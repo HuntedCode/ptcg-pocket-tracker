@@ -1,0 +1,16 @@
+# Django/Python specifics
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.db
+db.sqlite3
+*.log
+
+# Virtual environment
+venv/
+.env
+
+# Misc
+.DS_Store
+Thumbs.db
