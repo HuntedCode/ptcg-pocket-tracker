@@ -24,5 +24,7 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('accounts/register', views.register, name='register'),
-    path('dashboard/', views.dashboard, name='dashboard')
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('collection/add/', views.add_collection, name='add_collection'),
+    path('collection/edit/<int:pk>/', views.edit_collection, name='edit_collection')
 ]

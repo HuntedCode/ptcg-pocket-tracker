@@ -7,6 +7,7 @@
     {% endfor %}
 </ul>
 <h3>Your Cards</h3>
+<a href="{% url 'add_collection' %}">Add New card</a>
 <table>
     <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Quantity</th><th>Image</th></tr>
     {% for item in collections %}
@@ -16,6 +17,7 @@
         <td>{{ item.card.card_set.name }}</td>
         <td>{{ item.quantity }}</td>
         <td><img src="{{ item.card.image_base }}/low.png" alt="{{ item.card.name }}"></td>
+        <td><a href="{% url 'edit_collection' item.pk %}">Edit</a></td>
     </tr>
     {% empty %}
     <tr><td>No cards yet.</td></tr>
