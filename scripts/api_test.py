@@ -20,8 +20,38 @@ def get_card_by_id(id, language='en'):
     url = f"https://api.tcgdex.net/v2/{language}/cards/{id}"
     return call_api(url)
 
+def print_card(card_json):
+    card_data = json.loads(card_json)
+    card = {
+        'category': card_data['category'],
+        'id': card_data['id'],
+        'illustrator': card_data['illustrator'],
+        'image': card_data['image'],
+        'name': card_data['name'],
+        'rarity': card_data['rarity'],
+        'set_data': {'id': card_data['set']['id'], 'name': card_data['set']['name']}
+    }
+    
+    boosters = []
+    for b in card_data['boosters']:
+        b_dict = {'id': b['id'], 'name': b['name']}
+        boosters.append(b_dict)
+    card['boosters'] = boosters
 
-try:
+    if card['category'] == "Pokemon":
+        card['types'] = card_data['types']
+        card['stage'] = card_data['stage']
+        card['hp'] = card_data['hp']
+        if 'suffix' in card_data:
+            card['suffix'] = card_data['suffix']
+    elif card['category'] == "Trainer":
+        card['trainer_type'] = card_data['trainerType']
+    
+
+    print(card)
+
+
+#try:
     #sets = get_tcgp_sets()
     #print("TCG Pocket Sets:")
     #print(json.dumps(sets, indent=4))
@@ -33,9 +63,9 @@ try:
     #for card in cards.get('cards', [])[:5]:
         #print(f"Card ID: {card['id']}, Name: {card['name']}")
     
-    card_ids = ["A1-001", "A1-002", "A1-003", "A1-004", "A1-005"]
-    for id in card_ids:
-        print(json.dumps(get_card_by_id(id), indent=4))
+card_ids = ["A1-001", "A1-002", "A1-216", "A1-219", "A1-259"]
+for id in card_ids:
+    print_card(json.dumps(get_card_by_id(id)))
 
-except Exception as e:
-    print(f"Error: {e}")
+#except Exception as e:
+ #   print(f"Error: {e}")
