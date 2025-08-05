@@ -1,0 +1,27 @@
+<h2>You Collection Dashboard</h2>
+<p>Total Cards: {{ total_cards }}</p>
+<h3>Sets Summary</h3>
+<ul>
+    {% for summary in sets_summary %}
+    <li>{{ summary.card__card_set__name }}: {{ summary.count }} unique cards ({{ summary.completion|floatformat:1 }}% complete), {{ summary.total_quantity }} total</li>
+    {% endfor %}
+</ul>
+<h3>Your Cards</h3>
+<table>
+    <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Quantity</th><th>Image</th></tr>
+    {% for item in collections %}
+    <tr>
+        <td>{{ item.card.name }}</td>
+        <td>{{ item.card.rarity }}</td>
+        <td>{{ item.card.card_set.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td><img src="{{ item.card.image_base }}/low.png" alt="{{ item.card.name }}"></td>
+    </tr>
+    {% empty %}
+    <tr><td>No cards yet.</td></tr>
+    {% endfor %}
+</table>
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
