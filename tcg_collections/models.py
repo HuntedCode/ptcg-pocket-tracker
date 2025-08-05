@@ -13,8 +13,8 @@ class Booster(models.Model):
 class Set(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
-    release_date = models.DateField(null=True, blank=True)
-    card_count = models.PositiveIntegerField(null=True, blank=True)
+    card_count_official = models.PositiveIntegerField(null=True, blank=True)
+    card_count_total = models.PositiveIntegerField(null=True, blank=True)
     logo = models.URLField(blank=True)
     symbol = models.URLField(blank=True)
     boosters = models.ManyToManyField(Booster, related_name='sets', blank=True)

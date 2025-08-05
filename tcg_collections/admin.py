@@ -9,7 +9,7 @@ class BoosterAdmin(admin.ModelAdmin):
 
 @admin.register(Set)
 class SetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tcg_id', 'release_date', 'card_count')
+    list_display = ('name', 'tcg_id', 'card_count_official', 'card_count_total')
     search_fields = ('name', 'tcg_id')
 
 @admin.register(Card)
