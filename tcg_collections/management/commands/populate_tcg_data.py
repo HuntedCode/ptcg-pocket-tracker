@@ -10,11 +10,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--set_id', type=str, help='Populate only this specific set ID (e.g., A1)')
         parser.add_argument('--new_only', action='store_true', help='Process only new sets not already in the DB')
+        parser.add_argument('--refresh_full', action='store_true', help='Refresh and update all cards/sets, even if they exist in the DB already')
 
     def handle(self, *args, **options):
         lang = 'en'
         set_id = options['set_id']
         new_only = options['new_only']
+        refresh_full = options['refresh_full']
+
+        sets_data = self.get_tcgp_sets(lang)
+        last_set_id = sets_data.get('lastSet', {}).get('id')
+        if not last_set_id:
+            self.stdout.write(self.style.WARNING('No lastSet found in API response; trading flags may not update correctly'))
 
         if set_id:
             try:
@@ -26,17 +33,16 @@ class Command(BaseCommand):
                     'logo': cards_data.get('logo', ''),
                     'symbol': cards_data.get('symbol', '')
                 }
-                self.create_or_update_set(set_info, lang, cards_data=cards_data)
+                self.create_or_update_set(set_info, lang, cards_data=cards_data, last_set_id=last_set_id, refresh_full=refresh_full)
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Error fetching set {set_id}: {e}"))
                 return
         else:
-            sets_data = self.get_tcgp_sets(lang)
             for set_info in sets_data.get('sets', []):
-                if new_only and Set.objects.filter(tcg_id=set_info['id']).exists():
+                if not refresh_full and new_only and Set.objects.filter(tcg_id=set_info['id']).exists():
                     self.stdout.write(self.style.NOTICE(f"Skipping existing set {set_info['id']}"))
                     continue
-                self.create_or_update_set(set_info, lang)
+                self.create_or_update_set(set_info, lang, last_set_id=last_set_id, refresh_full=refresh_full)
 
         self.stdout.write(self.style.SUCCESS('DB population complete!'))
 
@@ -61,18 +67,26 @@ class Command(BaseCommand):
         return self.call_api(url)
 
     # DB Functions
-    def create_or_update_set(self, set_info, lang='en', cards_data=None):
+    def create_or_update_set(self, set_info, lang='en', cards_data=None, last_set_id=None, refresh_full=False):
         try:
-            set_obj, _ = Set.objects.get_or_create(
-                tcg_id=set_info['id'],
-                defaults={
-                    'name': set_info['name'],
-                    'card_count_official': set_info.get('cardCount', {}).get('official'),
-                    'card_count_total': set_info.get('cardCount', {}).get('total'),
-                    'logo': set_info.get('logo', ''),
-                    'symbol': set_info.get('symbol', '')
-                }
-            )
+            defaults = {
+                        'name': set_info['name'],
+                        'card_count_official': set_info.get('cardCount', {}).get('official'),
+                        'card_count_total': set_info.get('cardCount', {}).get('total'),
+                        'logo': set_info.get('logo', ''),
+                        'symbol': set_info.get('symbol', '')
+            }
+            
+            if refresh_full:
+                set_obj, _ = Set.objects.update_or_create(
+                    tcg_id=set_info['id'],
+                    defaults=defaults
+                )
+            else:
+                set_obj, _ = Set.objects.get_or_create(
+                    tcg_id=set_info['id'],
+                    defaults=defaults
+                )
 
             if cards_data is None:
                 cards_data = self.get_cards_from_set(set_info['id'], lang)
@@ -94,12 +108,12 @@ class Command(BaseCommand):
             has_boosters = False
 
             for card_info in cards_data.get('cards', []):
-                if Card.objects.filter(tcg_id=card_info['id']).exists():
+                if not refresh_full and Card.objects.filter(tcg_id=card_info['id']).exists():
                     self.stdout.write(self.style.NOTICE(f"Skipping existing card {card_info['id']}"))
                     continue
                 try:
                     card = self.get_card_by_id(card_info['id'], lang)
-                    card_obj = self.create_or_update_card(card, set_obj)
+                    card_obj = self.create_or_update_card(card, set_obj, last_set_id, refresh_full)
                     if card_obj:
                         card_objs.append(card_obj)
                     if card.get('boosters', []):
@@ -123,17 +137,19 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"Error creating set {set_info.get('id')}: {e}"))
 
-    def create_or_update_card(self, card_info, set_obj: Set) -> Card:
+    def create_or_update_card(self, card_info, set_obj: Set, last_set_id=None, refresh_full=False) -> Card:
         try:
-            card_obj, _ = Card.objects.get_or_create(
-                tcg_id=card_info['id'],
-                defaults={
+            tradeable_rarities = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond', 'One Star']
+            is_tradeable = False if set_obj.tcg_id == last_set_id else (card_info['rarity'] in tradeable_rarities)
+
+            defaults = {
                     'category': card_info['category'],
                     'illustrator': card_info.get('illustrator', ''),
                     'image_base': card_info.get('image', ''),
                     'name': card_info['name'],
                     'rarity': card_info['rarity'],
                     'card_set': set_obj,
+                    'is_tradeable': is_tradeable,
 
                     # Pokemon Specific
                     'types': card_info.get('types', []),
@@ -143,14 +159,28 @@ class Command(BaseCommand):
 
                     # Trainer Specific
                     'trainer_type': card_info.get('trainerType', '')
-                }
-            )
+            }
+
+            if refresh_full:
+                card_obj, _ = Card.objects.update_or_create(
+                    tcg_id=card_info['id'],
+                    defaults=defaults
+                )
+            else:
+                card_obj, _ = Card.objects.get_or_create(
+                    tcg_id=card_info['id'],
+                    defaults=defaults
+                )
+
+            if refresh_full:
+                card_obj.boosters.clear()
 
             for booster in card_info.get('boosters', []):
                 booster_obj = self.create_or_update_booster(booster)
                 card_obj.boosters.add(booster_obj)
                 set_obj.boosters.add(booster_obj)
             
+            self.stdout.write(self.style.SUCCESS(f"Card {card_obj.name} ({card_obj.tcg_id}) Created Successfully!"))
             return card_obj
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"Error creating card {card_info.get('id')}: {e}"))

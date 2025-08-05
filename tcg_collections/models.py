@@ -32,6 +32,7 @@ class Card(models.Model):
     rarity = models.CharField(max_length=50)
     card_set = models.ForeignKey(Set, on_delete=models.CASCADE, related_name='cards')
     boosters = models.ManyToManyField(Booster, related_name='cards', blank=True)
+    is_tradeable = models.BooleanField(default=False)
 
     # Pokemon Specific
     types = JSONField(default=list, blank=True)
