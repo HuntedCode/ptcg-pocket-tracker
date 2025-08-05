@@ -57,4 +57,14 @@ class UserCollection(models.Model):
     
     def __str__(self):
         return f"{self.user.username}'s {self.card.name} (x{self.quantity})"
-    
+
+class UserWants(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    desired_quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('user', 'card')
+
+    def __str__(self):
+        return f"{self.user.username} wants {self.card.name} (x{self.desired_quantity})"
