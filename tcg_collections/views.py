@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Sum, Count, Q
-from .models import UserCollection, Set, UserWants, Card
+from django.db.models import Sum, Count
+from .models import UserCollection, Set, UserWant, Card
 from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantsForm
 
 # Create your views here.
@@ -22,7 +22,7 @@ def register(request):
 @login_required
 def dashboard(request):
     collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
-    wants = UserWants.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
+    wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
     total_cards = collections.aggregate(total=Sum('quantity'))['total'] or 0
     sets_summary = collections.values('card__card_set__id', 'card__card_set__name').annotate(
         count=Count('card', distinct=True),
@@ -81,7 +81,7 @@ def add_want(request):
 
 @login_required
 def edit_want(request, pk):
-    want = get_object_or_404(UserWants, pk=pk, user=request.user)
+    want = get_object_or_404(UserWant, pk=pk, user=request.user)
     if request.method == "POST":
         form = WantsForm(request.POST, instance=want)
         if form.is_valid():
@@ -95,7 +95,7 @@ def edit_want(request, pk):
 def trade_matches(request):
 
     def get_user_wants(user):
-        user_wants = UserWants.objects.filter(user=user, desired_quantity__gt=0).select_related('card')
+        user_wants = UserWant.objects.filter(user=user, desired_quantity__gt=0).select_related('card')
         user_wants_by_rarity = defaultdict(set)
         for want in user_wants:
             user_wants_by_rarity[want.card.rarity].add(want.card.id)

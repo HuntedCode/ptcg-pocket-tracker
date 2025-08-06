@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import JSONField
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Create your models here.
 class Booster(models.Model):
@@ -58,7 +60,7 @@ class UserCollection(models.Model):
     def __str__(self):
         return f"{self.user.username}'s {self.card.name} (x{self.quantity})"
 
-class UserWants(models.Model):
+class UserWant(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     desired_quantity = models.PositiveIntegerField(default=1)
@@ -68,3 +70,20 @@ class UserWants(models.Model):
 
     def __str__(self):
         return f"{self.user.username} wants {self.card.name} (x{self.desired_quantity})"
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
+    bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_profile(sender, instance, **kwargs):
+    instance.profile.save()

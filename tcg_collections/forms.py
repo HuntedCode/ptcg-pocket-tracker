@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserCollection, Card, UserWants
+from .models import UserCollection, Card, UserWant
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -36,7 +36,7 @@ class CollectionForm(forms.ModelForm):
 
 class WantsForm(forms.ModelForm):
     class Meta:
-        model = UserWants
+        model = UserWant
         fields = ['card', 'desired_quantity']
         widgets = {
             'desired_quantity': forms.NumberInput(attrs={'min': 1}),

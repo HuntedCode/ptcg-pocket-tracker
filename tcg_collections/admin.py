@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booster, Card, Set, UserCollection
+from .models import Booster, Card, Set, UserCollection, UserWant, Profile
 
 # Register your models here.
 @admin.register(Booster)
@@ -21,4 +21,15 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(UserCollection)
 class UserCollectionAdmin(admin.ModelAdmin):
     list_display = ('user', 'card', 'quantity', 'for_trade')
-    search_fields = ('user__username', 'card__name')
+    search_fields = ('user__username', 'card__name', 'card__tcg_id')
+
+@admin.register(UserWant)
+class UserWantsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'card', 'desired_quantity')
+    search_fields = ('user__username', 'card__name', 'card__tcg_id')
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_trading_active', 'bio')
+    search_fields = ('user__username',)
+    list_filter = ('is_trading_active',)
