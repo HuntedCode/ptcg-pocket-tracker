@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from .models import UserCollection, Set, UserWant, Card
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantsForm
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm
 
 # Create your views here.
 def register(request):
@@ -69,26 +69,26 @@ def edit_collection(request, pk):
 @login_required
 def add_want(request):
     if request.method == 'POST':
-        form = WantsForm(request.POST)
+        form = WantForm(request.POST)
         if form.is_valid():
             want = form.save(commit=False)
             want.user = request.user
             want.save()
             return redirect('dashboard')
     else:
-        form = WantsForm()
+        form = WantForm()
     return render(request, 'collection_form.html', {'form': form, 'action': 'Add Want'})
 
 @login_required
 def edit_want(request, pk):
     want = get_object_or_404(UserWant, pk=pk, user=request.user)
     if request.method == "POST":
-        form = WantsForm(request.POST, instance=want)
+        form = WantForm(request.POST, instance=want)
         if form.is_valid():
             form.save()
             return redirect('dashboard')
     else:
-        form = WantsForm(instance=want)
+        form = WantForm(instance=want)
     return render(request, 'collection_form.html', {'form': form, 'action': 'Edit Want'})
 
 @login_required

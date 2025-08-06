@@ -34,7 +34,7 @@ class CollectionForm(forms.ModelForm):
             raise forms.ValidationError({'for_trade': 'This card is not tradeable based on current game rules.'})
         return cleaned_data
 
-class WantsForm(forms.ModelForm):
+class WantForm(forms.ModelForm):
     class Meta:
         model = UserWant
         fields = ['card', 'desired_quantity']
