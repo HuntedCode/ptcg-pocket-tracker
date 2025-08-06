@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
-from .models import UserCollection, Set
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm
+from .models import UserCollection, Set, UserWants
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantsForm
 
 # Create your views here.
 def register(request):
@@ -20,6 +20,7 @@ def register(request):
 @login_required
 def dashboard(request):
     collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set')
+    wants = UserWants.objects.filter(user=request.user).select_related('card', 'card__card_set')
     total_cards = collections.aggregate(total=Sum('quantity'))['total'] or 0
     sets_summary = collections.values('card__card_set__id', 'card__card_set__name').annotate(
         count=Count('card', distinct=True),
@@ -32,6 +33,7 @@ def dashboard(request):
     
     context = {
         'collections': collections,
+        'wants': wants,
         'total_cards': total_cards,
         'sets_summary': sets_summary,
     }
@@ -61,3 +63,28 @@ def edit_collection(request, pk):
     else:
         form = CollectionForm(instance=collection)
     return render(request, 'collection_form.html', {'form': form, 'action': 'Edit'})
+
+@login_required
+def add_want(request):
+    if request.method == 'POST':
+        form = WantsForm(request.POST)
+        if form.is_valid():
+            want = form.save(commit=False)
+            want.user = request.user
+            want.save()
+            return redirect('dashboard')
+    else:
+        form = WantsForm()
+    return render(request, 'collection_form.html', {'form': form, 'action': 'Add Want'})
+
+@login_required
+def edit_want(request, pk):
+    want = get_object_or_404(UserWants, pk=pk, user=request.user)
+    if request.method == "POST":
+        form = WantsForm(request.POST, instance=want)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = WantsForm(instance=want)
+    return render(request, 'collection_form.html', {'form': form, 'action': 'Edit Want'})

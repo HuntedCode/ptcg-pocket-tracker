@@ -26,5 +26,7 @@ urlpatterns = [
     path('accounts/register', views.register, name='register'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('collection/add/', views.add_collection, name='add_collection'),
-    path('collection/edit/<int:pk>/', views.edit_collection, name='edit_collection')
+    path('collection/edit/<int:pk>/', views.edit_collection, name='edit_collection'),
+    path('want/add/', views.add_want, name='add_want'),
+    path('want/edit/<int:pk>/', views.edit_want, name='edit_want')
 ]

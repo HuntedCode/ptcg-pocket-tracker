@@ -1,3 +1,7 @@
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
 <h2>You Collection Dashboard</h2>
 <p>Total Cards: {{ total_cards }}</p>
 <h3>Sets Summary</h3>
@@ -23,7 +27,18 @@
     <tr><td>No cards yet.</td></tr>
     {% endfor %}
 </table>
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+<h3>Your Wants</h3>
+<table>
+    <tr><th>Card</th><th>Set</th><th>Desired Quantity</th></tr>
+    {% for item in wants %}
+    <tr>
+        <td>{{ item.card.name }}</td>
+        <td>{{ item.card.card_set.name }}</td>
+        <td>{{ item.desired_quantity }}</td>
+        <td><a href="{% url 'edit_want' item.pk %}">Edit</a></td>
+    </tr>
+    {% empty %}
+    <tr><td>No wants yet.</td></tr>
+    {% endfor %}
+</table>
+<a href="{% url 'add_want' %}">Add Want</a>

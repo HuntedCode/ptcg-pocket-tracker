@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserCollection, Card
+from .models import UserCollection, Card, UserWants
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -25,3 +25,15 @@ class CollectionForm(forms.ModelForm):
             super().__init__(*args, **kwargs)
             self.fields['card'].queryset = Card.objects.all().order_by('card_set__tcg_id', 'tcg_id')
             self.fields['card'].widget.attrs.update({'class': 'form-select'})
+
+class WantsForm(forms.ModelForm):
+    class Meta:
+        model = UserWants
+        fields = ['card', 'desired_quantity']
+        widgets = {
+            'desired_quantity': forms.NumberInput(attrs={'min': 1}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['card'].queryset = Card.objects.all().order_by('card_set__tcg_id', 'tcg_id')
