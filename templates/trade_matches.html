@@ -3,7 +3,7 @@
 <p>{{ message }}</p>
 {% else %}
 {% for match in matches %}
-<h3>Match with {{ match.user }}</h3>
+<h3>Match with {{ match.username }}</h3>
 {% for rarity, data in match.rarity_matches.items %}
 <h4>In {{ rarity }} Rarity</h4>
 <p>They can offer you:</p>
@@ -19,6 +19,7 @@
     {% endfor %}
 </ul>
 {% endfor %}
+<a href="{% url 'send_message' match.user_id %}">Message {{ match.username }}</a>
 {% empty %}
 <p>No matches found yet. Try adjusting your wants or haves.</p>
 {% endfor %}

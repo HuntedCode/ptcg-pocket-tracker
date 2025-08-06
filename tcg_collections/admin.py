@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booster, Card, Set, UserCollection, UserWant, Profile
+from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message
 
 # Register your models here.
 @admin.register(Booster)
@@ -33,3 +33,8 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'is_trading_active', 'bio')
     search_fields = ('user__username',)
     list_filter = ('is_trading_active',)
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('sender', 'receiver', 'content', 'timestamp', 'is_read')
+    search_fields = ('sender__username', 'receiver__username', 'content')

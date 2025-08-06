@@ -4,8 +4,8 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
-from .models import UserCollection, Set, UserWant, Card
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm
+from .models import UserCollection, Set, UserWant, Card, Message
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm
 
 # Create your views here.
 def register(request):
@@ -156,9 +156,35 @@ def trade_matches(request):
         valid_rarity_matches = {r: data for r, data in rarity_matches.items() if data['they_offer'] and data['i_offer']}
         if valid_rarity_matches:
             matches.append({
-                'user': user.username,
+                'username': user.username,
+                'user_id': user.id,
                 'rarity_matches': valid_rarity_matches,
             })
     
     context = {'matches': matches}
     return render(request, 'trade_matches.html', context)
+
+@login_required
+def send_message(request, receiver_id):
+    receiver = get_object_or_404(User, id=receiver_id)
+    if not receiver.profile.is_trading_active or not request.user.profile.is_trading_active:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.receiver = receiver
+            message.save()
+            return redirect('inbox')
+    else:
+        form = MessageForm()
+    return render(request, 'send_message.html', {'form': form, 'receiver': receiver.username})
+
+@login_required
+def inbox(request):
+    received = Message.objects.filter(receiver=request.user).order_by('-timestamp')
+    sent = Message.objects.filter(sender=request.user).order_by('-timestamp')
+    context = {'received': received, 'sent': sent}
+    return render(request, 'inbox.html', context)

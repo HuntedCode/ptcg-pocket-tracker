@@ -1,0 +1,15 @@
+<h2>Your Inbox</h2>
+<h3>Received Messages</h3>
+{% for msg in received %}
+<p>From {{ msg.sender.username }} at {{ msg.timestamp }}: {{ msg.content }}</p>
+{% empty %}
+<p>No received messages.</p>
+{% endfor %}
+
+<h3>Sent Messages</h3>
+{% for msg in sent %}
+<p>To {{ msg.receiver.username }} at {{ msg.timestamp }}: {{ msg.content }}</p>
+{% empty %}
+<p>No sent messages.</p>
+{% endfor %}
+<a href="{% url 'dashboard' %}">Back to Dashboard</a>
