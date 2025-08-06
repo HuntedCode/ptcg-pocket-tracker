@@ -11,6 +11,7 @@
     <li>{{ summary.card__card_set__name }}: {{ summary.count }} unique cards ({{ summary.completion|floatformat:1 }}% complete), {{ summary.total_quantity }} total</li>
     {% endfor %}
 </ul>
+<a href="{% url 'trade_matches' %}">Find Trade Matches</a>
 
 <h3>Your Cards</h3>
 <a href="{% url 'add_collection' %}">Add New card</a>
@@ -36,7 +37,7 @@
     <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Desired Quantity</th></tr>
     {% for item in wants %}
     <tr>
-        <td>{{ item.card.name }}</td>
+        <td>{{ item.card.name }} ({{ item.card.tcg_id }})</td>
         <td>{{ item.card.rarity }}</td>
         <td>{{ item.card.card_set.name }}</td>
         <td>{{ item.desired_quantity }}</td>
@@ -53,7 +54,7 @@
     {% for item in collections %}
     {% if item.for_trade %}
     <tr>
-        <td>{{ item.card.name }}</td>
+        <td>{{ item.card.name }} ({{ item.card.tcg_id }})</td>
         <td>{{ item.card.rarity }}</td>
         <td>{{ item.card.card_set.name }}</td>
         <td>{{ item.quantity }}</td>

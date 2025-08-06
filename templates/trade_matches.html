@@ -1,0 +1,26 @@
+<h2>Your Trade Matches</h2>
+{% if message %}
+<p>{{ message }}</p>
+{% else %}
+{% for match in matches %}
+<h3>Match with {{ match.user }}</h3>
+{% for rarity, data in match.rarity_matches.items %}
+<h4>In {{ rarity }} Rarity</h4>
+<p>They can offer you:</p>
+<ul>
+    {% for card in data.they_offer %}
+    <li>{{ card.name }} ({{ card.tcg_id }}) | ({{ card.rarity }}) from {{ card.card_set.name }}</li>
+    {% endfor %}
+</ul>
+<p>You can offer them:</p>
+<ul>
+    {% for card in data.i_offer %}
+    <li>{{ card.name }} ({{ card.tcg_id }}) | ({{ card.rarity }}) from {{ card.card_set.name }}</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% empty %}
+<p>No matches found yet. Try adjusting your wants or haves.</p>
+{% endfor %}
+{% endif %}
+<a href="{% url 'dashboard' %}">Back to Dashboard</a>
