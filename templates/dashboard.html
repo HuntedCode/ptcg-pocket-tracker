@@ -11,6 +11,9 @@
     <li>{{ summary.card__card_set__name }}: {{ summary.count }} unique cards ({{ summary.completion|floatformat:1 }}% complete), {{ summary.total_quantity }} total</li>
     {% endfor %}
 </ul>
+<p>Trading Active: {% if request.user.profile.is_trading_active %}Yes{% else %}No{% endif %}</p>
+<a href="{% url 'update_profile' %}">Edit Trading Profile</a>
+
 <a href="{% url 'trade_matches' %}">Find Trade Matches</a>
 
 <h3>Your Cards</h3>

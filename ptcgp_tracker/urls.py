@@ -30,4 +30,5 @@ urlpatterns = [
     path('want/add/', views.add_want, name='add_want'),
     path('want/edit/<int:pk>/', views.edit_want, name='edit_want'),
     path('trade/matches/', views.trade_matches, name='trade_matches'),
+    path('profile/update', views.update_profile, name='update_profile'),
 ]

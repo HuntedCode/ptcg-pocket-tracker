@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from .models import UserCollection, Set, UserWant, Card
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm
 
 # Create your views here.
 def register(request):
@@ -18,6 +18,18 @@ def register(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def update_profile(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'profile_form.html', {'form': form})
 
 @login_required
 def dashboard(request):

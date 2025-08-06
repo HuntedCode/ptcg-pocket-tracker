@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserCollection, Card, UserWant
+from .models import UserCollection, Card, UserWant, Profile
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -18,7 +18,7 @@ class CollectionForm(forms.ModelForm):
         fields = ['card', 'quantity', 'for_trade']
         widgets = {
             'quantity': forms.NumberInput(attrs={'min': 0, 'value': 1}),
-            'for_trade': forms.CheckboxInput(),
+            'for_trade': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -45,3 +45,12 @@ class WantForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['card'].queryset = Card.objects.all().order_by('card_set__tcg_id', 'tcg_id')
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['is_trading_active', 'bio']
+        widgets = {
+            'is_trading_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
