@@ -6,6 +6,7 @@ __pycache__/
 *.db
 db.sqlite3
 *.log
+*.bat
 
 # Virtual environment
 venv/

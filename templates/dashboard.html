@@ -2,6 +2,7 @@
     {% csrf_token %}
     <button type="submit">Logout</button>
 </form>
+
 <h2>You Collection Dashboard</h2>
 <p>Total Cards: {{ total_cards }}</p>
 <h3>Sets Summary</h3>
@@ -10,6 +11,7 @@
     <li>{{ summary.card__card_set__name }}: {{ summary.count }} unique cards ({{ summary.completion|floatformat:1 }}% complete), {{ summary.total_quantity }} total</li>
     {% endfor %}
 </ul>
+
 <h3>Your Cards</h3>
 <a href="{% url 'add_collection' %}">Add New card</a>
 <table>
@@ -27,18 +29,37 @@
     <tr><td>No cards yet.</td></tr>
     {% endfor %}
 </table>
-<h3>Your Wants</h3>
+
+<h3>Your "Wants"</h3>
+<a href="{% url 'add_want' %}">Add Want</a>
 <table>
-    <tr><th>Card</th><th>Set</th><th>Desired Quantity</th></tr>
+    <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Desired Quantity</th></tr>
     {% for item in wants %}
     <tr>
         <td>{{ item.card.name }}</td>
+        <td>{{ item.card.rarity }}</td>
         <td>{{ item.card.card_set.name }}</td>
         <td>{{ item.desired_quantity }}</td>
         <td><a href="{% url 'edit_want' item.pk %}">Edit</a></td>
     </tr>
     {% empty %}
-    <tr><td>No wants yet.</td></tr>
+    <tr><td>No "wants" yet.</td></tr>
     {% endfor %}
 </table>
-<a href="{% url 'add_want' %}">Add Want</a>
+
+<h3>Your "Haves" For Trade</h3>
+<table>
+    <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Quantity Owned</th></tr>
+    {% for item in collections %}
+    {% if item.for_trade %}
+    <tr>
+        <td>{{ item.card.name }}</td>
+        <td>{{ item.card.rarity }}</td>
+        <td>{{ item.card.card_set.name }}</td>
+        <td>{{ item.quantity }}</td>
+    </tr>
+    {% endif %}
+    {% empty %}
+    <tr><td>No "haves" yet.</td></tr>
+    {% endfor %}
+</table>
