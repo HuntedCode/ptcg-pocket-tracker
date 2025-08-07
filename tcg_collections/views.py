@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm, PackOpenerForm
 
 # Create your views here.
 def register(request):
@@ -226,3 +226,24 @@ def inbox(request):
     sent = Message.objects.filter(sender=request.user).order_by('-timestamp')
     context = {'received': received, 'sent': sent}
     return render(request, 'inbox.html', context)
+
+@login_required
+def pack_opener(request):
+    if request.method == 'POST':
+        form = PackOpenerForm(request.POST)
+        if form.is_valid():
+            for i in range(1, 7):
+                card = form.cleaned_data.get(f'card{i}')
+                if card:
+                    obj, created = UserCollection.objects.get_or_create(
+                        user=request.user,
+                        card=card,
+                        defaults={'quantity': 1, 'for_trade': False}
+                    )
+                    if not created:
+                        obj.quantity += 1
+                        obj.save()
+            return redirect('dashboard')
+    else:
+        form = PackOpenerForm()
+    return render(request, 'pack_opener.html', {'form': form})

@@ -33,4 +33,5 @@ urlpatterns = [
     path('profile/update/', views.update_profile, name='update_profile'),
     path('message/send/<int:receiver_id>/', views.send_message, name='send_message'),
     path('message/inbox/', views.inbox, name='inbox'),
+    path('pack/opener/', views.pack_opener, name='pack_opener'),
 ]

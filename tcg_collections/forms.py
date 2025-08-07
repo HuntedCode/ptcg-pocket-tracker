@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserCollection, Card, UserWant, Profile, Message
+from .models import UserCollection, Card, UserWant, Profile, Message, Booster
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -59,3 +59,12 @@ class MessageForm(forms.ModelForm):
         model = Message
         fields = ['content']
         widgets = {'content': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'})}
+
+class PackOpenerForm(forms.Form):
+    booster = forms.ModelChoiceField(queryset=Booster.objects.all().order_by('name'), label="Select Booster")
+    card1 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 1")
+    card2 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 2")
+    card3 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 3")
+    card4 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 4")
+    card5 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 5")
+    card6 = forms.ModelChoiceField(queryset=Card.objects.all().order_by('card_set__tcg_id', 'tcg_id'), label="Card 6 (optional)", required=False)
