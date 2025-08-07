@@ -92,6 +92,24 @@ class Message(models.Model):
     def __str__(self):
         return f"From {self.sender} to {self.receiver} at {self.timestamp}"
 
+class BoosterDropRate(models.Model):
+    booster = models.ForeignKey(Booster, on_delete=models.CASCADE)
+    slot = models.CharField(max_length=50, choices=[
+        ('1-3', 'Slots 1-3 (Always One Diamond)'),
+        ('4', 'Slot 4 (Non-One Diamond, Weighted Low)'),
+        ('5', 'Slot 5 (Non-One Diamond, Better Odds)'),
+        ('god', 'God Pack (All One-Star+, Rare)'),
+        ('6', '6th Card (5% Chance, Exclusives)')
+    ])
+    rarity = models.CharField(max_length=50)
+    probability = models.FloatField(help_text='Probability (0.0 to 1.0)')
+
+    class Meta:
+        unique_together = ('booster', 'slot', 'rarity')
+
+    def __str__(self):
+        return f"{self.booster.name} - {self.slot}: {self.rarity} ({self.probability * 100}%)"
+
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message
+from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message, BoosterDropRate
 
 # Register your models here.
 @admin.register(Booster)
@@ -16,7 +16,7 @@ class SetAdmin(admin.ModelAdmin):
 class CardAdmin(admin.ModelAdmin):
     list_display = ('name', 'tcg_id', 'rarity', 'category')
     search_fields = ('name', 'tcg_id')
-    list_filter = ('rarity', 'category', 'card_set')
+    list_filter = ('rarity', 'category', 'card_set', 'boosters')
 
 @admin.register(UserCollection)
 class UserCollectionAdmin(admin.ModelAdmin):
@@ -38,3 +38,9 @@ class ProfileAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('sender', 'receiver', 'content', 'timestamp', 'is_read')
     search_fields = ('sender__username', 'receiver__username', 'content')
+
+@admin.register(BoosterDropRate)
+class BoosterDropRateAdmin(admin.ModelAdmin):
+    list_display = ('booster', 'slot', 'rarity', 'probability')
+    search_fields = ('booster',)
+    list_filter = ('booster__name', 'slot', 'rarity')
