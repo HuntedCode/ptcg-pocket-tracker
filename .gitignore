@@ -6,7 +6,7 @@ __pycache__/
 *.db
 db.sqlite3
 *.log
-*.bat
+
 
 # Virtual environment
 venv/
@@ -15,3 +15,5 @@ venv/
 # Misc
 .DS_Store
 Thumbs.db
+*.bat
+*.csv
