@@ -4,7 +4,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
-from .models import UserCollection, Set, UserWant, Card, Message
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
 from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm
 
 # Create your views here.
@@ -45,11 +45,49 @@ def dashboard(request):
         set_obj = Set.objects.get(id=summary['card__card_set__id'])
         summary['completion'] = (summary['count'] / set_obj.card_count_total * 100) if set_obj.card_count_total else 0
     
+    rarity_stats = collections.values('card__rarity').annotate(
+        owned_count=Count('card', distinct=True),
+        total_quantity=Sum('quantity')
+    ).order_by('card__rarity')
+
+    booster_probs_by_set = defaultdict(list)
+    boosters = Booster.objects.all()
+    for booster in boosters:
+        drop_rates = BoosterDropRate.objects.filter(booster=booster)
+        normal_prob = 0.0
+        god_prob = 0.0
+        sixth_prob = 0.0
+        total_prob = 0.0
+
+        for rate in drop_rates:
+            total_in_rarity = Card.objects.filter(rarity=rate.rarity, boosters=booster).count()
+            if total_in_rarity == 0:
+                continue
+            missing_in_rarity = Card.objects.filter(rarity=rate.rarity, boosters=booster).exclude(id__in=collections.values_list('card__id', flat=True)).count()
+
+            slot_rarity_prob = rate.probability * (missing_in_rarity / total_in_rarity if total_in_rarity else 0)
+            if rate.slot in ['1-3', '4', '5']:
+                normal_prob += slot_rarity_prob
+            elif rate.slot == 'god':
+                god_prob += slot_rarity_prob
+            elif rate.slot == '6':
+                sixth_prob += slot_rarity_prob
+
+        total_prob += (normal_prob / 5) + (booster.god_pack_prob * god_prob) + (booster.sixth_card_prob * sixth_prob)
+        primary_set = booster.sets.first()
+        set_name = primary_set.name if primary_set else 'Unknown Set'
+        booster_probs_by_set[set_name].append((booster.name, (total_prob * 100)))
+
+    for set_name in booster_probs_by_set:
+        booster_probs_by_set[set_name].sort(key=lambda x: x[1], reverse=True)
+
     context = {
         'collections': collections,
         'wants': wants,
         'total_cards': total_cards,
         'sets_summary': sets_summary,
+        'rarity_stats': rarity_stats,
+        'booster_probs_by_set': dict(booster_probs_by_set)
     }
     return render(request, 'dashboard.html', context)
 

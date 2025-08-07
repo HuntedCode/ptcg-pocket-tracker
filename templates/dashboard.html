@@ -69,3 +69,29 @@
     <tr><td>No "haves" yet.</td></tr>
     {% endfor %}
 </table>
+
+<h3>Rarity Breakdown</h3>
+<table>
+    <tr><th>Rarity</th><th>Unique Owned</th><th>Total Quantity</th></tr>
+    {% for stat in rarity_stats %}
+    <tr>
+        <td>{{ stat.card__rarity }}</td>
+        <td>{{ stat.owned_count }}</td>
+        <td>{{ stat.total_quantity }}</td>
+    </tr>
+    {% empty %}
+    <tr><td>No data yet.</td></tr>
+    {% endfor %}
+</table>
+
+<h3>Best Booster Picker (Chance of New Card)</h3>
+{% for set_name, boosters in booster_probs_by_set.items %}
+<h4>{{ set_name }}</h4>
+<ul>
+    {% for name, prob in boosters %}
+    <li>{{ name }}: {{ prob|floatformat:2 }}%</li>
+    {% endfor %}
+</ul>
+{% empty %}
+<li>No boosters available</li>
+{% endfor %}
