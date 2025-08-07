@@ -34,4 +34,6 @@ urlpatterns = [
     path('message/send/<int:receiver_id>/', views.send_message, name='send_message'),
     path('message/inbox/', views.inbox, name='inbox'),
     path('pack/opener/', views.pack_opener, name='pack_opener'),
+    path('collection/export/', views.export_collections, name='export_collections'),
+    path('collection/import/', views.import_collections, name='import_collections'),
 ]

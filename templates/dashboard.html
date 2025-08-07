@@ -21,6 +21,8 @@
 
 <h3>Your Cards</h3>
 <a href="{% url 'add_collection' %}">Add New card</a>
+<a href="{% url 'export_collections' %}">Export My Collection to CSV</a>
+<a href="{% url 'import_collections' %}">Import My Collection from CSV</a>
 <table>
     <tr><th>Card</th><th>Rarity</th><th>Set</th><th>Quantity</th><th>Image</th></tr>
     {% for item in collections %}

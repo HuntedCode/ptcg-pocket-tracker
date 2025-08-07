@@ -1,9 +1,12 @@
 from collections import defaultdict
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 from django.db.models import Sum, Count
+from io import StringIO
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
 from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm, PackOpenerForm
 
@@ -247,3 +250,35 @@ def pack_opener(request):
     else:
         form = PackOpenerForm()
     return render(request, 'pack_opener.html', {'form': form})
+
+@login_required
+def export_collections(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="my_collections.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Card ID', 'Name', 'Set Name', 'Quantity', 'For Trade'])
+    for item in UserCollection.objects.filter(user=request.user).select_related('card'):
+        writer.writerow([item.card.tcg_id, item.card.name, item.card.card_set.name, item.quantity, item.for_trade])
+    return response
+
+@login_required
+def import_collections(request):
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+        if csv_file:
+            file_data = csv_file.read().decode('utf-8')
+            csv_data = csv.reader(StringIO(file_data))
+            next(csv_data) #skips header
+            for row in csv_data:
+                tcg_id, quantity, for_trade = row[0], int(row[3]), bool(row[4])
+                card = Card.objects.filter(tcg_id=tcg_id).first()
+                if card:
+                    UserCollection.objects.update_or_create(
+                        user=request.user,
+                        card=card,
+                        defaults={'quantity': quantity, 'for_trade': for_trade}
+                    )
+                else:
+                    pass
+            return redirect('dashboard')
+    return render(request, 'import_csv.html')
