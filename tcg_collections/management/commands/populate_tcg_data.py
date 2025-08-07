@@ -172,13 +172,14 @@ class Command(BaseCommand):
                     defaults=defaults
                 )
 
-            if refresh_full:
+            if card_obj.manual_boosters_added:
+                self.stdout.write(self.style.WARNING(f"Skipping booster update for card {card_obj.name} - {card_obj.card_set.name} due to manual override flag."))
+            else:
                 card_obj.boosters.clear()
-
-            for booster in card_info.get('boosters', []):
-                booster_obj = self.create_or_update_booster(booster)
-                card_obj.boosters.add(booster_obj)
-                set_obj.boosters.add(booster_obj)
+                for booster in card_info.get('boosters', []):
+                    booster_obj = self.create_or_update_booster(booster)
+                    card_obj.boosters.add(booster_obj)
+                    set_obj.boosters.add(booster_obj)
             
             self.stdout.write(self.style.SUCCESS(f"Card {card_obj.name} ({card_obj.tcg_id}) Created Successfully!"))
             return card_obj
