@@ -8,7 +8,7 @@
     <a class="tab {% if forloop.first %}tab-active{% endif %}" onclick="showSet('{{ set.name|slugify }}')">{{ set.name }}</a>
     {% endfor %}
 </div>
-<input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4" onkeyup="filterCards()">
+<input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4 sticky" onkeyup="filterCards()">
 
 <form method="post" id="collectionForm">
     {% csrf_token %}
@@ -16,8 +16,16 @@
     {% for set_name, cards in cards_by_set.items %}
     <div id="{{ set_name|slugify }}" class="set-section" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
         <table class="table table-xs table-fixed text-base leading-relaxed text-base-content w-full">
-            <thead>
-                <tr><th class="px-4 py-2 text-center">Owned</th><th class="px-4 py-2 text-center">Image</th><th class="px-4 py-2 text-center">Name</th><th class="px-4 py-2 text-center">ID</th><th class="px-4 py-2 text-center">Type</th><th class="px-4 py-2 text-center">Rarity</th><th class="px-4 py-2 text-center">Owned Quantity</th><th class="px-4 py-2 text-center">For Trade</th><th class="px-4 py-2 text-center">Wishlist</th></tr>
+            <thead class="sticky top-0 bg-base-200 z-10 shadow-md">
+                <tr><th class="sticky top-0 z-10 bg-base-100 text-center">Owned</span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Image</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Owned Quantity</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
             </thead>
             <tbody>
                 {% for card in cards %}
@@ -32,7 +40,7 @@
                             <img 
                                 src="/media/{{ card.local_image_small }}" 
                                 alt="{{ card.name }}" 
-                                class="w-25 h-auto rounded shadow-md {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
+                                class="w-35 h-auto rounded shadow-md {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
                                 {% if 'Diamond' in card.rarity %}
                                     {% if card.rarity == 'One Diamond' %}border-2 border-info/50{% elif card.rarity == 'Two Diamond' %}border-2 border-info/70{% elif card.rarity == 'Three Diamond' %}border-2 border-info/90{% elif card.rarity == 'Four Diamond' %}border-2 border-info{% endif %}
                                 {% elif 'Star' in card.rarity %}
@@ -47,47 +55,34 @@
                                 loading="lazy">
                         {% else %}
                             <!-- Placeholder if no image -->
-                            <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:grayscale-0">No Img</div>
+                            <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
                         {% endif %}
                     </div>
                     </td>
                     <td class="text-center overflow-hidden truncate">
-                        <span class="inline-block transition-transform duration-200 hover:scale-105">
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
                             {{ card.name }}
                         </span>
                     </td>
                     <td class="text-center">
-                        <span class="inline-block transition-transform duration-200 hover:scale-105">
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold tracking-wide">
                             {{ card.tcg_id }}
                         </span>
                     </td>
                     <td class="text-center">
-                        <span class="badge text-xs font-semibold px-2 py-1 rounded-full border border-black
-                            {% if card.type == 'Colorless' %}
-                                bg-[#D2D0CF] bg-gradient-to-r from-[#D2D0CF] to-[#D2D0CF]/70 text-black
-                            {% elif card.type == 'Darkness' %}
-                                bg-[#2E7077] bg-gradient-to-r from-[#2E7077] to-[#2E7077]/70 text-white
-                            {% elif card.type == 'Dragon' %}
-                                bg-[#948F31] bg-gradient-to-r from-[#948F31] to-[#948F31]/70 text-white
-                            {% elif card.type == 'Fighting' %}
-                                bg-[#B16232] bg-gradient-to-r from-[#B16232] to-[#B16232]/70 text-white
-                            {% elif card.type == 'Fire' %}
-                                bg-[#D8223B] bg-gradient-to-r from-[#D8223B] to-[#D8223B]/70 text-white
-                            {% elif card.type == 'Grass' %}
-                                bg-[#3FA129] bg-gradient-to-r from-[#3FA129] to-[#3FA129]/70 text-white
-                            {% elif card.type == 'Lightning' %}
-                                bg-[#FAC000] bg-gradient-to-r from-[#FAC000] to-[#FAC000]/70 text-black
-                            {% elif card.type == 'Metal' %}
-                                bg-[#60A1B8] bg-gradient-to-r from-[#60A1B8] to-[#60A1B8]/70 text-black
-                            {% elif card.type == 'Psychic' %}
-                                bg-[#EF4179] bg-gradient-to-r from-[#EF4179] to-[#EF4179]/70 text-white
-                            {% elif card.type == 'Water' %}
-                                bg-[#2980EF] bg-gradient-to-r from-[#2980EF] to-[#2980EF]/70 text-white
-                            {% else %}
-                                bg-neutral bg-gradient-to-r from-neutral to-neutral/70 text-black
-                            {% endif %} transition-all duration-200 hover:scale-105 hover:shadow-sm">
-                            {{ card.type }}
+                        {% if card.type %}
+                        <div class="tooltip" data-tip="{{ card.type }}">
+                            <img 
+                                src="/media/icons/energy/{{ card.type|lower }}.png" 
+                                alt="{{ card.type }} Energy Symbol" 
+                                class="w-12 h-12 transition-all duration-200 hover:scale-110 hover:shadow-sm" 
+                                loading="lazy">
+                        </div>
+                        {% else %}
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
+                            No Type
                         </span>
+                        {% endif %}
                     </td>
                     <td class="text-center">
                         <span class="badge text-xs font-semibold px-2 py-1 rounded-full border border-black
@@ -115,7 +110,7 @@
                         />
                     </td>
                     <td class="text-center">
-                        <input type="checkbox" name="form-{{ forloop.counter0 }}-for_trade" {% if owned.1 %}checked{% endif %}>
+                        <input type="checkbox" name="form-{{ forloop.counter0 }}-for_trade" class="checkbox checkbox-lg" {% if owned.1 %}checked{% endif %}>
                     </td>
                     <td class="text-center">
                         <button type="button" onclick="addToWishlist('{{ card.id }}')" class="btn btn-sm {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">Wishlist</button>
@@ -124,7 +119,7 @@
                 {% endwith %}
                 {% endfor %}
             </tbody>
-        </table>
+        </table>  
     </div>
     {% endfor %}
     <button type="submit" class="btn btn-primary mt-4">Save Changes</button>
@@ -146,11 +141,39 @@
         });
     }
     function addToWishlist(cardId) {
-        // JS to add (e.g., fetch('/want/add/' + cardId, {method: 'POST'}).then(response => console.log('Added')));
         console.log('Added card ' + cardId + ' to wishlist');
     }
+function sortTable(header, colIndex) {
+    const table = header.closest('table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    const allHeaders = table.querySelectorAll('th.cursor-pointer');
+    allHeaders.forEach(h => {
+        if (h !== header) {
+            h.querySelector('.icon').innerHTML = '';
+            h.dataset.sortDir = 'asc';
+        }
+    });
+    
+    let dir = header.dataset.sortDir === 'asc' ? 1 : -1;
+    header.dataset.sortDir = dir === 1 ? 'desc' : 'asc';
+    
+    rows.sort((a, b) => {
+        let valA = a.cells[colIndex].dataset.sortValue || a.cells[colIndex].textContent.trim();
+        let valB = b.cells[colIndex].dataset.sortValue || b.cells[colIndex].textContent.trim();
+        if (!isNaN(valA) && !isNaN(valB)) {
+            return dir * (parseFloat(valA) - parseFloat(valB));
+        } else {
+            return dir * valA.localeCompare(valB);
+        }
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+    
+    header.querySelector('.icon').innerHTML = dir === 1 ? '&#x25B2;' : '&#x25BC;';
+}
     window.onbeforeunload = function () {
-        // Check if form changed (basic; improve with JS library if needed)
         return 'Unsaved changes - leave?';
     };
 </script>
