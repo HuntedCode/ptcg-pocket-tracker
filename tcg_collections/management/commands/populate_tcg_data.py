@@ -120,7 +120,6 @@ class Command(BaseCommand):
                         card_objs.append(card_obj)
                     if card.get('boosters', []):
                         has_boosters = True
-                    time.sleep(0.5)
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(f"Skipped card {card_info['id']}: {e}"))
             
@@ -143,6 +142,11 @@ class Command(BaseCommand):
         try:
             tradeable_rarities = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond', 'One Star']
             is_tradeable = False if set_obj.tcg_id == last_set_id else (card_info['rarity'] in tradeable_rarities)
+            type_list = card_info.get('types', [])
+            if type_list:
+                ptype = type_list[0]
+            else:
+                ptype = ''
 
             defaults = {
                     'category': card_info['category'],
@@ -154,7 +158,7 @@ class Command(BaseCommand):
                     'is_tradeable': is_tradeable,
 
                     # Pokemon Specific
-                    'types': card_info.get('types', []),
+                    'type': ptype,
                     'stage': card_info.get('stage', ''),
                     'hp': card_info.get('hp'),
                     'suffix': card_info.get('suffix', ''),

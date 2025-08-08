@@ -41,7 +41,7 @@ class Card(models.Model):
     is_tradeable = models.BooleanField(default=False)
 
     # Pokemon Specific
-    types = JSONField(default=list, blank=True)
+    type = models.CharField(max_length=50, blank=True)
     stage = models.CharField(max_length=50, blank=True)
     hp = models.PositiveIntegerField(null=True, blank=True)
     suffix = models.CharField(max_length=50, blank=True)

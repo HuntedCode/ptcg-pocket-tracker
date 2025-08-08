@@ -14,9 +14,9 @@ class SetAdmin(admin.ModelAdmin):
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tcg_id', 'rarity', 'category')
+    list_display = ('name', 'tcg_id', 'type', 'rarity', 'category')
     search_fields = ('name', 'tcg_id')
-    list_filter = ('rarity', 'category', 'card_set', 'boosters')
+    list_filter = ('rarity', 'type', 'card_set', 'boosters')
 
 @admin.register(UserCollection)
 class UserCollectionAdmin(admin.ModelAdmin):
