@@ -17,16 +17,56 @@
     <div id="{{ set_name|slugify }}" class="set-section" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
         <table class="table table-zebra">
             <thead>
-                <tr><th>Image</th><th>Name</th><th>ID</th><th>Rarity</th><th>Owned Quantity</th><th>For Trade</th><th>Wishlist</th></tr>
+                <tr><th>Image</th><th>Name</th><th>ID</th><th>Type</th><th>Rarity</th><th>Owned Quantity</th><th>For Trade</th><th>Wishlist</th></tr>
             </thead>
             <tbody>
                 {% for card in cards %}
                 {% with owned=owned_dict|get_value:card.id %}
                 <tr class="{% if not owned %}text-gray-500{% endif %}">
-                    <td><img src="{{ card.image_base }}/low.png" alt="{{ card.name }}" class="w-20 rounded shadow"></td>
+                    <td>
+                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})">
+                        {% if card.local_image_small %}
+                            <img 
+                                src="/media/{{ card.local_image_small }}" 
+                                alt="{{ card.name }}" 
+                                class="w-25 h-auto rounded shadow-md hover:scale-105 transition-transform duration-200 lazyload
+                                {% if 'Diamond' in card.rarity %}
+                                    {% if card.rarity == 'One Diamond' %}border-2 border-info/50{% elif card.rarity == 'Two Diamond' %}border-2 border-info/70{% elif card.rarity == 'Three Diamond' %}border-2 border-info/90{% elif card.rarity == 'Four Diamond' %}border-2 border-info{% endif %}
+                                {% elif 'Star' in card.rarity %}
+                                    {% if card.rarity == 'One Star' %}border-2 border-warning/50{% elif card.rarity == 'Two Star' %}border-2 border-warning/70{% elif card.rarity == 'Three Star' %}border-2 border-warning{% endif %}
+                                {% elif 'Shiny' in card.rarity %}
+                                    {% if card.rarity == 'One Shiny' %}border-2 border-secondary/50{% elif card.rarity == 'Two Shiny' %}border-2 border-secondary{% endif %} hover:shadow-secondary/50
+                                {% elif card.rarity == 'Crown' %}
+                                    border-2 border-error hover:shadow-error/50
+                                {% else %}
+                                    border-2 border-neutral
+                                {% endif %}"
+                                loading="lazy">
+                        {% else %}
+                            <!-- Placeholder if no image -->
+                            <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
+                        {% endif %}
+                    </div>
+                    </td>
                     <td>{{ card.name }}</td>
                     <td>{{ card.tcg_id }}</td>
-                    <td>{{ card.rarity }}</td>
+                    <td>{{ card.types }}</td>
+                    <td>
+                        <span class="badge text-xs font-semibold px-2 py-1 rounded-full border border-black
+                            {% if 'Diamond' in card.rarity %}
+                                badge-info bg-gradient-to-r from-info to-info/70
+                            {% elif 'Star' in card.rarity %}
+                                badge-warning bg-gradient-to-r from-warning to-warning/70
+                            {% elif 'Shiny' in card.rarity %}
+                                badge-secondary bg-gradient-to-r from-secondary to-secondary/70
+                            {% elif card.rarity == 'Crown' %}
+                                badge-error bg-gradient-to-r from-error to-error/70
+                            {% else %}
+                                badge-neutral bg-gradient-to-r from-neutral to-neutral/70
+                            {% endif %}">
+                            {{ card.rarity }}
+                        </span>
+                    </td>
                     <td>
                         <input type="number" name="form-{{ forloop.counter0 }}-quantity" value="{{ owned.0|default:0 }}" min="0" class="input input-bordered w-20">
                     </td>
