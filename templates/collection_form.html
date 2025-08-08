@@ -1,11 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{ action }} Card to Collection</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save</button>
-</form>
-<a href="{% url 'dashboard' %}">Cancel</a>
+<div class="card bg-base-100 shadow-xl max-w-md mx-auto">
+    <div class="card-body">
+        <h2 class="card-title">{{ action }} Card</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{ form.card.label }}</span>
+                </label>
+                {{ form.card }}
+            </div>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{ form.quantity.label }}</span>
+                </label>
+                {{ form.quantity }}
+            </div>
+            <div class="form-control">
+                <label class="label cursor-pointer">
+                    <span class="label-text">{{ form.for_trade.label }}</span>
+                    {{ form.for_trade }}
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+        <a href="{% url 'dashboard' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+</div>
 {% endblock %}

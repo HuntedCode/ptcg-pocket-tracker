@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTCG Pocket Tracker</title>
-    <link href="{% static 'theme/css/tailwind.css' %}" rel="stylesheet">
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
 </head>
-<body class="bg-base-100 text-base-content">
-    <nav class="navbar bg-base-200">
+<body class="min-h-screen bg-base-200">
+    <nav class="navbar bg-base-100 shadow-xl">
         <div class="flex-1">
             <a class="btn btn-ghost normal-case text-xl" href="{% url 'dashboard' %}">PTCG Tracker</a>
         </div>
@@ -17,6 +17,7 @@
                 <li><a href="{% url 'trade_matches' %}">Trades</a></li>
                 <li><a href="{% url 'pack_opener' %}">Open Pack</a></li>
                 <li><a href="{% url 'update_profile' %}">Profile</a></li>
+                <li><a href="{% url 'inbox' %}">Inbox</a></li>
                 <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-ghost">Logout</button></form></li>
             </ul>
         </div>
