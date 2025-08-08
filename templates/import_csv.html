@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
 <h2>Import Collections from CSV</h2>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -6,3 +9,4 @@
 </form>
 <p>CSV Format: TCG ID, Name (ignored), Set Name (ignored), Quantity, For Trade (True/False)</p>
 <a href="{% url 'dashboard' %}">Cancel</a>
+{% endblock %}

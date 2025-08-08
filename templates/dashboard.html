@@ -1,10 +1,7 @@
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+{% extends "base.html" %}
 
+{% block content %}
 <a href="{% url 'inbox' %}">Inbox</a>
-<a href="{% url 'pack_opener' %}">Open a Pack</a>
 
 <h2>You Collection Dashboard</h2>
 <p>Total Cards: {{ total_cards }}</p>
@@ -15,9 +12,6 @@
     {% endfor %}
 </ul>
 <p>Trading Active: {% if request.user.profile.is_trading_active %}Yes{% else %}No{% endif %}</p>
-<a href="{% url 'update_profile' %}">Edit Trading Profile</a>
-
-<a href="{% url 'trade_matches' %}">Find Trade Matches</a>
 
 <h3>Your Cards</h3>
 <a href="{% url 'add_collection' %}">Add New card</a>
@@ -98,3 +92,4 @@
 {% empty %}
 <li>No boosters available</li>
 {% endfor %}
+{% endblock %}

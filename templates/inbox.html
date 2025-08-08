@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
 <h2>Your Inbox</h2>
 <h3>Received Messages</h3>
 {% for msg in received %}
@@ -13,3 +16,4 @@
 <p>No sent messages.</p>
 {% endfor %}
 <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

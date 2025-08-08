@@ -38,12 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tcg_collections'
+    'tailwind',
+    'theme',
+    'tcg_collections',
 ]
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL= 'login'
 LOGIN_URL = 'login'
+TAILWIND_APP_NAME = 'theme'
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
