@@ -34,6 +34,17 @@ class CollectionForm(forms.ModelForm):
             raise forms.ValidationError({'for_trade': 'This card is not tradeable based on current game rules.'})
         return cleaned_data
 
+class CollectionItemForm(forms.ModelForm):
+    class Meta:
+        model = UserCollection
+        fields = ['quantity', 'for_trade']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('for_trade') and self.instance.card and not self.instance.card.is_tradeable:
+            raise forms.ValidationError('This card is not tradeable.')
+        return cleaned_data
+
 class WantForm(forms.ModelForm):
     class Meta:
         model = UserWant

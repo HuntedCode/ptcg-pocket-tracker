@@ -4,11 +4,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponse
 from django.db.models import Sum, Count
+from django.http import HttpResponse
+from django.views.generic import ListView
+from django.forms import modelformset_factory
 from io import StringIO
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm, PackOpenerForm
+from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm, PackOpenerForm, CollectionItemForm
 
 # Create your views here.
 def register(request):
@@ -93,6 +95,31 @@ def dashboard(request):
         'booster_probs_by_set': dict(booster_probs_by_set)
     }
     return render(request, 'dashboard.html', context)
+
+@login_required
+def collection(request):
+    cards = Card.objects.all().order_by('card_set__tcg_id', 'tcg_id')
+    sets = Set.objects.all().order_by('tcg_id')
+
+    cards_by_set = defaultdict(list)
+    for card in cards:
+        cards_by_set[card.card_set.name].append(card)
+    
+    owned = UserCollection.objects.filter(user=request.user).values_list('card__id', 'quantity', 'for_trade')
+    owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
+    wants = UserWant.objects.filter(user=request.user).values_list('card__id', flat=True)
+
+    CollectionFormSet = modelformset_factory(UserCollection, form=CollectionItemForm, extra=0)
+    if request.method == 'POST':
+        formset = CollectionFormSet(request.POST, queryset=UserCollection.objects.filter(user=request.user))
+        if formset.is_valid():
+            formset.save()
+            return redirect('collection')
+    else:
+        formset = CollectionFormSet(queryset=UserCollection.objects.filter(user=request.user))    
+
+    context = {'sets': sets, 'cards_by_set': dict(cards_by_set), 'owned_dict': owned_dict, 'wants': set(wants), 'formset': formset}
+    return render(request, 'collection.html', context)
 
 @login_required
 def add_collection(request):

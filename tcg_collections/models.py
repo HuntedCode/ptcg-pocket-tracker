@@ -32,6 +32,7 @@ class Card(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     illustrator = models.CharField(max_length=100, blank=True)
     image_base = models.CharField(max_length=200, blank=True)
+    local_image_small = models.CharField(max_length=200, blank=True, default='')
     name = models.CharField(max_length=100)
     rarity = models.CharField(max_length=50)
     card_set = models.ForeignKey(Set, on_delete=models.CASCADE, related_name='cards')

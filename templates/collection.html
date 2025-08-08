@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<h2>My Collection</h2>
+<div class="tabs tabs-boxed">
+    {% for set in sets %}
+    <a class="tab {% if forloop.first %}tab-active{% endif %}" onclick="showSet('{{ set.name|slugify }}')">{{ set.name }}</a>
+    {% endfor %}
+</div>
+<input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4" onkeyup="filterCards()">
+
+<form method="post" id="collectionForm">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for set_name, cards in cards_by_set.items %}
+    <div id="{{ set_name|slugify }}" class="set-section" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
+        <table class="table table-zebra">
+            <thead>
+                <tr><th>Image</th><th>Name</th><th>ID</th><th>Rarity</th><th>Owned Quantity</th><th>For Trade</th><th>Wishlist</th></tr>
+            </thead>
+            <tbody>
+                {% for card in cards %}
+                {% with owned=owned_dict|get_value:card.id %}
+                <tr class="{% if not owned %}text-gray-500{% endif %}">
+                    <td><img src="{{ card.image_base }}/low.png" alt="{{ card.name }}" class="w-20 rounded shadow"></td>
+                    <td>{{ card.name }}</td>
+                    <td>{{ card.tcg_id }}</td>
+                    <td>{{ card.rarity }}</td>
+                    <td>
+                        <input type="number" name="form-{{ forloop.counter0 }}-quantity" value="{{ owned.0|default:0 }}" min="0" class="input input-bordered w-20">
+                    </td>
+                    <td>
+                        <input type="checkbox" name="form-{{ forloop.counter0 }}-for_trade" {% if owned.1 %}checked{% endif %}>
+                    </td>
+                    <td>
+                        <button type="button" onclick="addToWishlist('{{ card.id }}')" class="btn btn-sm {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">Wishlist</button>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary mt-4">Save Changes</button>
+</form>
+
+<script>
+    function showSet(setId) {
+        document.querySelectorAll('.set-section').forEach(el => el.style.display = 'none');
+        document.getElementById(setId).style.display = 'block';
+    }
+    function filterCards() {
+        var input = document.getElementById('search').value.toLowerCase();
+        document.querySelectorAll('tr').forEach(tr => {
+            if (tr.textContent.toLowerCase().includes(input)) {
+                tr.style.display = '';
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+    }
+    function addToWishlist(cardId) {
+        // JS to add (e.g., fetch('/want/add/' + cardId, {method: 'POST'}).then(response => console.log('Added')));
+        console.log('Added card ' + cardId + ' to wishlist');
+    }
+    window.onbeforeunload = function () {
+        // Check if form changed (basic; improve with JS library if needed)
+        return 'Unsaved changes - leave?';
+    };
+</script>
+{% endblock %}
