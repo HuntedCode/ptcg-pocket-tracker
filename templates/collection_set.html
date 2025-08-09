@@ -48,7 +48,7 @@
                         <img 
                             src="/media/{{ card.local_image_small }}" 
                             alt="{{ card.name }}" 
-                            class="card-img w-35 h-auto rounded shadow-md {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
+                            class="card-img w-35 h-auto rounded shadow-md cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
                             {% if 'Diamond' in card.rarity %}
                                 {% if card.rarity == 'One Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-4 border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
                             {% elif 'Star' in card.rarity %}
@@ -60,6 +60,7 @@
                             {% else %}
                                 border-4 border-neutral
                             {% endif %}"
+                            data-large-src="{{ card.image_base }}/high.png"
                             loading="lazy">
                     {% else %}
                         <!-- Placeholder if no image -->
@@ -96,7 +97,7 @@
                     <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
                         <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold
                             {% if 'Diamond' in card.rarity %}
-                                text-info
+                                text-[oklch(74%_.16_232.661)]
                             {% elif 'Star' in card.rarity %}
                                 text-warning
                             {% elif 'Shiny' in card.rarity %}
@@ -140,7 +141,10 @@
         </tbody>
     </table>  
 </form>
-<div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-300">
+<div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 cursor-pointer hidden">
+    <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-10 border-[oklch(74%_.16_232.661)] shadow-2xl shadow-[oklch(74%_.16_232.661)] rounded-xl">
+</div>
+<div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-3000">
     Saved!
 </div>
 <script>
@@ -389,5 +393,31 @@
             }
         });
     });
+
+    const smallImages = document.querySelectorAll('.card-small-img');
+    const imageModal = document.getElementById('image-modal');
+    const largeImage = document.getElementById('large-image');
+
+    // Click on small image to show modal
+    smallImages.forEach(img => {
+        img.addEventListener('click', () => {
+            console.log("Image clicked..")
+            const largeSrc = img.dataset.largeSrc;
+            if (largeSrc) {
+                largeImage.src = largeSrc;
+                largeImage.alt = img.alt;
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('visible') // Trigger show transition
+            }
+        });
+    });
+
+    // Close on background click
+    imageModal.addEventListener('click', (event) => {
+            if (event.target === imageModal) {
+                imageModal.classList.add('hidden');
+                largeImage.src = '';
+            }
+        });
 </script>
 {% endblock %}
