@@ -2,7 +2,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2>My Collection</h2>
+<h1>My Collection</h1>
 
 {% if errors %}
     <div class="alert alert-error">
@@ -14,9 +14,9 @@
     </div>
 {% endif %}
 
-<div class="tabs tabs-boxed">
+<div role="tablist" class="tabs tabs-boxed mb-4">
     {% for nav_set in sets %}
-    <a class="tab {% if nav_set.id == set_id %}tab-active font-bold{% endif %}" href="{% url 'collection_set' nav_set.id %}">{{ nav_set.name }}</a>
+    <a role="tab" class="tab {% if nav_set.id == set_id %}tab-active font-bold{% endif %}" href="{% url 'collection_set' nav_set.id %}">{{ nav_set.name }}</a>
     {% endfor %}
 </div>
 <input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4 sticky" onkeyup="filterCards()">
@@ -31,7 +31,7 @@
                 <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
                 <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
                 <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Owned Quantity</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
                 <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
                 <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
         </thead>
@@ -141,7 +141,7 @@
         </tbody>
     </table>  
 </form>
-<div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 cursor-pointer hidden">
+<div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
     <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-10 border-[oklch(74%_.16_232.661)] shadow-2xl shadow-[oklch(74%_.16_232.661)] rounded-xl">
 </div>
 <div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-3000">

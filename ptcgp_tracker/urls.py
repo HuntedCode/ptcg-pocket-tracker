@@ -38,8 +38,8 @@ urlpatterns = [
     path('pack/opener/', views.pack_opener, name='pack_opener'),
     path('collection/export/', views.export_collections, name='export_collections'),
     path('collection/import/', views.import_collections, name='import_collections'),
-    path('collection/', views.collection, name='collection'),
     path('collection/set/<int:set_id>/', views.collection_set, name='collection_set'),
+    path('wishlist/', views.add_want, name='wishlist'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
