@@ -44,6 +44,35 @@ class CollectionItemForm(forms.ModelForm):
         if cleaned_data.get('for_trade') and self.instance.card and not self.instance.card.is_tradeable:
             raise forms.ValidationError('This card is not tradeable.')
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if instance.quantity == 0:
+            if commit:
+                instance.delete()
+            return None
+        if commit:
+            instance.save()
+        return instance
+
+class CollectionUpdateForm(forms.Form):
+    card_id = forms.IntegerField(widget=forms.HiddenInput)
+    quantity = forms.IntegerField(min_value=0, widget=forms.NumberInput(attrs={'min': 0}))
+    for_trade = forms.BooleanField(required=False, widget=forms.CheckboxInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        card_id = cleaned_data.get('card_id')
+        for_trade = cleaned_data.get('for_trade')
+
+        if card_id and for_trade:
+            try:
+                card = Card.objects.get(id=card_id)
+                if not card.is_tradeable:
+                    raise forms.ValidationError('This card is not tradeable')
+            except Card.DoesNotExist:
+                raise forms.ValidationError('Invalid card ID')
+        return cleaned_data
 
 class WantForm(forms.ModelForm):
     class Meta:

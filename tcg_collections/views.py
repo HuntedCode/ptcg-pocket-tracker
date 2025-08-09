@@ -5,7 +5,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.generic import ListView
 from django.forms import modelformset_factory
 from io import StringIO
@@ -98,28 +98,120 @@ def dashboard(request):
 
 @login_required
 def collection(request):
-    cards = Card.objects.all().order_by('card_set__tcg_id', 'tcg_id')
     sets = Set.objects.all().order_by('tcg_id')
-
-    cards_by_set = defaultdict(list)
-    for card in cards:
-        cards_by_set[card.card_set.name].append(card)
-    
-    owned = UserCollection.objects.filter(user=request.user).values_list('card__id', 'quantity', 'for_trade')
-    owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
-    wants = UserWant.objects.filter(user=request.user).values_list('card__id', flat=True)
-
-    CollectionFormSet = modelformset_factory(UserCollection, form=CollectionItemForm, extra=0)
-    if request.method == 'POST':
-        formset = CollectionFormSet(request.POST, queryset=UserCollection.objects.filter(user=request.user))
-        if formset.is_valid():
-            formset.save()
-            return redirect('collection')
-    else:
-        formset = CollectionFormSet(queryset=UserCollection.objects.filter(user=request.user))    
-
-    context = {'sets': sets, 'cards_by_set': dict(cards_by_set), 'owned_dict': owned_dict, 'wants': set(wants), 'formset': formset}
+    context = {'sets': sets}
     return render(request, 'collection.html', context)
+
+@login_required
+def collection_set(request, set_id):
+    set_obj = get_object_or_404(Set, id=set_id)
+    all_sets = Set.objects.all().order_by('tcg_id')
+    cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
+
+    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade')
+    owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
+    wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
+
+    errors = []
+
+    if request.method == 'POST':
+        processed_cards = set()
+        for key in request.POST:
+            if key.startswith('quantity_'):
+                card_id_str = key[9:]
+                processed_cards.add(card_id_str)
+            elif key.startswith('for_trade_'):
+                card_id_str = key[10:]
+                processed_cards.add(card_id_str)
+            
+            for card_id_str in processed_cards:
+                try:
+                    card_id = int(card_id_str)
+                    print(f"Processing card_id: {card_id} for set: {set_obj.id}")
+                    card= get_object_or_404(Card, id=card_id)
+                except ValueError:
+                    errors.append(f"Invalid card ID '{card_id_str}")
+                    print(f"Invalid card_id_str: {card_id_str}")
+                    continue
+
+                obj = UserCollection.objects.filter(user=request.user, card=card).first()
+                changed = False
+                qty_str = request.POST.get(f"quantity_{card_id}", None)
+                if qty_str is not None:
+                    try:
+                        qty = int(qty_str)
+                        if qty < 0:
+                            errors.append(f"Quantity for card '{card_id}' cannot be negative.")
+                            continue
+                    except ValueError:
+                        errors.append(f"Invalid quantity for card '{card.name}'.")
+                
+                    if obj is None:
+                        if qty > 0:
+                            obj = UserCollection(user=request.user, card=card, quantity=qty, for_trade=False)
+                            changed = True
+                    else:
+                        obj.quantity = qty
+                        changed = True
+                
+                for_trade_str = request.POST.get(f"for_trade_{card_id}", None)
+                if for_trade_str is not None:
+                    for_trade = for_trade_str == 'true'
+                    if for_trade and not card.is_tradeable:
+                        errors.append(f'Card "{card.name}" is not tradeable.')
+                        continue
+
+                    if obj is None:
+                        continue
+                    else:
+                        obj.for_trade = for_trade
+                        changed = True
+
+                if obj and changed:
+                    if obj.quantity == 0:
+                        obj.delete()
+                    else:
+                        obj.save()
+
+            if key.startswith('want_toggle_'):
+                print("Processing wishlist toggle...")
+                card_id_str = key[12:]
+                try:
+                    card_id = int(card_id_str)
+                    card = get_object_or_404(Card, id=card_id)
+                    want_obj = UserWant.objects.filter(user=request.user, card=card).first()
+                    print(want_obj)
+                    if want_obj:
+                        want_obj.delete()
+                    else:
+                        UserWant.objects.create(user=request.user, card=card, desired_quantity=1)
+                except ValueError:
+                    errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
+                    continue
+
+        if not errors:
+            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade')
+            owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
+            wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX
+                return JsonResponse({'status': 'success', 'message': 'Changes saved!'})
+            else:
+                return redirect('collection_set', set_id=set_id)  # Fallback for non-AJAX
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+                
+    context = {
+        'set': set_obj,
+        'sets': all_sets,
+        'set_id': set_id,
+        'cards': cards,
+        'owned_dict': owned_dict,
+        'wants': set(wants),
+        'errors': errors,
+    }
+    return render(request, 'collection_set.html', context)
 
 @login_required
 def add_collection(request):

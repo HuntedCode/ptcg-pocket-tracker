@@ -1,0 +1,25 @@
+{
+  "name": "ptcgp_tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HuntedCode/ptcg-pocket-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HuntedCode/ptcg-pocket-tracker/issues"
+  },
+  "homepage": "https://github.com/HuntedCode/ptcg-pocket-tracker#readme",
+  "devDependencies": {
+    "daisyui": "^5.0.50",
+    "tailwindcss": "^4.1.11"
+  }
+}

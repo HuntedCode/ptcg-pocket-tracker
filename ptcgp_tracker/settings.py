@@ -42,11 +42,11 @@ INSTALLED_APPS = [
     'theme',
     'tcg_collections',
 ]
+TAILWIND_APP_NAME = 'theme'
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL= 'login'
 LOGIN_URL = 'login'
-TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
@@ -94,6 +94,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 
 # Password validation

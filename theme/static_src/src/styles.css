@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /**
   * A catch-all path to Django template files, JavaScript, and Python files
@@ -9,3 +12,60 @@
   * the scope of this path.
   */
 @source "../../../**/*.{html,py,js}";
+
+@plugin "daisyui" {
+  themes: pokemon --default;  /* Registers your custom theme and sets it as default (no data-theme needed if global) */
+}
+
+/* Define your custom "pokemon" theme */
+@plugin "daisyui/theme" {
+  name: "pokemon";  /* Matches what you'll use in data-theme */
+  default: true;    /* Makes it the fallback theme */
+  prefersdark: false;  /* Not auto-switching to dark; set true if you add a dark variant later */
+  color-scheme: light;  /* Base scheme; can be 'dark' for inverted colors */
+
+  /* Your colors as CSS variables (maps to daisyUI's structure—direct from your old config) */
+  --color-primary: #0075BE;  /* Blue for buttons/accents */
+  --color-primary-content: #FFFFFF;  /* Text on primary (white for contrast—add if needed) */
+  --color-secondary: #FFCC00;  /* Yellow for highlights */
+  --color-secondary-content: #000000;  /* Text on secondary (black for readability) */
+  --color-accent: #A82028;  /* Red for CTAs */
+  --color-accent-content: #FFFFFF;
+  --color-neutral: #304160;  /* Dark blue-grey for borders/text */
+  --color-neutral-content: #FFFFFF;
+  --color-base-100: #FFFFFF;  /* Fixed your #afafafff (assuming typo; use #FFFFFF if pure white) */
+  --color-base-200: #F0F0F0;  /* Light grey for hovers */
+  --color-base-300: #E0E0E0;  /* Optional: Add a base-300 for depth (darker grey) */
+  --color-base-content: #000000;  /* Text on base backgrounds */
+  --color-info: #3FA129;  /* Green for info/success */
+  --color-info-content: #FFFFFF;
+  --color-success: #3FA129;
+  --color-success-content: #FFFFFF;
+  --color-warning: #FAC000;  /* Yellow for warnings */
+  --color-warning-content: #000000;
+  --color-error: #D8223B;  /* Red for errors */
+  --color-error-content: #FFFFFF;
+  /* Optional extras (daisyUI defaults; customize for Pokémon feel) */
+  --radius-selector: 0.5rem;  /* Rounded corners for buttons, etc. */
+  --border: 1px;  /* Border width */
+  --depth: 1;  /* Shadow depth */
+}
+
+/* Custom override for for_trade checkboxes */
+.for-trade-checkbox {
+  /* Base styles if needed (e.g., size, border) */
+  @apply border-primary;  /* Uses your theme's primary border when unchecked */
+
+  /* When checked: Fill with blue (primary) instead of gray */
+  &:checked {
+    background-color: var(--color-primary);  /* #0075BE blue fill */
+    border-color: var(--color-primary);     /* Matching border */
+    /* Optional: Add a checkmark icon color if DaisyUI uses one */
+    color: var(--color-primary-content);    /* White checkmark for contrast */
+  }
+
+  /* Hover/focus for better UX (optional but good for accessibility) */
+  &:hover, &:focus {
+    @apply ring-2 ring-primary ring-offset-2;  /* Blue ring on interaction */
+  }
+}

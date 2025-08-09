@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<h2>My Collection</h2>
+
+{% if errors %}
+    <div class="alert alert-error">
+        <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="tabs tabs-boxed">
+    {% for nav_set in sets %}
+    <a class="tab {% if nav_set.id == set_id %}tab-active font-bold{% endif %}" href="{% url 'collection_set' nav_set.id %}">{{ nav_set.name }}</a>
+    {% endfor %}
+</div>
+<input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4 sticky" onkeyup="filterCards()">
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table table-xs table-fixed text-base leading-relaxed text-base-content w-full">
+        <thead class="sticky top-0 bg-base-200 z-10 shadow-md text-lg">
+            <tr><th class="sticky top-0 z-10 bg-base-100 text-center">Owned</span></th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Image</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Owned Quantity</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
+                <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
+        </thead>
+        <tbody>
+            {% for card in cards %}
+            {% with owned=owned_dict|get_value:card.id %}
+            <tr class="{% if not owned or owned.0 == 0 %}opacity-50 bg-gray-300{% endif %} transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:opacity-100 hover:bg-base-200 hover:font-bold">
+            <td class="text-center">
+                <input type="checkbox" disabled {% if owned and owned.0 > 0 %}checked{% endif %} class="checkbox checkbox-lg" aria-label="Owned status for {{ card.name }}">
+            </td>
+                <td class="text-center card-image" >
+                    <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})">
+                    {% if card.local_image_small %}
+                        <img 
+                            src="/media/{{ card.local_image_small }}" 
+                            alt="{{ card.name }}" 
+                            class="card-img w-35 h-auto rounded shadow-md {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
+                            {% if 'Diamond' in card.rarity %}
+                                {% if card.rarity == 'One Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-4 border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
+                            {% elif 'Star' in card.rarity %}
+                                {% if card.rarity == 'One Star' %}border-4 border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-4 border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-4 border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
+                            {% elif 'Shiny' in card.rarity %}
+                                {% if card.rarity == 'One Shiny' %}border-4 border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-4 border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
+                            {% elif card.rarity == 'Crown' %}
+                                border-4 border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
+                            {% else %}
+                                border-4 border-neutral
+                            {% endif %}"
+                            loading="lazy">
+                    {% else %}
+                        <!-- Placeholder if no image -->
+                        <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
+                    {% endif %}
+                </div>
+                </td>
+                <td class="text-center overflow-hidden truncate">
+                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
+                        {{ card.name }}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold tracking-wide">
+                        {{ card.tcg_id }}
+                    </span>
+                </td>
+                <td class="text-center">
+                    {% if card.type %}
+                    <div class="tooltip" data-tip="{{ card.type }}">
+                        <img 
+                            src="/media/icons/energy/{{ card.type|lower }}.png" 
+                            alt="{{ card.type }} Energy Symbol" 
+                            class="w-10 h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
+                            loading="lazy">
+                    </div>
+                    {% else %}
+                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
+                        No Type
+                    </span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
+                        <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold
+                            {% if 'Diamond' in card.rarity %}
+                                text-info
+                            {% elif 'Star' in card.rarity %}
+                                text-warning
+                            {% elif 'Shiny' in card.rarity %}
+                                text-secondary
+                            {% elif card.rarity == 'Crown' %}
+                                text-error
+                            {% else %}
+                                text-neutral
+                            {% endif %}">
+                            {% if card.rarity == 'One Diamond' %}💎
+                            {% elif card.rarity == 'Two Diamond' %}💎💎
+                            {% elif card.rarity == 'Three Diamond' %}💎💎💎
+                            {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
+                            {% elif card.rarity == 'One Star' %}★
+                            {% elif card.rarity == 'Two Star' %}★★
+                            {% elif card.rarity == 'Three Star' %}★★★
+                            {% elif card.rarity == 'One Shiny' %}✨
+                            {% elif card.rarity == 'Two Shiny' %}✨✨
+                            {% elif card.rarity == 'Crown' %}👑
+                            {% else %}{{ card.rarity }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <input 
+                        type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input input-bordered join-item w-20 text-center" 
+                    />
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" name="for_trade_{{ card.id }}" class="checkbox for-trade-checkbox checkbox-lg" {% if owned.1 %}checked{% endif %} {% if not card.is_tradeable %}disabled{% endif %}>
+                </td>
+                <td class="text-center">
+                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">
+                        {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
+                    </button>
+                </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>  
+</form>
+<div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-300">
+    Saved!
+</div>
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateRowStyle(quantityInput) {
+        if (quantityInput.type !== "number") {
+            console.log("skipping...");
+            return;
+        }
+        const row = quantityInput.closest('tr');
+        if (!row) return;
+
+        const qtyValue = parseInt(quantityInput.value, 10) || 0;
+        console.log("qtyValue: ", qtyValue);
+        if (qtyValue > 0) {
+            row.classList.remove('opacity-50', 'bg-gray-300');
+        } else {
+            row.classList.add('opacity-50', 'bg-gray-300');
+        }
+
+        const imageTd = row.querySelector('.card-image');
+        if (!imageTd) {
+            console.warn('No card-image td found in row – check template.');
+            return;
+        }
+
+        const image = imageTd.querySelector('img.card-img');
+        if (image) {
+            if (qtyValue > 0) {
+                image.classList.remove('grayscale');
+            } else {
+                image.classList.add('grayscale');
+            }
+        } else {
+            imageTd.classList.toggle('text-gray-500', qtyValue === 0);
+        }
+    }
+    
+    const saveIndicator = document.getElementById('save-indicator');
+    if (!saveIndicator) {
+        console.warn('No #save-indicator found – add it to the template for UX feedback.');
+    }
+
+    let indicatorTimeout;
+
+    function showIndicator(message, isError = false) {
+        if (!saveIndicator) return;
+        saveIndicator.textContent = message;
+        saveIndicator.classList.toggle('error', isError);
+        saveIndicator.classList.remove('hidden'); 
+        saveIndicator.style.opacity = '1';
+
+        clearTimeout(indicatorTimeout);
+        indicatorTimeout = setTimeout(() => {
+            saveIndicator.style.opacity = '0';
+            setTimeout(() => {
+                saveIndicator.classList.add('hidden');
+                saveIndicator.classList.remove('error');
+            }, 300);
+        }, 2000);
+    }
+
+    const inputs = document.querySelectorAll('input[type="number"][name^="quantity_"], input[type="checkbox"][name^="for_trade_"]');
+    const initialValues = new Map();
+    inputs.forEach(input => {
+        if (input.type === 'number') {
+            initialValues.set(input.name, input.value);
+        } else if (input.type === 'checkbox') {
+            initialValues.set(input.name, input.checked);
+        }
+    });
+
+    function getChangedData() {
+        const changedData = new FormData();
+        let hasChanges = false;
+
+        inputs.forEach(input => {
+            let currentValue = input.type === 'number' ? input.value : input.checked;
+            let initial = initialValues.get(input.name);
+
+            if (currentValue !== initial) {
+                if (input.type === 'checkbox') {
+                    changedData.append(input.name, currentValue ? 'true' : 'false');
+                } else {
+                    changedData.append(input.name, currentValue);
+                }
+                hasChanges = true;
+            }
+        });
+
+        if (!hasChanges) {
+            console.log('No changes detected in data.');
+        }
+        return changedData;
+    }
+
+    function saveChanges() {
+        const changedData = getChangedData();
+        let hasEntries = false;
+        for (let pair of changedData.entries()) {
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.log('Skipping fetch – no changed data.');
+            return;
+        }
+
+        const csrfToken = getCookie('csrftoken');
+        if (!csrfToken) return;
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: changedData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                inputs.forEach(input => {
+                    initialValues.set(input.name, input.type === 'number' ? input.value : input.checked);
+                });
+                showIndicator('Saved!');
+                console.log('Success – updated initials.');
+            } else {
+                alert('Errors: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('Save failed—check console.');
+        });
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('change', () => {
+            updateRowStyle(input);
+            saveChanges();
+        });
+    });
+
+    window.addEventListener('beforeunload', () => {
+        updateRowStyle(input);
+        saveChanges();
+    });
+
+    function filterCards() {
+        var input = document.getElementById('search').value.toLowerCase();
+        document.querySelectorAll('tr').forEach(tr => {
+            if (tr.textContent.toLowerCase().includes(input)) {
+                tr.style.display = '';
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+    }
+
+    function sortTable(header, colIndex) {
+        const table = header.closest('table');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        const allHeaders = table.querySelectorAll('th.cursor-pointer');
+        allHeaders.forEach(h => {
+            if (h !== header) {
+                h.querySelector('.icon').innerHTML = '';
+                h.dataset.sortDir = 'asc';
+            }
+        });
+        
+        let dir = header.dataset.sortDir === 'asc' ? 1 : -1;
+        header.dataset.sortDir = dir === 1 ? 'desc' : 'asc';
+        
+        rows.sort((a, b) => {
+            let valA = a.cells[colIndex].dataset.sortValue || a.cells[colIndex].textContent.trim();
+            let valB = b.cells[colIndex].dataset.sortValue || b.cells[colIndex].textContent.trim();
+            if (!isNaN(valA) && !isNaN(valB)) {
+                return dir * (parseFloat(valA) - parseFloat(valB));
+            } else {
+                return dir * valA.localeCompare(valB);
+            }
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
+        
+        header.querySelector('.icon').innerHTML = dir === 1 ? '&#x25B2;' : '&#x25BC;';
+    }
+
+    const wishlistButtons = document.querySelectorAll('.wishlist-toggle');  // All buttons
+
+    wishlistButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const cardId = button.dataset.cardId;
+            if (!cardId) return;
+
+            
+            const formData = new FormData();
+            formData.append(`want_toggle_${cardId}`, 'on');
+
+            const csrfToken = getCookie('csrftoken');
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken }
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    
+                    if (button.classList.contains('btn-success')) {
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline');
+                        button.textContent = 'Wishlist';
+                    } else {
+                        button.classList.add('btn-success');
+                        button.classList.remove('btn-outline');
+                        button.textContent = 'Wishlisted!';
+                    }
+                    showIndicator('Wishlist updated!');
+                } else {
+                    alert('Error: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+                }
+            } catch (error) {
+                console.error('Toggle failed:', error);
+                alert('Wishlist toggle failed.');
+            }
+        });
+    });
+</script>
+{% endblock %}
