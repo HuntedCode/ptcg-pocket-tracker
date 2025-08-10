@@ -32,7 +32,7 @@ class Command(BaseCommand):
                     'id': cards_data['id'],
                     'name': cards_data['name'],
                     'cardCount': cards_data.get('cardCount', {}),
-                    'logo': cards_data.get('logo', ''),
+                    'logo_path': f"images/set_logos/{cards_data['id']}_logo.png",
                     'symbol': cards_data.get('symbol', '')
                 }
                 self.create_or_update_set(set_info, lang, cards_data=cards_data, last_set_id=last_set_id, refresh_full=refresh_full, booster_refresh=booster_refresh)
@@ -75,8 +75,8 @@ class Command(BaseCommand):
                         'name': set_info['name'],
                         'card_count_official': set_info.get('cardCount', {}).get('official'),
                         'card_count_total': set_info.get('cardCount', {}).get('total'),
-                        'logo': set_info.get('logo', ''),
-                        'symbol': set_info.get('symbol', '')
+                        'logo_path': set_info.get('logo_path'),
+                        'symbol': set_info.get('symbol'),
             }
             
             if refresh_full:

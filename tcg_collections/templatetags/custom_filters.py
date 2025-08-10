@@ -9,3 +9,9 @@ def get_value(dictionary, key):
 @register.filter
 def get_index(value, index):
     return value[index]
+
+@register.filter
+def startswith(text, starts):
+    if isinstance(text, str):
+        return text.startswith(starts)
+    return False

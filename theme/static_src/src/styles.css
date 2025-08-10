@@ -27,7 +27,6 @@
   /* Your colors as CSS variables (maps to daisyUI's structure—direct from your old config) */
   --color-primary: #0075BE;  /* Blue for buttons/accents */
   --color-primary-content: #FFFFFF;  /* Text on primary (white for contrast—add if needed) */
-  --color-primary-primary-content: #FFFFFF;  /* Text on primary (white for contrast) */
   --color-secondary: #FFCC00;  /* Yellow for highlights */
   --color-secondary-content: #000000;  /* Text on secondary (black for readability) */
   --color-accent: #A82028;  /* Red for CTAs */
@@ -102,7 +101,7 @@ body {
  }
 
  .navbar .menu li a:hover {
-   @apply text-primary underline scale-105;  /* Blue hover, underline for clarity, subtle scale for community fun */
+   @apply underline scale-105;  /* Blue hover, underline for clarity, subtle scale for community fun */
    transition: all 0.2s ease-in-out;  /* Smooth change (from your animation-btn) */
  }
 
@@ -118,12 +117,6 @@ body {
  /* If buttons/menus need override (DaisyUI defaults sans-serif, but ensure) */
  .btn, .menu li a {
    font-family: var(--font-family-base);
- }
-
- /* New: Hover enhancements for community interactivity (explain: Uses secondary yellow for fun hovers) */
- a:hover {
-   color: var(--color-primary);  /* Yellow hover for links—Pokemon energy */
-   transition: color 0.2s ease-in-out;  /* Smooth change */
  }
 
  .btn:hover {

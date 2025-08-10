@@ -1,4 +1,5 @@
 {% load static tailwind_tags %}
+{% load custom_filters %}
 
 <!DOCTYPE html>
 <html lang="en" data-theme="pokemon">
@@ -16,18 +17,23 @@
 <body class="bg-base-100 text-base-content min-h-screen flex flex-col">
     <nav class="navbar bg-base-100 shadow-xl rounded-box">
         <div class="navbar-start">
-            <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center hover:text-primary">
                 <img src="{% static 'images/icons/pokeball-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">PTCG Pocket Tracker
             </a>
         </div>
         <div class="navbar-center hidden lg:flex">
-            <ul class="menu menu-horizontal px-1 space-x-4">
-                <li><a href="{% url 'collection_set' 1 %}" class="hover:text-primary transition duration-200">My Collection</a></li>
-                <li><a href="{% url 'wishlist' %}" class="hover:text-primary transition duration-200">My Wishlist</a></li>
-                <li><a href="{% url 'trade_matches' %}" class="hover:text-primary transition duration-200">Trades</a></li>
-                <li><a href="{% url 'pack_opener' %}" class="hover:text-primary transition duration-200">Open Pack</a></li>
-                <li><a href="{% url 'update_profile' %}" class="hover:text-primary transition duration-200">Profile</a></li>
-                <li><a href="{% url 'inbox' %}" class="hover:text-primary transition duration-200">Inbox</a></li>
+            <ul class="menu menu-horizontal px-1 space-x-4 flex items-center">
+                <li><a href="{% url 'collection_set' 1 %}" class="{% if request.path|startswith:'/collection/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">My Collection</a></li>
+                <li><a href="{% url 'profile' %}" class="{% if request.path == '/profile/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Profile</a></li>
+                <li><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Trades</a></li>
+
+                <span class="flex items-center px-2">
+                    <img src="{% static random_icon %}" alt="Random Pokemon Icon" class="w-20 h-20">
+                </span>
+
+                <li><a href="{% url 'wishlist' %}" class="{% if request.path == '/wishlist/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">My Wishlist</a></li>
+                <li><a href="{% url 'pack_opener' %}" class="{% if request.path == '/pack/opener/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Open Pack</a></li>
+                <li><a href="{% url 'inbox' %}" class="{% if request.path == '/message/inbox/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Inbox</a></li>
             </ul>
         </div>
         <div class="navbar-end">

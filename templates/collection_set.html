@@ -2,8 +2,6 @@
 {% load custom_filters %}
 
 {% block content %}
-<h1>My Collection</h1>
-
 {% if errors %}
     <div class="alert alert-error">
         <ul>
@@ -14,9 +12,14 @@
     </div>
 {% endif %}
 
-<div role="tablist" class="tabs tabs-boxed mb-4">
+<div class="flex flex-wrap justify-center gap-4 mb-4">
     {% for nav_set in sets %}
-    <a role="tab" class="tab {% if nav_set.id == set_id %}tab-active font-bold{% endif %}" href="{% url 'collection_set' nav_set.id %}">{{ nav_set.name }}</a>
+    <a role="tab" href="{% url 'collection_set' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
+                                                                    hover:bg-primary hover:text-primary-content hover:scale-105 transition-all duration-200 
+                                                                    {% if nav_set.id == set_id %}bg-primary text-primary-content font-bold{% endif %}">
+        <img src="/media/{{ nav_set.logo_path }}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
+        <span class="text-center text-sm font-medium row-span-1">{{ nav_set.name }}</span>
+    </a>
     {% endfor %}
 </div>
 <input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4 sticky" onkeyup="filterCards()">
@@ -69,7 +72,7 @@
                 </div>
                 </td>
                 <td class="text-center overflow-hidden truncate">
-                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
+                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold text-wrap">
                         {{ card.name }}
                     </span>
                 </td>
@@ -95,18 +98,7 @@
                 </td>
                 <td class="text-center">
                     <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
-                        <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold
-                            {% if 'Diamond' in card.rarity %}
-                                text-[oklch(74%_.16_232.661)]
-                            {% elif 'Star' in card.rarity %}
-                                text-warning
-                            {% elif 'Shiny' in card.rarity %}
-                                text-secondary
-                            {% elif card.rarity == 'Crown' %}
-                                text-error
-                            {% else %}
-                                text-neutral
-                            {% endif %}">
+                        <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold text-warning">
                             {% if card.rarity == 'One Diamond' %}💎
                             {% elif card.rarity == 'Two Diamond' %}💎💎
                             {% elif card.rarity == 'Three Diamond' %}💎💎💎
@@ -131,7 +123,7 @@
                     <input type="checkbox" name="for_trade_{{ card.id }}" class="checkbox for-trade-checkbox checkbox-lg" {% if owned.1 %}checked{% endif %} {% if not card.is_tradeable %}disabled{% endif %}>
                 </td>
                 <td class="text-center">
-                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">
+                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if not card.is_tradeable %}disabled{% endif %}>
                         {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
                     </button>
                 </td>

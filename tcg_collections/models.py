@@ -20,7 +20,7 @@ class Set(models.Model):
     release_date = models.DateField(null=True, blank=True)
     card_count_official = models.PositiveIntegerField(null=True, blank=True)
     card_count_total = models.PositiveIntegerField(null=True, blank=True)
-    logo = models.URLField(blank=True)
+    logo_path = models.CharField(max_length=50, blank=True)
     symbol = models.URLField(blank=True)
     boosters = models.ManyToManyField(Booster, related_name='sets', blank=True)
 
