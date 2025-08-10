@@ -64,6 +64,7 @@
                                 border-4 border-neutral
                             {% endif %}"
                             data-large-src="{{ card.image_base }}/high.png"
+                            data-rarity="{{ card.rarity }}"
                             loading="lazy">
                     {% else %}
                         <!-- Placeholder if no image -->
@@ -134,7 +135,7 @@
     </table>  
 </form>
 <div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
-    <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-10 border-[oklch(74%_.16_232.661)] shadow-2xl shadow-[oklch(74%_.16_232.661)] rounded-xl">
+    <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-xl">
 </div>
 <div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-3000">
     Saved!
@@ -390,25 +391,52 @@
     const imageModal = document.getElementById('image-modal');
     const largeImage = document.getElementById('large-image');
 
-    // Click on small image to show modal
     smallImages.forEach(img => {
         img.addEventListener('click', () => {
-            console.log("Image clicked..")
             const largeSrc = img.dataset.largeSrc;
             if (largeSrc) {
                 largeImage.src = largeSrc;
                 largeImage.alt = img.alt;
                 imageModal.classList.remove('hidden');
-                imageModal.classList.add('visible') // Trigger show transition
+                imageModal.classList.add('visible')
+            
+                rarity = img.dataset.rarity.toLowerCase();
+                if (rarity.includes('diamond')) {
+                    largeImage.classList.add('border-[oklch(74%_.16_232.661)]');
+                    largeImage.classList.add('shadow-[oklch(74%_.16_232.661)]');
+                } else if (rarity.includes('star')) {
+                    largeImage.classList.add('border-[oklch(82%_.189_84.429)]');
+                    largeImage.classList.add('shadow-[oklch(82%_.189_84.429)]');
+                } else if (rarity.includes('shiny')) {
+                    largeImage.classList.add('border-[oklch(65%_.241_354.308)]');
+                    largeImage.classList.add('shadow-[oklch(65%_.241_354.308)]');
+                } else if (rarity.includes('crown')) {
+                    largeImage.classList.add('border-[oklch(71%_.194_13.428)]');
+                    largeImage.classList.add('shadow-[oklch(71%_.194_13.428)]');
+                } else {
+                    largeImage.classList.add('border-neutral');
+                    largeImage.classList.add('shadow-neutral');
+                }
             }
         });
     });
 
-    // Close on background click
     imageModal.addEventListener('click', (event) => {
             if (event.target === imageModal) {
                 imageModal.classList.add('hidden');
                 largeImage.src = '';
+                
+                const rarityClasses = [
+                    'border-[oklch(74%_.16_232.661)]', 'shadow-[oklch(74%_.16_232.661)]',  // Diamond
+                    'border-[oklch(82%_.189_84.429)]', 'shadow-[oklch(82%_.189_84.429)]',  // Star
+                    'border-[oklch(65%_.241_354.308)]', 'shadow-[oklch(65%_.241_354.308)]',  // Shiny
+                    'border-[oklch(71%_.194_13.428)]', 'shadow-[oklch(71%_.194_13.428)]',  // Crown
+                    'border-neutral', 'shadow-neutral'  // Fallback
+                ];
+
+                rarityClasses.forEach(className => {
+                    largeImage.classList.remove(className);
+                });
             }
         });
 </script>
