@@ -21,6 +21,7 @@ def random_navbar_icon(request):
         'images/navbar_icons/poke_icon17.png',
         'images/navbar_icons/poke_icon18.png',
         'images/navbar_icons/poke_icon19.png',
+        'images/navbar_icons/poke_icon20.png',
     ]
     random_icon = random.choice(icons)
     return {'random_icon': random_icon}

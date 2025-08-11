@@ -97,7 +97,7 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
-def collection_set(request, set_id):
+def tracker_set(request, set_id):
     set_obj = get_object_or_404(Set, id=set_id)
     all_sets = Set.objects.all().order_by('tcg_id')
     cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
@@ -205,7 +205,7 @@ def collection_set(request, set_id):
         'wants': set(wants),
         'errors': errors,
     }
-    return render(request, 'collection_set.html', context)
+    return render(request, 'tracker_set.html', context)
 
 @login_required
 def trade_matches(request):
@@ -315,38 +315,6 @@ def pack_opener(request):
     return render(request, 'pack_opener.html', {'form': form})
 
 @login_required
-def export_collections(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="my_collections.csv"'
-    writer = csv.writer(response)
-    writer.writerow(['Card ID', 'Name', 'Set Name', 'Quantity', 'For Trade'])
-    for item in UserCollection.objects.filter(user=request.user).select_related('card'):
-        writer.writerow([item.card.tcg_id, item.card.name, item.card.card_set.name, item.quantity, item.for_trade])
-    return response
-
-@login_required
-def import_collections(request):
-    if request.method == 'POST':
-        csv_file = request.FILES.get('csv_file')
-        if csv_file:
-            file_data = csv_file.read().decode('utf-8')
-            csv_data = csv.reader(StringIO(file_data))
-            next(csv_data) #skips header
-            for row in csv_data:
-                tcg_id, quantity, for_trade = row[0], int(row[3]), bool(row[4])
-                card = Card.objects.filter(tcg_id=tcg_id).first()
-                if card:
-                    UserCollection.objects.update_or_create(
-                        user=request.user,
-                        card=card,
-                        defaults={'quantity': quantity, 'for_trade': for_trade}
-                    )
-                else:
-                    pass
-            return redirect('dashboard')
-    return render(request, 'import_csv.html')
-
-@login_required
 def wishlist(request):
     def get_sorted_wants():
         wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
@@ -387,3 +355,52 @@ def wishlist(request):
         'errors': errors,
     }
     return render(request, 'wishlist.html', context)
+
+@login_required
+def collection(request):
+    errors = []
+
+    show_unowned = request.GET.get('show_unowned', '0') == '1'
+
+    owned_queryset = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
+    owned_dict = {item.card.id: item for item in owned_queryset}
+
+    sorted_sets = []
+
+    if not show_unowned:
+        # Owned only
+        owned_by_set = defaultdict(list)
+        for item in owned_queryset:
+            owned_by_set[item.card.card_set].append(item)
+        set_tuples = sorted(owned_by_set.items(), key=lambda x: x[0].tcg_id)
+
+        for set_obj, items in set_tuples:
+            owned_count = len(items)
+            sorted_sets.append((set_obj, items, owned_count, 0))
+    else:
+        # Full Set
+        all_sets = Set.objects.all().order_by('tcg_id')
+        for set_obj in all_sets:
+            all_cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
+            items = []
+            owned_count = 0
+            for card in all_cards:
+                owned_item = owned_dict.get(card.id)
+                quantity = owned_item.quantity if owned_item else 0
+                items.append({
+                    'card': card,
+                    'quantity': quantity,
+                    'for_trade': owned_item.for_trade if owned_item else False,
+                })
+                if quantity > 0:
+                    owned_count += 1
+            if items:
+                unowned_count = len(items) - owned_count
+                sorted_sets.append((set_obj, items, owned_count, unowned_count))
+
+    context = {
+        'sorted_sets': sorted_sets,
+        'show_unowned': show_unowned,
+        'errors': errors,
+    }
+    return render(request, 'collection.html', context)

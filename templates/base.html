@@ -23,15 +23,15 @@
         </div>
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1 space-x-4 flex items-center">
-                <li><a href="{% url 'collection_set' 1 %}" class="{% if request.path|startswith:'/collection/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">My Collection</a></li>
-                <li><a href="{% url 'profile' %}" class="{% if request.path == '/profile/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Profile</a></li>
-                <li><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Trades</a></li>
+                <li><a href="{% url 'tracker_set' 1 %}" class="{% if request.path|startswith:'/tracker/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Tracker</a></li>
+                <li><a href="{% url 'wishlist' %}" class="{% if request.path == '/wishlist/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Wishlist</a></li>
+                <li><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Trade</a></li>
 
                 <span class="flex items-center px-2">
                     <img src="{% static random_icon %}" alt="Random Pokemon Icon" class="w-20 h-20">
                 </span>
 
-                <li><a href="{% url 'wishlist' %}" class="{% if request.path == '/wishlist/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">My Wishlist</a></li>
+                <li><a href="{% url 'collection' %}" class="{% if request.path == '/collection/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Collection</a></li>
                 <li><a href="{% url 'pack_opener' %}" class="{% if request.path == '/pack/opener/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Open Pack</a></li>
                 <li><a href="{% url 'inbox' %}" class="{% if request.path == '/message/inbox/' %}nav-focused bg-accent text-primary-content font-bold rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content flex items-center">Inbox</a></li>
             </ul>

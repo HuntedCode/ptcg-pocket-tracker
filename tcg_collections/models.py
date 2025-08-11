@@ -57,6 +57,7 @@ class UserCollection(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     for_trade = models.BooleanField(default=False)
+    is_seen = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'card')

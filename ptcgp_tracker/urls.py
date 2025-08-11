@@ -32,9 +32,8 @@ urlpatterns = [
     path('message/send/<int:receiver_id>/', views.send_message, name='send_message'),
     path('message/inbox/', views.inbox, name='inbox'),
     path('pack/opener/', views.pack_opener, name='pack_opener'),
-    path('collection/export/', views.export_collections, name='export_collections'),
-    path('collection/import/', views.import_collections, name='import_collections'),
-    path('collection/set/<int:set_id>/', views.collection_set, name='collection_set'),
+    path('collection/', views.collection, name='collection'),
+    path('tracker/set/<int:set_id>/', views.tracker_set, name='tracker_set'),
     path('wishlist/', views.wishlist, name='wishlist'),
 ]
 

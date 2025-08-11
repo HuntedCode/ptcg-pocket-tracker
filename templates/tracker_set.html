@@ -14,7 +14,7 @@
 
 <div class="flex flex-wrap justify-center gap-4 mb-4">
     {% for nav_set in sets %}
-    <a role="tab" href="{% url 'collection_set' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
+    <a role="tab" href="{% url 'tracker_set' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
                                                                     hover:bg-primary hover:text-primary-content hover:scale-105 transition-all duration-200 
                                                                     {% if nav_set.id == set_id %}bg-primary text-primary-content font-bold{% endif %}">
         <img src="/media/{{ nav_set.logo_path }}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
