@@ -27,10 +27,6 @@ urlpatterns = [
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('accounts/register', views.register, name='register'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('collection/add/', views.add_collection, name='add_collection'),
-    path('collection/edit/<int:pk>/', views.edit_collection, name='edit_collection'),
-    path('want/add/', views.add_want, name='add_want'),
-    path('want/edit/<int:pk>/', views.edit_want, name='edit_want'),
     path('trade/matches/', views.trade_matches, name='trade_matches'),
     path('profile/', views.profile, name='profile'),
     path('message/send/<int:receiver_id>/', views.send_message, name='send_message'),
@@ -39,7 +35,7 @@ urlpatterns = [
     path('collection/export/', views.export_collections, name='export_collections'),
     path('collection/import/', views.import_collections, name='import_collections'),
     path('collection/set/<int:set_id>/', views.collection_set, name='collection_set'),
-    path('wishlist/', views.add_want, name='wishlist'),
+    path('wishlist/', views.wishlist, name='wishlist'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

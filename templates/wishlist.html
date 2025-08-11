@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    {% if not sorted_sets %}
+    <div class="alert alert-info shadow-lg">
+        <div>
+            <img src="{% static 'images/icons/pokeball-open-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">Your wishlist is empty! Head to your collection to add some cards!
+        </div>
+    </div>
+    {% else %}
+    {% for set_obj, wants in sorted_sets %}
+    <div class="mb-8 set-section">
+        <h2 class="text-2xl font-semibold mb-4 flex items-center">
+            <img src="/media/{{ set_obj.logo_path }}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
+            {{ set_obj.name }}
+            <span class="ml-2 text-sm text-gray-500">({{ wants|length }} cards)</span>
+        </h2>
+        <div class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
+            {% for want in wants %}
+            {% with rarity_lower=want.card.rarity|lower %}
+            <div class="card w-32 bg-base-100 relative card-floating card-interactive 
+            {% if 'diamond' in rarity_lower %}rarity-diamond
+            {% elif 'star' in rarity_lower %}rarity-star
+            {% elif 'shiny' in rarity_lower %}rarity-shiny
+            {% elif 'crown' in rarity_lower %}rarity-crown
+            {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
+            {% endwith %}
+            <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
+                <figure>
+                    <img src="/media/{{ want.card.local_image_small }}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                </figure>
+            </div>
+                <form method="post" class="absolute top-1 right-1" data-ajax-form>
+                    {% csrf_token %}
+                    <input type="hidden" name="remove_want_{{ want.card.id }}" value="true">
+                    <button type="submit" class="btn btn-circle btn-xs bg-error shadow-sm shadow-neutral text-white hover:bg-error-dark remove-overlay">
+                        -
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if errors %}
+        <div class="alert alert-error mt-4">
+            {% for error in errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+<div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
+    <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-xl">
+</div>
+
+<script>
+    document.querySelectorAll('[data-ajax-form]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.href);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.status === 'success') {
+                        const cardElem = form.closest('.card');
+                        const setSection = cardElem.closest('.set-section');
+                        const flexContainer = setSection.querySelector('.flex');
+                        const countSpan = setSection.querySelector('.text-sm.text-gray-500');
+
+                        cardElem.classList.add('fade-out');
+                        setTimeout(() => {
+                            cardElem.remove();
+
+                            if (countSpan) {
+                                let currentText = countSpan.textContent;
+                                let match = currentText.match(/\((\d+) cards\)/);
+                                if (match) {
+                                    let newCount = parseInt(match[1]) - 1;
+                                    if (newCount === 0) {
+                                        setSection.remove();
+                                    } else {
+                                        countSpan.textContent = `(${newCount} cards)`;
+                                    }
+                                }
+                            }
+                        }, 500);
+                    } else {
+                        alert('Error: ' + response.errors.join('\n'));
+                    }
+                }
+            };
+            xhr.send(new FormData(form));
+        });
+    });
+
+    const smallImages = document.querySelectorAll('.card-small-img');
+    const imageModal = document.getElementById('image-modal');
+    const largeImage = document.getElementById('large-image');
+
+    smallImages.forEach(img => {
+        img.addEventListener('click', function(e) {
+            if (e.target.closest('form')) return;
+
+            const largeSrc = img.dataset.largeSrc;
+            if (largeSrc) {
+                largeImage.src = largeSrc;
+                largeImage.alt = img.alt;
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('visible')
+            
+                rarity = img.dataset.rarity.toLowerCase();
+                if (rarity.includes('diamond')) {
+                    largeImage.classList.add('border-[oklch(74%_.16_232.661)]');
+                    largeImage.classList.add('shadow-[oklch(74%_.16_232.661)]');
+                } else if (rarity.includes('star')) {
+                    largeImage.classList.add('border-[oklch(82%_.189_84.429)]');
+                    largeImage.classList.add('shadow-[oklch(82%_.189_84.429)]');
+                } else if (rarity.includes('shiny')) {
+                    largeImage.classList.add('border-[oklch(65%_.241_354.308)]');
+                    largeImage.classList.add('shadow-[oklch(65%_.241_354.308)]');
+                } else if (rarity.includes('crown')) {
+                    largeImage.classList.add('border-[oklch(71%_.194_13.428)]');
+                    largeImage.classList.add('shadow-[oklch(71%_.194_13.428)]');
+                } else {
+                    largeImage.classList.add('border-neutral');
+                    largeImage.classList.add('shadow-neutral');
+                }
+            }
+        });
+    });
+
+    imageModal.addEventListener('click', (event) => {
+        if (event.target === imageModal) {
+            imageModal.classList.add('hidden');
+            largeImage.src = '';
+            
+            const rarityClasses = [
+                'border-[oklch(74%_.16_232.661)]', 'shadow-[oklch(74%_.16_232.661)]',  // Diamond
+                'border-[oklch(82%_.189_84.429)]', 'shadow-[oklch(82%_.189_84.429)]',  // Star
+                'border-[oklch(65%_.241_354.308)]', 'shadow-[oklch(65%_.241_354.308)]',  // Shiny
+                'border-[oklch(71%_.194_13.428)]', 'shadow-[oklch(71%_.194_13.428)]',  // Crown
+                'border-neutral', 'shadow-neutral'  // Fallback
+            ];
+
+            rarityClasses.forEach(className => {
+                largeImage.classList.remove(className);
+            });
+        }
+    });
+</script>
+{% endblock %}

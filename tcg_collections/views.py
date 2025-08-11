@@ -97,12 +97,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
-def collection(request):
-    sets = Set.objects.all().order_by('tcg_id')
-    context = {'sets': sets}
-    return render(request, 'collection.html', context)
-
-@login_required
 def collection_set(request, set_id):
     set_obj = get_object_or_404(Set, id=set_id)
     all_sets = Set.objects.all().order_by('tcg_id')
@@ -212,56 +206,6 @@ def collection_set(request, set_id):
         'errors': errors,
     }
     return render(request, 'collection_set.html', context)
-
-@login_required
-def add_collection(request):
-    if request.method == "POST":
-        form = CollectionForm(request.POST)
-        if form.is_valid():
-            collection = form.save(commit=False)
-            collection.user = request.user
-            collection.save()
-            return redirect('dashboard')
-    else:
-        form = CollectionForm()
-    return render(request, 'collection_form.html', {'form': form, 'action': 'Add'})
-
-@login_required
-def edit_collection(request, pk):
-    collection = get_object_or_404(UserCollection, pk=pk, user=request.user)
-    if request.method == "POST":
-        form = CollectionForm(request.POST, instance=collection)
-        if form.is_valid():
-            form.save()
-            return redirect('dashboard')
-    else:
-        form = CollectionForm(instance=collection)
-    return render(request, 'collection_form.html', {'form': form, 'action': 'Edit'})
-
-@login_required
-def add_want(request):
-    if request.method == 'POST':
-        form = WantForm(request.POST)
-        if form.is_valid():
-            want = form.save(commit=False)
-            want.user = request.user
-            want.save()
-            return redirect('dashboard')
-    else:
-        form = WantForm()
-    return render(request, 'collection_form.html', {'form': form, 'action': 'Add Want'})
-
-@login_required
-def edit_want(request, pk):
-    want = get_object_or_404(UserWant, pk=pk, user=request.user)
-    if request.method == "POST":
-        form = WantForm(request.POST, instance=want)
-        if form.is_valid():
-            form.save()
-            return redirect('dashboard')
-    else:
-        form = WantForm(instance=want)
-    return render(request, 'collection_form.html', {'form': form, 'action': 'Edit Want'})
 
 @login_required
 def trade_matches(request):
@@ -401,3 +345,45 @@ def import_collections(request):
                     pass
             return redirect('dashboard')
     return render(request, 'import_csv.html')
+
+@login_required
+def wishlist(request):
+    def get_sorted_wants():
+        wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
+        wants_by_set = defaultdict(list)
+        for want in wants:
+            wants_by_set[want.card.card_set].append(want)
+        return sorted(wants_by_set.items(), key=lambda x: x[0].tcg_id)
+    
+    errors = []
+    sorted_sets = get_sorted_wants()
+
+    if request.method == 'POST':
+        for key in request.POST:
+            print("Key: ", key)
+            if key.startswith('remove_want_'):
+                card_id_str = key[12:]
+                try:
+                    card_id = int(card_id_str)
+                    want_obj = UserWant.objects.filter(user=request.user, card__id=card_id).first()
+                    if want_obj:
+                        want_obj.delete()
+                    else:
+                        errors.append(f"Want for card ID {card_id} not found.")
+                except ValueError:
+                    errors.append(f"Invalid card ID: {card_id_str}")
+        
+        sorted_sets = get_sorted_wants()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if errors:
+                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+            return JsonResponse({'status': 'success', 'message': 'Wishlist updated!'})
+        else:
+            return redirect('wishlist')
+    
+    context = {
+        'sorted_sets': sorted_sets,
+        'errors': errors,
+    }
+    return render(request, 'wishlist.html', context)

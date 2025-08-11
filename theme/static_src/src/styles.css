@@ -109,11 +109,6 @@ body {
   @apply mx-auto px-4;  /* Center content with padding (minimal whitespace) */
 }
 
- /* Optional: Bold headers for community emphasis (Pokemon bold titles) */
- h1, h2, h3 {
-   font-weight: 600;  /* Semi-bold variant we loaded */
- }
-
  /* If buttons/menus need override (DaisyUI defaults sans-serif, but ensure) */
  .btn, .menu li a {
    font-family: var(--font-family-base);
@@ -124,6 +119,10 @@ body {
    transition: transform 0.2s ease-in-out;
  }
 
+.remove-overlay {
+  @apply font-bold text-lg;
+}
+
  footer {
   @apply bg-neutral text-neutral-content;  /* Dark bg/white text for contrast */
   border-top: 1px solid var(--color-neutral);  /* Subtle separator (minimal) */
@@ -131,4 +130,54 @@ body {
 
 footer a {
   @apply hover:text-accent transition duration-200;  /* Red hover for CTAs */
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.card-floating {
+  animation: float 3s ease-in-out infinite;
+}
+
+.card-interactive {
+  @apply transition-all duration-300 ease-in-out border-2 border-neutral;
+  will-change: transform, box-shadow, border-color;
+}
+
+.card-interactive:hover {
+  @apply scale-105 shadow-lg rotate-2;
+}
+
+.card-interactive.rarity-diamond:hover {
+  border-color: oklch(74% .16 232.661);
+}
+
+.card-modal-diamond {
+  border-color: oklch(74% .16 232.661);
+}
+
+.card-interactive.rarity-star:hover {
+  border-color: oklch(82% .189 84.429);
+}
+
+.card-interactive.rarity-shiny:hover {
+  border-color: oklch(65% .241 354.308);
+}
+
+.card-interactive.rarity-crown:hover {
+  border-color: oklch(71% .194 13.428);
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease forwards;
+}
+
+.set-section {
+  @apply bg-base-300 rounded-lg p-4 shadow-lg;
 }
