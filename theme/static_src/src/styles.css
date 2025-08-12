@@ -139,6 +139,7 @@ footer a {
 
 .card-floating {
   animation: float 3s ease-in-out infinite;
+  will-change: transform;
 }
 
 .card-interactive {

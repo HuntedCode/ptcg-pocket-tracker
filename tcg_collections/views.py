@@ -358,46 +358,79 @@ def wishlist(request):
 
 @login_required
 def collection(request):
+    def get_sorted_sets(collections, show_unowned):
+        owned_dict = {item.card.id: item for item in collections}
+        sorted_sets = []
+
+        if not show_unowned:
+            # Owned only
+            owned_by_set = defaultdict(list)
+            for item in collections:
+                owned_by_set[item.card.card_set].append(item)
+            set_tuples = sorted(owned_by_set.items(), key=lambda x: x[0].tcg_id)
+
+            for set_obj, items in set_tuples:
+                owned_count = len(items)
+                items = [{
+                    'card': col.card,
+                    'quantity': col.quantity,
+                    'collection': col
+                } for col in items]
+                has_unseen = any(not item['collection'].is_seen for item in items)
+                sorted_sets.append((set_obj, items, owned_count, 0, has_unseen))
+        else:
+            # Full Set
+            all_sets = Set.objects.all().order_by('tcg_id')
+            for set_obj in all_sets:
+                all_cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
+                items = []
+                owned_count = 0
+                for card in all_cards:
+                    owned_item = owned_dict.get(card.id)
+                    quantity = owned_item.quantity if owned_item else 0
+                    items.append({
+                        'card': card,
+                        'quantity': quantity,
+                        'collection': owned_item
+                    })
+                    if quantity > 0:
+                        owned_count += 1
+                if items:
+                    unowned_count = len(items) - owned_count
+                    has_unseen = any(item['collection'] and not item['collection'].is_seen for item in items)
+                    sorted_sets.append((set_obj, items, owned_count, unowned_count, has_unseen))
+        return sorted_sets 
+
     errors = []
-
+    collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
     show_unowned = request.GET.get('show_unowned', '0') == '1'
+    sorted_sets = get_sorted_sets(collections, show_unowned)
 
-    owned_queryset = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
-    owned_dict = {item.card.id: item for item in owned_queryset}
+    if request.method == 'POST':
+        for key in request.POST:
+            if key.startswith('mark_seen_'):
+                item_id_str = key[10:]
+                try:
+                    item_id = int(item_id_str)
+                    collection_item = collections.filter(id=item_id).first()
+                    if collection_item:
+                        collection_item.is_seen = True
+                        collection_item.save()
+                    else:
+                        errors.append(f"Item ID {item_id} not found.")
+                except ValueError:
+                    errors.append(f"Invalid item ID: {item_id_str}")
 
-    sorted_sets = []
+        sorted_sets = get_sorted_sets(collections, show_unowned)
 
-    if not show_unowned:
-        # Owned only
-        owned_by_set = defaultdict(list)
-        for item in owned_queryset:
-            owned_by_set[item.card.card_set].append(item)
-        set_tuples = sorted(owned_by_set.items(), key=lambda x: x[0].tcg_id)
-
-        for set_obj, items in set_tuples:
-            owned_count = len(items)
-            sorted_sets.append((set_obj, items, owned_count, 0))
-    else:
-        # Full Set
-        all_sets = Set.objects.all().order_by('tcg_id')
-        for set_obj in all_sets:
-            all_cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
-            items = []
-            owned_count = 0
-            for card in all_cards:
-                owned_item = owned_dict.get(card.id)
-                quantity = owned_item.quantity if owned_item else 0
-                items.append({
-                    'card': card,
-                    'quantity': quantity,
-                    'for_trade': owned_item.for_trade if owned_item else False,
-                })
-                if quantity > 0:
-                    owned_count += 1
-            if items:
-                unowned_count = len(items) - owned_count
-                sorted_sets.append((set_obj, items, owned_count, unowned_count))
-
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            unseen_count = UserCollection.objects.filter(user=request.user, is_seen=False).count()
+            set_id = collection_item.card.card_set.id
+            set_has_unseen = collections.filter(card__card_set__id=set_id).filter(is_seen=False).exists()
+            return JsonResponse({'status': 'success', 'message': 'Collection updated!', 'unseen_count': unseen_count, 'set_id': set_id, 'has_unseen': set_has_unseen} if not errors else {'status': 'error', 'errors': errors}, status=200 if not errors else 400)
+        else:
+            return redirect('collection')
+    
     context = {
         'sorted_sets': sorted_sets,
         'show_unowned': show_unowned,

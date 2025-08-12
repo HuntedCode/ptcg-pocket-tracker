@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'tcg_collections.context_processors.random_navbar_icon',
+                'tcg_collections.context_processors.unseen_count_processor',
             ],
         },
     },

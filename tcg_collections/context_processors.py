@@ -1,4 +1,5 @@
 import random
+from .models import UserCollection
 
 def random_navbar_icon(request):
     icons = [
@@ -25,3 +26,8 @@ def random_navbar_icon(request):
     ]
     random_icon = random.choice(icons)
     return {'random_icon': random_icon}
+
+def unseen_count_processor(request):
+    if request.user.is_authenticated:
+        return {'unseen_count': UserCollection.objects.filter(user=request.user, is_seen=False).count()}
+    return {'unseen_count': 0}
