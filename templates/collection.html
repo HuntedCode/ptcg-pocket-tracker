@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container mx-auto px-4">
     
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-base-200 rounded-lg shadow-sm">
+    <div class="raised-card flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-base-200 rounded-lg shadow-sm">
         <form id="unownedForm" method="get" action="." class="flex items-center gap-2 lable cursor-pointer">
             <span class="label-text text-sm font-semibold">Show Unowned</span>
             <input type="checkbox" name="show_unowned" value="1" {% if show_unowned %}checked{% endif %} class="checkbox checkbox-primary" name="show_unowned" value="1" onchange="this.form.submit()">
@@ -77,8 +77,8 @@
     {% else %}
     {% for set_obj, items, owned_count, unowned_count, has_unseen in sorted_sets %}
     <div class="mb-8 set-section">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold mb-4 flex items-center">
+        <div class="flex justify-between items-center mb-4 p-2">
+            <h2 class="text-2xl font-semibold flex items-center">
                 <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
                 {{ set_obj.name }}
                 <span class="ml-2 text-sm text-gray-500">({{ owned_count }} Owned Cards{% if show_unowned %} / {{ unowned_count }} Unowned Cards{% endif %})</span>

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from django.http import JsonResponse
+import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, PackOpenerForm
 
@@ -291,9 +292,51 @@ def inbox(request):
 
 @login_required
 def pack_opener(request):
-    sets = Set.objects.all().prefetch_related('boosters').order_by('tcg_id')
-    context = {'sets': sets}
-    return render(request, 'pack_opener.html', context)
+    if request.method == 'POST':
+        errors = []
+        booster_id = request.POST.get('booster_id')
+        selected_cards_str = request.POST.get('selected_cards')
+        if not booster_id or not selected_cards_str:
+            errors.append('Missing booster or card selections.')
+        else:
+            try:
+                selected_cards = json.loads(selected_cards_str)
+                commons = selected_cards.get('commons', [])
+                others = selected_cards.get('others', [])
+                booster = get_object_or_404(Booster, id=booster_id)
+
+                for card_id in commons:
+                    card = get_object_or_404(Card, id=card_id)
+                    if card not in booster.cards.all() or card.rarity != 'One Diamond':
+                        errors.append(f"Invalid common card {card.name}")
+                    else:
+                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'for_trade': False, 'is_seen': False})
+                        if not created:
+                            obj.quantity += 1
+                            obj.save()
+
+                for card_id in others:
+                    card = get_object_or_404(Card, id=card_id)
+                    if card not in booster.cards.all() or card.rarity == 'One Diamond':
+                        errors.append(f"Invalid other card {card.name}")
+                    else:
+                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'for_trade': False, 'is_seen': False})
+                        if not created:
+                            obj.quantity += 1
+                            obj.save()
+
+                if errors:
+                    sets = Set.objects.all().prefetch_related('boosters').order_by('-tcg_id')
+                    return render(request, 'pack_opener.html', {'sets': sets, 'errors': errors})
+                return redirect('pack_opener')
+            except json.JSONDecodeError:
+                errors.append('Invalid selection data.')
+
+        sets = Set.objects.all().prefetch_related('boosters').order_by('-tcg_id')
+        return render(request, 'pack_opener.html', {'sets': sets, 'errors': errors})
+    
+    sets = Set.objects.all().prefetch_related('boosters').order_by('-tcg_id')
+    return render(request, 'pack_opener.html', {'sets': sets})
 
 @login_required
 def get_booster_cards(request):
@@ -304,13 +347,25 @@ def get_booster_cards(request):
     booster = get_object_or_404(Booster, id=booster_id)
     cards = booster.cards.all().order_by('card_set__tcg_id', 'tcg_id')
 
-    commons = cards.filter(rarity="One Diamond")
-    others = cards.exclude(rarity="One Diamond")
+    commons = cards.filter(rarity='One Diamond')
+    others = cards.exclude(rarity='One Diamond')
 
-    common_list = [{'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id} for c in commons]
-    others_list = [{'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id} for c in others]
+    common_list = [
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        for c in commons    
+    ]
 
-    return JsonResponse({'commons': common_list, 'others': others_list})
+    others_list = [
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        for c in others    
+    ]
+
+    print(others_list)
+    return JsonResponse({
+        'commons': common_list,
+        'others': others_list,
+        'booster_image': booster.local_image_small if booster.local_image_small else ''
+    })
 
 @login_required
 def wishlist(request):

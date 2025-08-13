@@ -3,19 +3,20 @@
 
 {% block content %}
 <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-4">Pack Opener: Choose a Booster</h1>
+    <h1 class="text-3xl font-bold mb-4 text-center">Pack Opener: Choose a Booster</h1>
 
-    <div class="flex flex-wrap justify-center gap-6">
+    <div id="boosters-container" class="flex flex-wrap justify-center gap-6">
         {% for set in sets %}
-        <div class="set-section p-4 bg-base-200 rounded-lg shadow-md flex flex-col items-center">
+        {% if set.boosters.values|length > 0 %}
+        <div class="raised-card min-w-80 p-4 bg-base-200 rounded-lg shadow-md flex flex-col items-center">
             {% if set.logo_path %}
-            <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-24 h-12 mb-12">
+            <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-48 h-24 mb-12">
             {% else %}
             <h2 class="text-xl font-semibold mb-2 h-12">{{ set.name }}</h2>
             {% endif %}
             <div class="flex flex-wrap justify-center gap-4">
                 {% for booster in set.boosters.all %}
-                <div class="tooltip booster-card card-floating cursor-pointer border-5 border-transparent" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
+                <div class="tooltip tooltip-primary booster-card card-floating cursor-pointer border-5 border-transparent rounded-lg" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
                     {% if booster.local_image_small %}
                     <img src="{% static booster.local_image_small %}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
                     {% endif %}
@@ -25,15 +26,66 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
         {% empty %}
         <p>No sets available. Add some in the admin panel.</p>
         {% endfor %}
     </div>
     <button id="proceed-btn" class="btn btn-accent mt-4" disabled>Proceed to Cards</button>
+
+    <form method="post" id="pack-form">
+        {% csrf_token %}
+        <div id="card-section" class="hidden mt-8">
+            <div class="flex flex-row gap-4">
+                <div class="flex-grow flex flex-col">
+                    <div class="set-section p-4 bg-base-200 rounded-lg shadow-md mb-8">
+                        <div class="flex-grow flex flex-col items-center">
+                            <h3 class="text-xl font-semibold mb-2">Slots 1-3: One Diamond <span id="commons-count-preview" class="text-sm">(0/3)</span></h3>
+                            <div id="commons-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
+                        </div>
+                    </div>
+
+                    <div class="set-section p-4 bg-base-200 rounded-lg shadow-md">
+                        <div class="flex-grow flex flex-col items-center">
+                            <h3 class="text-xl font-semibold mb-2">Slots 4-5: Higher Rarities <span id="others-count-preview" class="text-sm">(0/2)</span></h3>
+                            <div id="others-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="floating-preview" class="set-section justify-center text-center sticky top-[50%] translate-y-[-50%] self-start z-10">
+                    <h1 class="text-xl font-semibold mb-4 text-center">Selected Pack</h1>
+                    <div id="booster-preview" class="mb-2 text-center"></div>
+                    <div class="mb-4">
+                        <p class="text-xs mb-1 text-center">Slots 1-3 <span id="commons-count">(0/3)</span></p>
+                        <div id="commons-selected" class="flex flex-row gap-2 justify-center">
+                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs mb-1 text-center">Slots 4-5 <span id="others-count">(0/2)</span></p>
+                        <div id="others-selected" class="flex flex-row gap-2 justify-center">
+                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                        </div>
+                    </div>
+                    <button id="submit-pack" class="btn btn-accent mt-4" disabled>Add to Collection</button>
+                </div>
+            </div>  
+        </div>
+        <input type="hidden" name="booster_id" id="booster_id" value="">
+        <input type="hidden" name="selected_cards" id="selected_cards" value="">
+    </form>
 </div>
 
 <script>
     let selectedBoosterId = null;
+    let cardsData = { commons: [], others: [] };
+    let selectedCommons = [];
+    let selectedOthers = [];
+    const staticUrl = '{% static "" %}';
 
     document.querySelectorAll('.booster-card').forEach(card => {
         card.addEventListener('click', function () {
@@ -45,14 +97,172 @@
             this.classList.remove('grayscale', 'border-transparent');
             selectedBoosterId = this.dataset.id;
             document.getElementById('proceed-btn').disabled = false;
-            console.log('Selected booster:', selectedBoosterId);
         });
+    });
+
+    function proccedWithBooster(boosterId) {
+        fetch(`/get_booster_cards/?booster_id=${boosterId}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                cardsData.commons = data.commons || [];
+                cardsData.others = data.others || [];
+
+                const previewDiv = document.getElementById('booster-preview');
+                previewDiv.innerHTML = data.booster_image ? `<img src="${staticUrl}${data.booster_image}" alt="Opened Booster" class="w-32 h-auto mb-2 mx-auto block"><p>Opening pack...</p>` : '';
+
+                const commonsGrid = document.getElementById('commons-grid');
+                commonsGrid.innerHTML = '';
+                cardsData.commons.forEach(card => {
+                    const cardDiv = `<div class="tooltip card w-32 bg-base-100 border-neutral relative card-floating card-interactive rarity-diamond" data-tip="${card.name}" data-id="${card.id}">
+                            <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-32 h-auto rounded-lg" loading="lazy">
+                        </div`;
+                        commonsGrid.innerHTML += cardDiv;
+                });
+
+                const othersGrid = document.getElementById('others-grid');
+                othersGrid.innerHTML = '';
+                cardsData.others.forEach(card => {
+                    let rarity = "";
+                    if (card.rarity.toLowerCase().includes('diamond')) {
+                        rarity = 'diamond';
+                    } else if (card.rarity.toLowerCase().includes('star')) {
+                        rarity = 'star';
+                    } else if (card.rarity.toLowerCase().includes('shiny')) {
+                        rarity = 'shiny';
+                    } else if (card.rarity.toLowerCase().includes('crown')) {
+                        rarity = 'crown';
+                    }
+
+                    const cardDiv = `<div class="tooltip card w-32 bg-base-100 border-neutral relative card-floating card-interactive rarity-${rarity}" data-tip="${card.name}" data-id="${card.id}">
+                            <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-32 h-auto rounded-lg" loading="lazy">
+                        </div`;
+                        othersGrid.innerHTML += cardDiv;
+                });
+
+                document.getElementById('boosters-container').classList.add('hidden');
+                document.getElementById('proceed-btn').classList.add('hidden');
+                document.getElementById('card-section').classList.remove('hidden');
+
+                selectedCommons = [];
+                selectedOthers = [];
+                updateCounts();
+            })
+            .catch(error => alert(`Fetch failed: ${error.message}`));
+    }
+
+    document.getElementById('commons-grid').addEventListener('click', function(e) {
+        const item = e.target.closest('div.tooltip');
+        if (item) {
+            const id = item.dataset.id;
+            if (selectedCommons.length < 3) {
+                selectedCommons.push(id);
+            } else {
+                alert('Max 3 for slots 1-3!');
+            }
+            updateSelectedPreview('commons');
+            updateCounts();
+        }
+    });
+
+    document.getElementById('others-grid').addEventListener('click', function(e) {
+        const item = e.target.closest('div.tooltip');
+        if (item) {
+            const id = item.dataset.id;
+            if (selectedOthers.length < 2) {
+                selectedOthers.push(id);
+            } else {
+                alert('Max 2 for slots 4-5!');
+            }
+            updateSelectedPreview('others');
+            updateCounts();
+        }
+    });
+
+    function updateCounts() {
+        document.getElementById('commons-count').textContent = `(${selectedCommons.length}/3)`;
+        document.getElementById('commons-count-preview').textContent = `(${selectedCommons.length}/3)`;
+        document.getElementById('others-count').textContent = `(${selectedOthers.length}/2)`;
+        document.getElementById('others-count-preview').textContent = `(${selectedOthers.length}/2)`;
+        document.getElementById('submit-pack').disabled = !(selectedCommons.length === 3 && selectedOthers.length === 2);
+    }
+
+    document.querySelectorAll('.booster-card').forEach(card => {
+        card.addEventListener('dblclick', function () {
+            if (selectedBoosterId) {
+                proccedWithBooster(selectedBoosterId)
+            }
+        })
     });
 
     document.getElementById('proceed-btn').addEventListener('click', function () {
         if (selectedBoosterId) {
-            alert(`Proceeding with booster ID: ${selectedBoosterId}`);
+            proccedWithBooster(selectedBoosterId)
         }
+    });
+
+    function updateSelectedPreview(type) {
+        const previewInner = document.getElementById(`${type}-selected`);
+        previewInner.innerHTML = '';
+        const selected = type === 'commons' ? selectedCommons : selectedOthers;
+        const maxSlots = type === 'commons' ? 3 : 2;
+
+        selected.forEach(id => {
+            const original = document.querySelector(`#${type}-grid > div[data-id="${id}"]`);
+            if (original) {
+                const clone = original.cloneNode(true);
+                clone.classList.remove('card-floating');
+                previewInner.insertAdjacentHTML('beforeend', clone.outerHTML);
+            }
+        });
+
+        const remaining = maxSlots - selected.length;
+        for (let i = 0; i < remaining; i++) {
+            const ghost = `<div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>`;
+            previewInner.insertAdjacentHTML('beforeend', ghost);
+        }
+    }
+
+    document.getElementById('commons-selected').addEventListener('click', function(e) {
+        const item = e.target.closest('div.tooltip');
+        if (item) {
+            const id = item.dataset.id;
+            const index = selectedCommons.lastIndexOf(id);
+
+            if (index > -1) {
+                selectedCommons.splice(index, 1);
+                updateSelectedPreview('commons');
+                updateCounts();
+            }
+        }
+    });
+
+    document.getElementById('others-selected').addEventListener('click', function(e) {
+        const item = e.target.closest('div.tooltip');
+        if (item) {
+            const id = item.dataset.id;
+            const index = selectedOthers.lastIndexOf(id);
+
+            if (index > -1) {
+                selectedOthers.splice(index, 1);
+                updateSelectedPreview('others');
+                updateCounts();
+            }
+        }
+    });
+
+    document.getElementById('submit-pack').addEventListener('click', function() {
+        if (selectedCommons.length !== 3 || selectedOthers.length !== 2) return;
+
+        document.getElementById('booster_id').value = selectedBoosterId;
+        document.getElementById('selected_cards').value = JSON.stringify({
+            commons: selectedCommons,
+            others: selectedOthers,
+        });
+
+        document.getElementById('pack-form').submit();
     });
 </script>
 {% endblock %}
