@@ -1,16 +1,12 @@
 from collections import defaultdict
-import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
-from django.http import HttpResponse, JsonResponse
-from django.views.generic import ListView
-from django.forms import modelformset_factory
-from io import StringIO
+from django.http import JsonResponse
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
-from tcg_collections.forms import CustomUserCreationForm, CollectionForm, WantForm, ProfileForm, MessageForm, PackOpenerForm, CollectionItemForm
+from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, PackOpenerForm
 
 # Create your views here.
 def register(request):
@@ -295,24 +291,26 @@ def inbox(request):
 
 @login_required
 def pack_opener(request):
-    if request.method == 'POST':
-        form = PackOpenerForm(request.POST)
-        if form.is_valid():
-            for i in range(1, 7):
-                card = form.cleaned_data.get(f'card{i}')
-                if card:
-                    obj, created = UserCollection.objects.get_or_create(
-                        user=request.user,
-                        card=card,
-                        defaults={'quantity': 1, 'for_trade': False}
-                    )
-                    if not created:
-                        obj.quantity += 1
-                        obj.save()
-            return redirect('dashboard')
-    else:
-        form = PackOpenerForm()
-    return render(request, 'pack_opener.html', {'form': form})
+    sets = Set.objects.all().prefetch_related('boosters').order_by('tcg_id')
+    context = {'sets': sets}
+    return render(request, 'pack_opener.html', context)
+
+@login_required
+def get_booster_cards(request):
+    booster_id = request.GET.get('booster_id')
+    if not booster_id:
+        return JsonResponse({'error': 'No booster selected'}, status=400)
+    
+    booster = get_object_or_404(Booster, id=booster_id)
+    cards = booster.cards.all().order_by('card_set__tcg_id', 'tcg_id')
+
+    commons = cards.filter(rarity="One Diamond")
+    others = cards.exclude(rarity="One Diamond")
+
+    common_list = [{'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id} for c in commons]
+    others_list = [{'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id} for c in others]
+
+    return JsonResponse({'commons': common_list, 'others': others_list})
 
 @login_required
 def wishlist(request):

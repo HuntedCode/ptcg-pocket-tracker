@@ -182,3 +182,7 @@ footer a {
 .set-section {
   @apply bg-base-300 rounded-lg p-4 shadow-lg;
 }
+
+.booster-card:hover {
+  @apply scale-105 shadow-xl
+}

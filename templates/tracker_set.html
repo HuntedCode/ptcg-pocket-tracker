@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load custom_filters %}
 
 {% block content %}
@@ -17,7 +18,7 @@
     <a role="tab" href="{% url 'tracker_set' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
                                                                     hover:bg-primary hover:text-primary-content hover:scale-105 transition-all duration-200 
                                                                     {% if nav_set.id == set_id %}bg-primary text-primary-content font-bold{% endif %}">
-        <img src="/media/{{ nav_set.logo_path }}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
+        <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
         <span class="text-center text-sm font-medium row-span-1">{{ nav_set.name }}</span>
     </a>
     {% endfor %}
@@ -49,7 +50,7 @@
                     <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})" data-tooltip-placement="right">
                     {% if card.local_image_small %}
                         <img 
-                            src="/media/{{ card.local_image_small }}" 
+                            src="{% static card.local_image_small %}" 
                             alt="{{ card.name }}" 
                             class="card-img w-35 h-auto rounded shadow-md cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
                             {% if 'Diamond' in card.rarity %}
@@ -86,7 +87,7 @@
                     {% if card.type %}
                     <div class="tooltip" data-tip="{{ card.type }}">
                         <img 
-                            src="/media/icons/energy/{{ card.type|lower }}.png" 
+                            src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" 
                             alt="{{ card.type }} Energy Symbol" 
                             class="w-10 h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
                             loading="lazy">

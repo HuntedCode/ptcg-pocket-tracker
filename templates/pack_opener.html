@@ -1,11 +1,58 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<h2>Open a Pack</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add to Collection</button>
-</form>
-<a href="{% url 'dashboard' %}">Cancel</a>
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">Pack Opener: Choose a Booster</h1>
+
+    <div class="flex flex-wrap justify-center gap-6">
+        {% for set in sets %}
+        <div class="set-section p-4 bg-base-200 rounded-lg shadow-md flex flex-col items-center">
+            {% if set.logo_path %}
+            <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-24 h-12 mb-12">
+            {% else %}
+            <h2 class="text-xl font-semibold mb-2 h-12">{{ set.name }}</h2>
+            {% endif %}
+            <div class="flex flex-wrap justify-center gap-4">
+                {% for booster in set.boosters.all %}
+                <div class="tooltip booster-card card-floating cursor-pointer border-5 border-transparent" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
+                    {% if booster.local_image_small %}
+                    <img src="{% static booster.local_image_small %}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-center">No boosters in this set.</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p>No sets available. Add some in the admin panel.</p>
+        {% endfor %}
+    </div>
+    <button id="proceed-btn" class="btn btn-accent mt-4" disabled>Proceed to Cards</button>
+</div>
+
+<script>
+    let selectedBoosterId = null;
+
+    document.querySelectorAll('.booster-card').forEach(card => {
+        card.addEventListener('click', function () {
+            document.querySelectorAll('.booster-card').forEach(c => {
+                    c.classList.remove('border-primary', 'scale-105');
+                    c.classList.add('grayscale', 'border-transparent');
+            });
+            this.classList.add('border-primary', 'scale-105');
+            this.classList.remove('grayscale', 'border-transparent');
+            selectedBoosterId = this.dataset.id;
+            document.getElementById('proceed-btn').disabled = false;
+            console.log('Selected booster:', selectedBoosterId);
+        });
+    });
+
+    document.getElementById('proceed-btn').addEventListener('click', function () {
+        if (selectedBoosterId) {
+            alert(`Proceeding with booster ID: ${selectedBoosterId}`);
+        }
+    });
+</script>
 {% endblock %}

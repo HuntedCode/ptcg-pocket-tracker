@@ -8,6 +8,7 @@ from django.dispatch import receiver
 class Booster(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
+    local_image_small = models.CharField(max_length=200, blank=True, default='')
     god_pack_prob = models.FloatField(default=0.0005, help_text='Base probability of god pack (e.g., 0.0005)')
     sixth_card_prob = models.FloatField(default=0.0, help_text="Base probability of 6th card (e.g., 0.05)")
 

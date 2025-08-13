@@ -79,7 +79,7 @@
     <div class="mb-8 set-section">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-semibold mb-4 flex items-center">
-                <img src="/media/{{ set_obj.logo_path }}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
+                <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
                 {{ set_obj.name }}
                 <span class="ml-2 text-sm text-gray-500">({{ owned_count }} Owned Cards{% if show_unowned %} / {{ unowned_count }} Unowned Cards{% endif %})</span>
                 {% if has_unseen %}
@@ -100,7 +100,7 @@
             {% endwith %}
                 <div class="tooltip" data-tip="{{ item.card.name }} - {{ item.card.rarity }}">
                     <figure>
-                        <img src="/media/{{ item.card.local_image_small }}" alt="{{ item.card.name }}" class="card-small-img w-full h-44 object-cover {% if item.quantity == 0 %}grayscale hover:grayscale-0{% endif %}" data-large-src="{{ item.card.image_base }}/high.png" data-rarity="{{ item.card.rarity }}" loading="lazy">
+                        <img src="{% static item.card.local_image_small %}" alt="{{ item.card.name }}" class="card-small-img w-full h-44 object-cover {% if item.quantity == 0 %}grayscale hover:grayscale-0{% endif %}" data-large-src="{{ item.card.image_base }}/high.png" data-rarity="{{ item.card.rarity }}" loading="lazy">
                     </figure>
                     {% if item.collection and not item.collection.is_seen %}
                     <img src="{% static 'images/icons/new2.png' %}" alt="New card!" class="absolute top-[-.75rem] right-[-.75rem] w-8 h-8 z-10" data-unseen-icon>

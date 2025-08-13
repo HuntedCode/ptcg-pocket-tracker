@@ -13,7 +13,7 @@
     {% for set_obj, wants in sorted_sets %}
     <div class="mb-8 set-section">
         <h2 class="text-2xl font-semibold mb-4 flex items-center">
-            <img src="/media/{{ set_obj.logo_path }}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
+            <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
             {{ set_obj.name }}
             <span class="ml-2 text-sm text-gray-500">({{ wants|length }} cards)</span>
         </h2>
@@ -29,7 +29,7 @@
             {% endwith %}
             <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
                 <figure>
-                    <img src="/media/{{ want.card.local_image_small }}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                    <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
                 </figure>
             </div>
                 <form method="post" class="absolute top-1 right-1" data-ajax-form>
