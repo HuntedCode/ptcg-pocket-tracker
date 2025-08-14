@@ -27,113 +27,115 @@
 
 <form method="post">
     {% csrf_token %}
-    <table class="table table-xs table-fixed text-base leading-relaxed text-base-content">
-        <thead class="sticky top-0 bg-base-200 z-10 shadow-md text-lg w-full">
-            <tr><th class="sticky top-0 z-10 bg-base-100 text-center">Owned</span></th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Image</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
-                <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
-        </thead>
-        <tbody>
-            {% for card in cards %}
-            {% with owned=owned_dict|get_value:card.id %}
-            <tr class="{% if not owned or owned.0 == 0 %}opacity-50 bg-gray-300{% endif %} pt-20 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:opacity-100 hover:bg-base-200 hover:font-bold">
-            <td class="text-center">
-                <input type="checkbox" disabled {% if owned and owned.0 > 0 %}checked{% endif %} class="checkbox checkbox-lg" aria-label="Owned status for {{ card.name }}">
-            </td>
-                <td class="text-center card-image" >
-                    <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})" data-tooltip-placement="right">
-                    {% if card.local_image_small %}
-                        <img 
-                            src="{% static card.local_image_small %}" 
-                            alt="{{ card.name }}" 
-                            class="card-img w-35 h-auto rounded shadow-md cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
-                            {% if 'Diamond' in card.rarity %}
-                                {% if card.rarity == 'One Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-4 border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
-                            {% elif 'Star' in card.rarity %}
-                                {% if card.rarity == 'One Star' %}border-4 border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-4 border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-4 border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
-                            {% elif 'Shiny' in card.rarity %}
-                                {% if card.rarity == 'One Shiny' %}border-4 border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-4 border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
-                            {% elif card.rarity == 'Crown' %}
-                                border-4 border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
-                            {% else %}
-                                border-4 border-neutral
-                            {% endif %}"
-                            data-large-src="{{ card.image_base }}/high.png"
-                            data-rarity="{{ card.rarity }}"
-                            loading="lazy">
-                    {% else %}
-                        <!-- Placeholder if no image -->
-                        <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
-                    {% endif %}
-                </div>
-                </td>
-                <td class="text-center overflow-hidden truncate">
-                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold text-wrap">
-                        {{ card.name }}
-                    </span>
-                </td>
+    <div class="raised-card">
+        <table class="table table-md table-fixed text-base leading-relaxed text-base-content">
+            <thead class="sticky top-0 bg-base-200 z-10 shadow-md text-lg w-full">
+                <tr><th class="sticky top-0 z-10 bg-base-100 text-center">Owned</span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Image</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
+            </thead>
+            <tbody>
+                {% for card in cards %}
+                {% with owned=owned_dict|get_value:card.id %}
+                <tr class="{% if not owned or owned.0 == 0 %}opacity-50 bg-gray-300{% endif %} bg-base-100 pt-20 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:opacity-100 hover:bg-base-200 hover:font-bold">
                 <td class="text-center">
-                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold tracking-wide">
-                        {{ card.tcg_id }}
-                    </span>
+                    <input type="checkbox" disabled {% if owned and owned.0 > 0 %}checked{% endif %} class="checkbox checkbox-lg" aria-label="Owned status for {{ card.name }}">
                 </td>
-                <td class="text-center">
-                    {% if card.type %}
-                    <div class="tooltip" data-tip="{{ card.type }}">
-                        <img 
-                            src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" 
-                            alt="{{ card.type }} Energy Symbol" 
-                            class="w-10 h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
-                            loading="lazy">
+                    <td class="text-center card-image" >
+                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})" data-tooltip-placement="right">
+                        {% if card.local_image_small %}
+                            <img 
+                                src="{% static card.local_image_small %}" 
+                                alt="{{ card.name }}" 
+                                class="card-img w-35 h-auto rounded shadow-md cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
+                                {% if 'Diamond' in card.rarity %}
+                                    {% if card.rarity == 'One Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-4 border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
+                                {% elif 'Star' in card.rarity %}
+                                    {% if card.rarity == 'One Star' %}border-4 border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-4 border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-4 border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
+                                {% elif 'Shiny' in card.rarity %}
+                                    {% if card.rarity == 'One Shiny' %}border-4 border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-4 border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
+                                {% elif card.rarity == 'Crown' %}
+                                    border-4 border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
+                                {% else %}
+                                    border-4 border-neutral
+                                {% endif %}"
+                                data-large-src="{{ card.image_base }}/high.png"
+                                data-rarity="{{ card.rarity }}"
+                                loading="lazy">
+                        {% else %}
+                            <!-- Placeholder if no image -->
+                            <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
-                        No Type
-                    </span>
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
-                        <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold text-warning">
-                            {% if card.rarity == 'One Diamond' %}💎
-                            {% elif card.rarity == 'Two Diamond' %}💎💎
-                            {% elif card.rarity == 'Three Diamond' %}💎💎💎
-                            {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
-                            {% elif card.rarity == 'One Star' %}★
-                            {% elif card.rarity == 'Two Star' %}★★
-                            {% elif card.rarity == 'Three Star' %}★★★
-                            {% elif card.rarity == 'One Shiny' %}✨
-                            {% elif card.rarity == 'Two Shiny' %}✨✨
-                            {% elif card.rarity == 'Crown' %}👑
-                            {% else %}{{ card.rarity }}
-                            {% endif %}
+                    </td>
+                    <td class="text-center overflow-hidden truncate">
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold text-wrap">
+                            {{ card.name }}
                         </span>
-                    </div>
-                </td>
-                <td class="text-center">
-                    <input 
-                        type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input input-bordered join-item w-20 text-center" 
-                    />
-                </td>
-                <td class="text-center">
-                    <input type="checkbox" name="for_trade_{{ card.id }}" class="checkbox for-trade-checkbox checkbox-lg" {% if owned.1 %}checked{% endif %} {% if not card.is_tradeable %}disabled{% endif %}>
-                </td>
-                <td class="text-center">
-                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if not card.is_tradeable %}disabled{% endif %}>
-                        {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
-                    </button>
-                </td>
-            </tr>
-            {% endwith %}
-            {% endfor %}
-        </tbody>
-    </table>  
+                    </td>
+                    <td class="text-center">
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold tracking-wide">
+                            {{ card.tcg_id }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if card.type %}
+                        <div class="tooltip" data-tip="{{ card.type }}">
+                            <img 
+                                src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" 
+                                alt="{{ card.type }} Energy Symbol" 
+                                class="w-10 h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
+                                loading="lazy">
+                        </div>
+                        {% else %}
+                        <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
+                            No Type
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
+                            <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold text-warning">
+                                {% if card.rarity == 'One Diamond' %}💎
+                                {% elif card.rarity == 'Two Diamond' %}💎💎
+                                {% elif card.rarity == 'Three Diamond' %}💎💎💎
+                                {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
+                                {% elif card.rarity == 'One Star' %}★
+                                {% elif card.rarity == 'Two Star' %}★★
+                                {% elif card.rarity == 'Three Star' %}★★★
+                                {% elif card.rarity == 'One Shiny' %}✨
+                                {% elif card.rarity == 'Two Shiny' %}✨✨
+                                {% elif card.rarity == 'Crown' %}👑
+                                {% else %}{{ card.rarity }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <input 
+                            type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input input-bordered join-item w-20 text-center" 
+                        />
+                    </td>
+                    <td class="text-center">
+                        <input type="checkbox" name="for_trade_{{ card.id }}" class="checkbox for-trade-checkbox checkbox-lg" {% if owned.1 %}checked{% endif %} {% if not card.is_tradeable %}disabled{% endif %}>
+                    </td>
+                    <td class="text-center">
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if not card.is_tradeable %}disabled{% endif %}>
+                            {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
+                        </button>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </form>
 <div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
     <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-xl">

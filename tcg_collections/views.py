@@ -31,7 +31,7 @@ def profile(request):
             return redirect('dashboard')
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'profile_form.html', {'form': form})
+    return render(request, 'profile.html', {'form': form})
 
 @login_required
 def dashboard(request):

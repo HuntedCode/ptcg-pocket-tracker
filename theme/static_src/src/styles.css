@@ -198,5 +198,5 @@ footer a {
 }
 
 .raised-card {
-  @apply bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral;
+  @apply bg-base-300 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
 }
