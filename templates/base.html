@@ -17,14 +17,14 @@
 <body class="bg-base-100 text-base-content min-h-screen flex flex-col">
     <nav class="navbar bg-base-100 shadow-xl rounded-box">
         <div class="navbar-start">
-            <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center hover:text-primary">
-                <img src="{% static 'images/icons/pokeball-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">PTCG Pocket Tracker
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center {% if request.path == '/dashboard/' %}nav-focused bg-primary text-primary-content rounded-md hover:bg-primary{% else %} hover:text-primary{% endif %}">
+                <img src="{% if request.path == '/dashboard/' %}{% static 'images/icons/pokeball-open-favicon.png' %}{% else %}{% static 'images/icons/pokeball-favicon.png' %}{% endif %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">PTCG Pocket Tracker
             </a>
         </div>
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1 space-x-4 flex items-center font-semibold justify-around">
                 <li class="min-w-[100px]"><a href="{% url 'tracker_set' 1 %}" class="{% if request.path|startswith:'/tracker/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Tracker</a></li>
-                <li class="min-w-[100px]"><a href="{% url 'wishlist' %}" class="{% if request.path == '/wishlist/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Wishlist</a></li>
+                <li class="min-w-[100px]"><a href="{% url 'wishlist' request.user.profile.share_token %}" class="{% if request.path|startswith:'/wishlist/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Wishlist</a></li>
                 <li class="min-w-[100px]"><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Trade</a></li>
 
                 <span class="flex items-center px-2 tooltip tooltip-bottom" data-tip="Did you know you're cute??" data-tip->
@@ -40,7 +40,7 @@
                     </a>
                 </li>
                 <li class="min-w-[100px]"><a href="{% url 'pack_opener' %}" class="{% if request.path == '/pack/opener/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Open Pack</a></li>
-                <li class="min-w-[100px]"><a href="{% url 'inbox' %}" class="{% if request.path == '/message/inbox/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Inbox</a></li>
+                <li class="min-w-[100px]"><a href="{% url 'profile' request.user.profile.share_token %}" class="{% if request.path|startswith:'/profile/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Profile</a></li>
             </ul>
         </div>
         <div class="navbar-end">

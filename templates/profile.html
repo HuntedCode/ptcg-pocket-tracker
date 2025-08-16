@@ -2,13 +2,111 @@
 {% load static %}
 
 {% block content %}
-<div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-4">Your Profile</h1>
+<div class="container mx-auto px-4 py-8">
+    <div class="card bg-base-100 shadow-xl profile-card">
+        <div class="card-body">
+            <div class="profile-header flex flex-col md:flex-row items-center gap-4">
+                <div class="avatar placeholder">
+                    <div class="bg-neutral text-neutral-content rounded-full w-24 text-center flex flex-row items-center">
+                        <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
+                    </div>
+                </div>
+                <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+            </div>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-accent mt-4">Save Profile</button>
-    </form>
+            {% if is_own %}
+            <form method="post" class="space-y-6 profile-section">
+                {% csrf_token %}
+                <div class="form-control flex flex-row items-center gap-4">
+                    <label for="id_bio" class="label font-semibold w-32 text-right">Bio</label>
+                    <textarea id="id_bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
+                </div>
+                <div class="form-control flex flex-row items-center gap-4">
+                    <label for="id_favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
+                    <select id="id_favorite_set" name="favorite_set" class="select select-primary flex-grow">
+                        <option value="" {% if not profile.favorite_set %}selected{% endif %}>None</option>
+                        {% for set in all_sets %}
+                        <option value="{{ set.id }}" {% if profile.favorite_set == set %}selected{% endif %}>{{ set.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-control flex flex-row items-center gap-4">
+                    <label for="id_is_trading_active" class="cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
+                    <input id="id_is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+            </form>
+            {% else %}
+            <div class="profile-section">
+                <h3 class="text-xl font-semibold text-accent">Bio</h3>
+                <p class="text-base-content">{{ profile.bio|linebreaks }}</p>
+            </div>
+
+            <div class="profile-section">
+                <h3 class="text-xl font-semibold text-accent">Favorites & Stats</h3>
+                <div class="stats stats-vertical md:stats-horizontal shadow">
+                    <div class="stat">
+                        <div class="stat-title">Favorite Set</div>
+                        <div class="stat-value">{{ profile.favorite_set.name|default:"None" }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Unique Cards Owned</div>
+                        <div class="stat-value">{{ total_unique_cards }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Trading Active</div>
+                        <div class="stat-value {% if profile.is_trading_active %}text-success{% else %}text-error{% endif %}">
+                            {{ profile.is_trading_active|yesno:"Yes,No" }}
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Last Active</div>
+                        <div class="stat-value">{{ profile.last_active|date:"SHORT_DATE_FORMAT" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="profile-section">
+                <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Set</th>
+                                <th>Owned Base Cards</th>
+                                <th>Total Base Cards</th>
+                                <th>Base Completion %</th>
+                                <th>Owned Rare Cards</th>
+                                <th>Total Rare Cards</th>
+                                <th>Rare Completion %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for breakdown in set_breakdowns %}
+                            <tr class="hover">
+                                <td>{{ breakdown.set.name }}</td>
+                                <td>{{ breakdown.owned_base }}</td>
+                                <td>{{ breakdown.total_base }}</td>
+                                <td>
+                                    <progress class="progress progress-lg progress-primary w-full" value="{{ breakdown.base_completion }}" max="100"></progress>
+                                    {{ breakdown.base_completion }}%
+                                </td>
+                                <td>{{ breakdown.owned_rare }}</td>
+                                <td>{{ breakdown.total_rare }}</td>
+                                <td>
+                                    <progress class="progress progress-lg progress-accent w-full" value="{{ breakdown.rare_completion }}" max="100"></progress>
+                                    {{ breakdown.rare_completion }}%
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7">No base cards owned yet!</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

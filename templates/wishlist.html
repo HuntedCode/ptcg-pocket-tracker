@@ -3,6 +3,20 @@
 
 {% block content %}
 <div class="container mx-auto px-4">
+    {% if request.user == profile.user %}
+    <div class="flex flex-col items-center justify-center pb-6">
+        <h1 class="text-4xl font-bold text-primary">Your Wishlist!</h1>
+        <div class="mt-4 flex items-center gap-2 w-175">
+            <input type="text" id="share-url" value="{{ share_url }}" class="input input-primary w-full" readonly>  <!-- DaisyUI input -->
+            <button id="copy-btn" class="btn btn-primary">Copy Link</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center pb-6">
+        <h1 class="text-4xl font-bold text-primary">{{ profile.user.username }}'s Wishlist!</h1>
+        <p class="text-md font-semibold">(Highlighted cards are on your 'for-trade' list!)</p>
+    </div>
+    {% endif %}
     {% if not sorted_sets %}
     <div class="alert alert-info shadow-lg">
         <div>
@@ -154,6 +168,24 @@
                 largeImage.classList.remove(className);
             });
         }
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', function() {
+        const urlInput = document.getElementById('share-url');
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999);
+
+        navigator.clipboard.writeText(urlInput.value)
+            .then(() => {
+                const btn = this;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = originalText; }, 2000);
+            })
+            .catch(err => {
+                console.error('Copy failed:', err);
+                alert('Copy failed-please select and copy manually.');
+            });
     });
 </script>
 {% endblock %}

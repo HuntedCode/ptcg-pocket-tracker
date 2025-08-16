@@ -200,3 +200,41 @@ footer a {
 .raised-card {
   @apply bg-base-300 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
 }
+
+.profile-card {
+  @apply rounded-xl border border-base-300;
+  box-shadow: var(--shadow-xl);
+}
+
+.profile-header {
+  @apply pb-6 border-b border-base-200 mb-6;
+}
+
+.profile-section {
+  @apply mb-8 p-4 bg-base-200 rounded-lg;
+}
+
+.profile-section h3 {
+  @apply mb-4;
+}
+
+.profile-section .form-control {
+  @apply mb-4;
+}
+
+.profile-section .label {
+  @apply p-0 justify-end;
+}
+
+@media (max-width: 767px) {
+  .profile-section .form-control {
+    @apply flex-col items-start gap-2;
+  }
+  .profile-section .label {
+    @apply w-full text-left mb-1;
+  }
+}
+
+.progress-primary .progress-bar {
+  background-color: var(--color-primary) !important;
+}

@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models import JSONField
+from django.db.models.deletion import SET_NULL
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import uuid
 
 # Create your models here.
 class Booster(models.Model):
@@ -79,8 +80,11 @@ class UserWant(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
     is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
     bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
+    favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")
+    last_active = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.username}'s profile"

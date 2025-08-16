@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from django.http import JsonResponse
+from django.urls import reverse
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, PackOpenerForm
 
 # Create your views here.
@@ -22,16 +23,40 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 @login_required
-def profile(request):
-    profile = request.user.profile
-    if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect('dashboard')
-    else:
-        form = ProfileForm(instance=profile)
-    return render(request, 'profile.html', {'form': form})
+def profile(request, token):
+    profile = get_object_or_404(Profile, share_token=token)
+    user = get_object_or_404(User, profile=profile)
+    is_own = request.user == user
+    form = ProfileForm(instance=profile) if is_own else None
+    total_unique_cards = UserCollection.objects.filter(user=request.user).aggregate(owned=Count('card', distinct=True))['owned']
+    print("total cards:", total_unique_cards)
+
+    BASE_RARITIES = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond']
+    OTHER_RARITIES = ['One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown']
+
+    set_breakdowns = []
+    all_sets = Set.objects.exclude(name__contains='Promo').order_by('tcg_id')
+
+    for set_obj in all_sets:
+        total_base_in_set = Card.objects.filter(card_set=set_obj, rarity__in=BASE_RARITIES).count()
+        owned_base_in_set = UserCollection.objects.filter(user=request.user, card__card_set=set_obj, card__rarity__in=BASE_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
+        base_completion = (owned_base_in_set / total_base_in_set * 100) if total_base_in_set else 0
+        total_rare_in_set = Card.objects.filter(card_set=set_obj, rarity__in=OTHER_RARITIES).count()
+        owned_rare_in_set = UserCollection.objects.filter(user=request.user, card__card_set=set_obj, card__rarity__in=OTHER_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
+        rare_completion = (owned_rare_in_set / total_rare_in_set * 100) if total_rare_in_set else 0
+
+        set_breakdowns.append({
+            'set': set_obj,
+            'owned_base': owned_base_in_set,
+            'total_base': total_base_in_set,
+            'base_completion': round(base_completion, 1),
+            'owned_rare': owned_rare_in_set,
+            'total_rare': total_rare_in_set,
+            'rare_completion': round(rare_completion, 1)
+        })
+
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns}
+    return render(request, 'profile.html', context)
 
 @login_required
 def dashboard(request):
@@ -368,7 +393,10 @@ def get_booster_cards(request):
     })
 
 @login_required
-def wishlist(request):
+def wishlist(request, token):
+    profile = get_object_or_404(Profile, share_token=token)
+    share_url = request.build_absolute_uri(reverse('wishlist', args=[profile.share_token]))
+
     def get_sorted_wants():
         wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
         wants_by_set = defaultdict(list)
@@ -404,6 +432,8 @@ def wishlist(request):
             return redirect('wishlist')
     
     context = {
+        'profile': profile,
+        'share_url': share_url,
         'sorted_sets': sorted_sets,
         'errors': errors,
     }

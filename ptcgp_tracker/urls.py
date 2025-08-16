@@ -28,14 +28,14 @@ urlpatterns = [
     path('accounts/register', views.register, name='register'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('trade/matches/', views.trade_matches, name='trade_matches'),
-    path('profile/', views.profile, name='profile'),
+    path('profile/<uuid:token>/', views.profile, name='profile'),
     path('message/send/<int:receiver_id>/', views.send_message, name='send_message'),
     path('message/inbox/', views.inbox, name='inbox'),
     path('pack/opener/', views.pack_opener, name='pack_opener'),
     path('get_booster_cards/', views.get_booster_cards, name='get_booster_cards'),
     path('collection/', views.collection, name='collection'),
     path('tracker/set/<int:set_id>/', views.tracker_set, name='tracker_set'),
-    path('wishlist/', views.wishlist, name='wishlist'),
+    path('wishlist/<uuid:token>/', views.wishlist, name='wishlist'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
