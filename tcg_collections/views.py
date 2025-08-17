@@ -119,84 +119,55 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
-def tracker_set(request, set_id):
+def tracker(request, set_id):
     set_obj = get_object_or_404(Set, id=set_id)
     all_sets = Set.objects.all().order_by('tcg_id')
     cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
 
-    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade')
-    owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
+    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade', 'is_favorite')
+    owned_dict = {cid: (qty, for_trade, is_fav) for cid, qty, for_trade, is_fav in owned}
     wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
     errors = []
 
     if request.method == 'POST':
-        processed_cards = set()
+        print(request.POST)
         for key in request.POST:
             if key.startswith('quantity_'):
                 card_id_str = key[9:]
-                processed_cards.add(card_id_str)
-            elif key.startswith('for_trade_'):
-                card_id_str = key[10:]
-                processed_cards.add(card_id_str)
-            
-            for card_id_str in processed_cards:
                 try:
                     card_id = int(card_id_str)
                     print(f"Processing card_id: {card_id} for set: {set_obj.id}")
                     card= get_object_or_404(Card, id=card_id)
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
                 except ValueError:
-                    errors.append(f"Invalid card ID '{card_id_str}")
-                    print(f"Invalid card_id_str: {card_id_str}")
-                    continue
+                    errors.append(f"Invalid card ID '{card_id_str}'")
 
-                obj = UserCollection.objects.filter(user=request.user, card=card).first()
-                changed = False
                 qty_str = request.POST.get(f"quantity_{card_id}", None)
-                if qty_str is not None:
-                    try:
-                        qty = int(qty_str)
-                        if qty < 0:
-                            errors.append(f"Quantity for card '{card_id}' cannot be negative.")
-                            continue
-                    except ValueError:
-                        errors.append(f"Invalid quantity for card '{card.name}'.")
-                
-                    if obj is None:
+                try:
+                    qty = int(qty_str)
+                    if qty < 0:
+                        errors.append(f"Quantity for card '{card_id}' cannot be negative.")
+                    
+                    if collection is None:
                         if qty > 0:
-                            obj = UserCollection(user=request.user, card=card, quantity=qty, for_trade=False)
-                            changed = True
-                    else:
-                        obj.quantity = qty
-                        changed = True
-                
-                for_trade_str = request.POST.get(f"for_trade_{card_id}", None)
-                if for_trade_str is not None:
-                    for_trade = for_trade_str == 'true'
-                    if for_trade and not card.is_tradeable:
-                        errors.append(f'Card "{card.name}" is not tradeable.')
-                        continue
+                            collection = UserCollection(user=request.user, card=card, quantity=qty)
+                            collection.save()
+                    elif qty > 0:
+                        collection.quantity = qty
+                        collection.save()
+                    elif qty == 0:
+                        collection.delete()
+                except ValueError:
+                    errors.append(f"Invalid quantity for card Id {card_id}")
 
-                    if obj is None:
-                        continue
-                    else:
-                        obj.for_trade = for_trade
-                        changed = True
-
-                if obj and changed:
-                    if obj.quantity == 0:
-                        obj.delete()
-                    else:
-                        obj.save()
-
-            if key.startswith('want_toggle_'):
+            elif key.startswith('want_toggle_'):
                 print("Processing wishlist toggle...")
                 card_id_str = key[12:]
                 try:
                     card_id = int(card_id_str)
                     card = get_object_or_404(Card, id=card_id)
                     want_obj = UserWant.objects.filter(user=request.user, card=card).first()
-                    print(want_obj)
                     if want_obj:
                         want_obj.delete()
                     else:
@@ -204,17 +175,48 @@ def tracker_set(request, set_id):
                 except ValueError:
                     errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
                     continue
+            
+            elif key.startswith('for_trade_toggle_'):
+                print("Processing for trade toggle...")
+                card_id_str = key[17:]
+                try:
+                    card_id = int(card_id_str)
+                    card = get_object_or_404(Card, id=card_id)
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
+                    if collection and card.is_tradeable and collection.quantity > 0:
+                        collection.for_trade = not collection.for_trade
+                        collection.save()
+                    else:
+                        errors.append(f"Cannot toggle for trade for this card Id {card_id}")
+                except ValueError:
+                    errors.append(f"Invalid card ID for trading: {card_id_str}")
+
+            elif key.startswith('favorite_toggle_'):
+                print("Processing favorite toggle...")
+                card_id_str = key[16:]
+                try:
+                    card_id = int(card_id_str)
+                    card = get_object_or_404(Card, id=card_id)
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
+                    if collection and collection.quantity > 0:
+                        collection.is_favorite = not collection.is_favorite
+                        collection.save()
+                    else:
+                        errors.append(f"Cannot favorite unowned card ID {card_id}")
+                except ValueError:
+                    errors.append(f"Invalid card ID for favorite: {card_id_str}")
 
         if not errors:
-            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade')
-            owned_dict = {cid: (qty, for_trade) for cid, qty, for_trade in owned}
+            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade', 'is_favorite')
+            owned_dict = {cid: (qty, for_trade, is_fav) for cid, qty, for_trade, is_fav in owned}
             wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX
                 return JsonResponse({'status': 'success', 'message': 'Changes saved!'})
             else:
-                return redirect('collection_set', set_id=set_id)  # Fallback for non-AJAX
+                return redirect('collection', set_id=set_id)  # Fallback for non-AJAX
         else:
+            print('Errors:', errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'errors': errors}, status=400)
                 
@@ -227,7 +229,7 @@ def tracker_set(request, set_id):
         'wants': set(wants),
         'errors': errors,
     }
-    return render(request, 'tracker_set.html', context)
+    return render(request, 'tracker.html', context)
 
 @login_required
 def trade_matches(request):
@@ -395,6 +397,10 @@ def get_booster_cards(request):
 @login_required
 def wishlist(request, token):
     profile = get_object_or_404(Profile, share_token=token)
+    if profile.user != request.user:
+        print("Error: User attempted to edit wishlist of a separate user.")
+        return
+    
     share_url = request.build_absolute_uri(reverse('wishlist', args=[profile.share_token]))
 
     def get_sorted_wants():

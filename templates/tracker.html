@@ -15,7 +15,7 @@
 
 <div class="flex flex-wrap justify-center gap-4 mb-4">
     {% for nav_set in sets %}
-    <a role="tab" href="{% url 'tracker_set' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
+    <a role="tab" href="{% url 'tracker' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
                                                                     hover:bg-primary hover:text-primary-content hover:scale-105 transition-all duration-200 
                                                                     {% if nav_set.id == set_id %}bg-primary text-primary-content font-bold{% endif %}">
         <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
@@ -38,7 +38,9 @@
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
-                    <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th></tr>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th>
+                    <th class="sticky top-0 z-10 bg-base-100 text-center">Favorite</th>
+                </tr>
             </thead>
             <tbody>
                 {% for card in cards %}
@@ -122,13 +124,27 @@
                             type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input input-bordered join-item w-20 text-center" 
                         />
                     </td>
+                    {% if card.is_tradeable %}
                     <td class="text-center">
-                        <input type="checkbox" name="for_trade_{{ card.id }}" class="checkbox for-trade-checkbox checkbox-lg" {% if owned.1 %}checked{% endif %} {% if not card.is_tradeable %}disabled{% endif %}>
+                        <button data-card-id="{{ card.id }}" name="for_trade_{{ card.id }}" type="button" class="btn btn-md for-trade-toggle {% if owned.1 %}btn-accent{% else %}btn-outline{% endif %}">
+                            {% if owned.1 %}For Trade!{% else %}Mark For Trade{% endif %}
+                        </button>                        
                     </td>
                     <td class="text-center">
-                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if not card.is_tradeable %}disabled{% endif %}>
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">
                             {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
                         </button>
+                    </td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+                    <td class="text-center">
+                        {% if owned and owned.0 > 0 %}
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md {% if owned.2 %}btn-primary{% else %}btn-outline{% endif %} favorite-toggle w-full" {% if owned.0 == 0 %}disabled{% endif %}>
+                            {% if owned.2 %}Favorited!{% else %}Favorite{% endif %}
+                        </button>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endwith %}
@@ -213,13 +229,11 @@
         }, 2000);
     }
 
-    const inputs = document.querySelectorAll('input[type="number"][name^="quantity_"], input[type="checkbox"][name^="for_trade_"]');
+    const inputs = document.querySelectorAll('input[type="number"][name^="quantity_"]');
     const initialValues = new Map();
     inputs.forEach(input => {
         if (input.type === 'number') {
             initialValues.set(input.name, input.value);
-        } else if (input.type === 'checkbox') {
-            initialValues.set(input.name, input.checked);
         }
     });
 
@@ -228,15 +242,11 @@
         let hasChanges = false;
 
         inputs.forEach(input => {
-            let currentValue = input.type === 'number' ? input.value : input.checked;
+            let currentValue = input.type === 'number' ? input.value : 0;
             let initial = initialValues.get(input.name);
 
             if (currentValue !== initial) {
-                if (input.type === 'checkbox') {
-                    changedData.append(input.name, currentValue ? 'true' : 'false');
-                } else {
-                    changedData.append(input.name, currentValue);
-                }
+                changedData.append(input.name, currentValue);
                 hasChanges = true;
             }
         });
@@ -272,7 +282,7 @@
         .then(data => {
             if (data.status === 'success') {
                 inputs.forEach(input => {
-                    initialValues.set(input.name, input.type === 'number' ? input.value : input.checked);
+                    initialValues.set(input.name, input.type === 'number' ? input.value : 0);
                 });
                 showIndicator('Saved!');
             } else {
@@ -338,45 +348,78 @@
         header.querySelector('.icon').innerHTML = dir === 1 ? '&#x25B2;' : '&#x25BC;';
     }
 
-    const wishlistButtons = document.querySelectorAll('.wishlist-toggle');  // All buttons
-
-    wishlistButtons.forEach(button => {
-        button.addEventListener('click', async () => {
-            const cardId = button.dataset.cardId;
-            if (!cardId) return;
-
-            
-            const formData = new FormData();
-            formData.append(`want_toggle_${cardId}`, 'on');
-
-            const csrfToken = getCookie('csrftoken');
-            try {
-                const response = await fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken }
-                });
-                const data = await response.json();
-                if (data.status === 'success') {
-                    
-                    if (button.classList.contains('btn-success')) {
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-outline');
-                        button.textContent = 'Wishlist';
-                    } else {
-                        button.classList.add('btn-success');
-                        button.classList.remove('btn-outline');
-                        button.textContent = 'Wishlisted!';
-                    }
-                    showIndicator('Wishlist updated!');
-                } else {
-                    alert('Error: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+    function add_toggle_button_event_listeners(buttons, type) {
+        buttons.forEach(button => {
+            button.addEventListener('click', async () => {
+                console.log("Processing type...", type);
+                const cardId = button.dataset.cardId;
+                if (!cardId) {
+                    console.log("Returning")
+                    return;
                 }
-            } catch (error) {
-                alert('Wishlist toggle failed.');
-            }
+                const formData = new FormData();
+                formData.append(`${type}_toggle_${cardId}`, 'on');
+                console.log(formData);
+
+                const csrfToken = getCookie('csrftoken');
+                try {
+                    const response = await fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken }
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        if (type === 'want') {
+                            if (button.classList.contains('btn-success')) {
+                                button.classList.remove('btn-success');
+                                button.classList.add('btn-outline');
+                                button.textContent = 'Wishlist';
+                            } else {
+                                button.classList.add('btn-success');
+                                button.classList.remove('btn-outline');
+                                button.textContent = 'Wishlisted!';
+                            }
+                            showIndicator('Wishlist updated!');
+                        } else if (type === 'for_trade') {
+                            if (button.classList.contains('btn-accent')) {
+                                button.classList.remove('btn-accent');
+                                button.classList.add('btn-outline');
+                                button.textContent = 'Mark For Trade';
+                            } else {
+                                button.classList.add('btn-accent');
+                                button.classList.remove('btn-outline');
+                                button.textContent = 'For Trade!';
+                            }
+                            showIndicator('Trade status updated!');
+                        } else if (type === 'favorite') {
+                            if (button.classList.contains('btn-primary')) {
+                                button.classList.remove('btn-primary');
+                                button.classList.add('btn-outline');
+                                button.textContent = 'Favorite';
+                            } else {
+                                button.classList.add('btn-primary');
+                                button.classList.remove('btn-outline');
+                                button.textContent = 'Favorited!'
+                            }
+                            showIndicator('Favorites updated!');
+                        }
+                    } else {
+                        alert('Error: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+                    }
+                } catch {
+                    alert("Error processing button toggle.");
+                }
+            });
         });
-    });
+    }
+
+    const forTradeButtons = document.querySelectorAll('.for-trade-toggle');
+    add_toggle_button_event_listeners(forTradeButtons, 'for_trade');
+    const wishlistButtons = document.querySelectorAll('.wishlist-toggle');
+    add_toggle_button_event_listeners(wishlistButtons, 'want');
+    const favoriteButtons = document.querySelectorAll('.favorite-toggle');
+    add_toggle_button_event_listeners(favoriteButtons, 'favorite')
 
     const smallImages = document.querySelectorAll('.card-small-img');
     const imageModal = document.getElementById('image-modal');

@@ -34,7 +34,7 @@ urlpatterns = [
     path('pack/opener/', views.pack_opener, name='pack_opener'),
     path('get_booster_cards/', views.get_booster_cards, name='get_booster_cards'),
     path('collection/', views.collection, name='collection'),
-    path('tracker/set/<int:set_id>/', views.tracker_set, name='tracker_set'),
+    path('tracker/set/<int:set_id>/', views.tracker, name='tracker'),
     path('wishlist/<uuid:token>/', views.wishlist, name='wishlist'),
 ]
 

@@ -23,7 +23,7 @@
         </div>
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1 space-x-4 flex items-center font-semibold justify-around">
-                <li class="min-w-[100px]"><a href="{% url 'tracker_set' 1 %}" class="{% if request.path|startswith:'/tracker/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Tracker</a></li>
+                <li class="min-w-[100px]"><a href="{% url 'tracker' 1 %}" class="{% if request.path|startswith:'/tracker/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Tracker</a></li>
                 <li class="min-w-[100px]"><a href="{% url 'wishlist' request.user.profile.share_token %}" class="{% if request.path|startswith:'/wishlist/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Wishlist</a></li>
                 <li class="min-w-[100px]"><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Trade</a></li>
 
