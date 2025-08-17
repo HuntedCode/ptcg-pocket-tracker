@@ -74,7 +74,7 @@
 
             <div class="profile-section">
                 <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
-                <div class="overflow-x-auto">
+                <div class="overflow-visible">
                     <table class="table table-zebra w-full">
                         <thead>
                             <tr>
@@ -89,8 +89,8 @@
                         </thead>
                         <tbody>
                             {% for breakdown in set_breakdowns %}
-                            <tr class="hover">
-                                <td>{{ breakdown.set.name }}</td>
+                            <tr class="hover overflow-visible">
+                                <td class="hover:cursor-pointer" onclick="document.location='{% url 'tracker' breakdown.set.id %}';">{{ breakdown.set.name }}</td>
                                 <td>{{ breakdown.owned_base }}</td>
                                 <td>{{ breakdown.total_base }}</td>
                                 <td>

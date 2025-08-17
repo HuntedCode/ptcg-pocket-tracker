@@ -234,7 +234,10 @@ footer a {
     @apply w-full text-left mb-1;
   }
 }
-
 .progress-primary .progress-bar {
   background-color: var(--color-primary) !important;
+}
+
+.hover td:hover {
+  @apply scale-105 font-bold
 }
