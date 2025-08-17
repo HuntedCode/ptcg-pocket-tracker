@@ -24,9 +24,18 @@ def register(request):
 
 @login_required
 def profile(request, token):
+    print(request.POST)
     profile = get_object_or_404(Profile, share_token=token)
     user = get_object_or_404(User, profile=profile)
     is_own = request.user == user
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST ,instance=profile)
+        if is_own and form.is_valid():
+            form.save()
+
+        return redirect('profile', token=profile.share_token)
+
     form = ProfileForm(instance=profile) if is_own else None
     total_unique_cards = UserCollection.objects.filter(user=request.user).aggregate(owned=Count('card', distinct=True))['owned']
     print("total cards:", total_unique_cards)
@@ -396,24 +405,30 @@ def get_booster_cards(request):
 
 @login_required
 def wishlist(request, token):
-    profile = get_object_or_404(Profile, share_token=token)
-    if profile.user != request.user:
-        print("Error: User attempted to edit wishlist of a separate user.")
-        return
-    
+    profile = get_object_or_404(Profile, share_token=token)  
     share_url = request.build_absolute_uri(reverse('wishlist', args=[profile.share_token]))
 
     def get_sorted_wants():
-        wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
+        wants = UserWant.objects.filter(user=profile.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
         wants_by_set = defaultdict(list)
         for want in wants:
-            wants_by_set[want.card.card_set].append(want)
+            if profile.user == request.user:
+                wants_by_set[want.card.card_set].append(want)
+            else:
+                obj = UserCollection.objects.filter(user=request.user, card=want.card).first()
+                calling_user_has_for_trade = obj and obj.for_trade
+                wants_by_set[want.card.card_set].append((want, calling_user_has_for_trade))
+
         return sorted(wants_by_set.items(), key=lambda x: x[0].tcg_id)
-    
+
     errors = []
     sorted_sets = get_sorted_wants()
 
     if request.method == 'POST':
+        if profile.user != request.user:
+            print("Error: User attempted to edit wishlist of a separate user.")
+            return redirect('dashboard')
+        
         for key in request.POST:
             print("Key: ", key)
             if key.startswith('remove_want_'):
@@ -443,6 +458,7 @@ def wishlist(request, token):
         'sorted_sets': sorted_sets,
         'errors': errors,
     }
+
     return render(request, 'wishlist.html', context)
 
 @login_required

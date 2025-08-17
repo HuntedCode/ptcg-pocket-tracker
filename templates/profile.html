@@ -18,12 +18,12 @@
             <form method="post" class="space-y-6 profile-section">
                 {% csrf_token %}
                 <div class="form-control flex flex-row items-center gap-4">
-                    <label for="id_bio" class="label font-semibold w-32 text-right">Bio</label>
-                    <textarea id="id_bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
+                    <label for="bio" class="label font-semibold w-32 text-right">Bio</label>
+                    <textarea id="bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
                 </div>
                 <div class="form-control flex flex-row items-center gap-4">
-                    <label for="id_favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
-                    <select id="id_favorite_set" name="favorite_set" class="select select-primary flex-grow">
+                    <label for="favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
+                    <select id="favorite_set" name="favorite_set" class="select select-primary flex-grow">
                         <option value="" {% if not profile.favorite_set %}selected{% endif %}>None</option>
                         {% for set in all_sets %}
                         <option value="{{ set.id }}" {% if profile.favorite_set == set %}selected{% endif %}>{{ set.name }}</option>
@@ -31,8 +31,8 @@
                     </select>
                 </div>
                 <div class="form-control flex flex-row items-center gap-4">
-                    <label for="id_is_trading_active" class="cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
-                    <input id="id_is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
+                    <label for="is_trading_active" class="form-check-input cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
+                    <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
                 </div>
                 <button type="submit" class="btn btn-primary w-full">Save Changes</button>
             </form>

@@ -50,7 +50,7 @@
                     <input type="checkbox" disabled {% if owned and owned.0 > 0 %}checked{% endif %} class="checkbox checkbox-lg" aria-label="Owned status for {{ card.name }}">
                 </td>
                     <td class="text-center card-image" >
-                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }} ({{ card.card_set.name }})" data-tooltip-placement="right">
+                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
                         {% if card.local_image_small %}
                             <img 
                                 src="{% static card.local_image_small %}" 

@@ -88,7 +88,7 @@
             </h2>
             <button class="btn btn-sm bg-base-200 toggle-btn hover:bg-primary hover:text-primary-content" data-target="cards-{{ set_obj.id }}">▼</button>
         </div>
-        <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
+        <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
             {% for item in items %}
             {% with rarity_lower=item.card.rarity|lower %}
             <div class="card w-32 bg-base-100 relative card-floating card-interactive

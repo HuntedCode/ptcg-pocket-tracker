@@ -31,21 +31,21 @@
             {{ set_obj.name }}
             <span class="ml-2 text-sm text-gray-500">({{ wants|length }} cards)</span>
         </h2>
-        <div class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
-            {% for want in wants %}
-            {% with rarity_lower=want.card.rarity|lower %}
+        <div class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
+            {% for want_item in wants %}
+            {% if profile.user == request.user %}
+            {% with want=want_item rarity_lower=want_item.card.rarity|lower %}
             <div class="card w-32 bg-base-100 relative card-floating card-interactive 
             {% if 'diamond' in rarity_lower %}rarity-diamond
             {% elif 'star' in rarity_lower %}rarity-star
             {% elif 'shiny' in rarity_lower %}rarity-shiny
             {% elif 'crown' in rarity_lower %}rarity-crown
             {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
-            {% endwith %}
-            <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
-                <figure>
-                    <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
-                </figure>
-            </div>
+                <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
+                    <figure>
+                        <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                    </figure>
+                </div>
                 <form method="post" class="absolute top-1 right-1" data-ajax-form>
                     {% csrf_token %}
                     <input type="hidden" name="remove_want_{{ want.card.id }}" value="true">
@@ -54,6 +54,23 @@
                     </button>
                 </form>
             </div>
+            {% endwith %}
+            {% else %}
+            {% with want=want_item.0 rarity_lower=want_item.0.card.rarity|lower %}
+            <div class="card w-32 bg-base-100 relative card-floating card-interactive 
+            {% if 'diamond' in rarity_lower %}rarity-diamond
+            {% elif 'star' in rarity_lower %}rarity-star
+            {% elif 'shiny' in rarity_lower %}rarity-shiny
+            {% elif 'crown' in rarity_lower %}rarity-crown
+            {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
+                <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
+                    <figure>
+                        <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover{% if want_item.1 == 0 %} grayscale hover:grayscale-0{% endif %}" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                    </figure>
+                </div>
+            </div>
+            {% endwith %}
+            {% endif %}
             {% endfor %}
         </div>
     </div>
