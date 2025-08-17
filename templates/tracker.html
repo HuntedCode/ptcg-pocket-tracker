@@ -126,8 +126,8 @@
                     </td>
                     {% if card.is_tradeable %}
                     <td class="text-center">
-                        <button data-card-id="{{ card.id }}" name="for_trade_{{ card.id }}" type="button" class="btn btn-md for-trade-toggle {% if owned.1 %}btn-accent{% else %}btn-outline{% endif %}">
-                            {% if owned.1 %}For Trade!{% else %}Mark For Trade{% endif %}
+                        <button data-card-id="{{ card.id }}" name="for_trade_{{ card.id }}" type="button" class="btn btn-md for-trade-toggle {% if owned.1 %}btn-accent{% else %}btn-outline{% endif %}" {% if not owned or owned.0 < 2 %}disabled{% endif %}>
+                            {% if owned.1 %}For Trade!{% else %}Tradeable{% endif %}
                         </button>                        
                     </td>
                     <td class="text-center">
@@ -140,11 +140,9 @@
                     <td></td>
                     {% endif %}
                     <td class="text-center">
-                        {% if owned and owned.0 > 0 %}
-                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md {% if owned.2 %}btn-primary{% else %}btn-outline{% endif %} favorite-toggle w-full" {% if owned.0 == 0 %}disabled{% endif %}>
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md {% if owned.2 %}btn-primary{% else %}btn-outline{% endif %} favorite-toggle w-full" {% if not owned or owned.0 == 0 %}disabled{% endif %}>
                             {% if owned.2 %}Favorited!{% else %}Favorite{% endif %}
                         </button>
-                        {% endif %}
                     </td>
                 </tr>
                 {% endwith %}
@@ -181,13 +179,23 @@
         }
         const row = quantityInput.closest('tr');
         if (!row) return;
-
+        
         const qtyValue = parseInt(quantityInput.value, 10) || 0;
-        if (qtyValue > 0) {
-            row.classList.remove('opacity-50', 'bg-gray-300');
-        } else {
+        if (qtyValue <= 0) {
             row.classList.add('opacity-50', 'bg-gray-300');
+            row.querySelector('.favorite-toggle').disabled = true;
+        } else {
+            row.classList.remove('opacity-50', 'bg-gray-300');
+            row.querySelector('.favorite-toggle').disabled = false;
         }
+
+        forTradeToggle = row.querySelector('.for-trade-toggle');
+        if (forTradeToggle)
+            if (qtyValue >= 2) {
+                forTradeToggle.disabled = false;
+            } else {
+                forTradeToggle.disabled = true;
+            }
 
         const imageTd = row.querySelector('.card-image');
         if (!imageTd) {
@@ -385,7 +393,7 @@
                             if (button.classList.contains('btn-accent')) {
                                 button.classList.remove('btn-accent');
                                 button.classList.add('btn-outline');
-                                button.textContent = 'Mark For Trade';
+                                button.textContent = 'Tradeable';
                             } else {
                                 button.classList.add('btn-accent');
                                 button.classList.remove('btn-outline');
