@@ -5,13 +5,18 @@
 <div class="container mx-auto px-4 py-8">
     <div class="card bg-base-100 shadow-xl profile-card">
         <div class="card-body">
-            <div class="profile-header flex flex-col md:flex-row items-center gap-4">
-                <div class="avatar placeholder">
-                    <div class="bg-neutral text-neutral-content rounded-full w-24 text-center flex flex-row items-center">
-                        <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
+            <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="avatar placeholder">
+                        <div class="bg-neutral text-neutral-content rounded-full w-24 text-center flex flex-row items-center">
+                            <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
+                        </div>
                     </div>
+                    <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
                 </div>
-                <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+                <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-lg text-accent-content">
+                    View My Wishlist!
+                </button>
             </div>
 
             {% if is_own %}
