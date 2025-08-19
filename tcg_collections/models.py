@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.deletion import SET_NULL
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import json
 import uuid
 
 # Create your models here.
@@ -91,6 +92,21 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s profile"
 
+class Activity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    type = models.CharField(max_length=50, choices=[
+        ('collection_add', 'Collection Add'),
+        ('pack_open', 'Pack Open')
+    ])
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.type} at {self.timestamp}"
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
@@ -130,3 +146,10 @@ def create_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+@receiver(post_save, sender=UserCollection)
+def log_new_collection_add(sender, instance, created, **kwargs):
+    TRACKED_RARITIES = ['Four Diamond', 'One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown']
+    if created and instance.quantity > 0 and instance.card.rarity in TRACKED_RARITIES:
+        content = json.dumps({'message': f"({instance.card.tcg_id}) {instance.card.name} - {instance.card.rarity}", 'card_id': instance.card.id})
+        Activity.objects.create(user=instance.user, type='collection_add', content=content)

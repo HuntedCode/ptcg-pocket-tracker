@@ -7,8 +7,8 @@ from django.db.models import Sum, Count
 from django.http import JsonResponse
 from django.urls import reverse
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile
-from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, PackOpenerForm
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity
+from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm
 
 # Create your views here.
 def register(request):
@@ -32,8 +32,6 @@ def profile(request, token):
         form = ProfileForm(request.POST ,instance=profile)
         if is_own and form.is_valid():
             form.save()
-        else:
-            print("Form invalid, full errors:", form.errors.as_data())
 
         return redirect('profile', token=profile.share_token)
 
@@ -68,7 +66,34 @@ def profile(request, token):
     if profile.display_favorites:
         displayed_favorites = Card.objects.filter(id__in=profile.display_favorites).order_by('tcg_id')
 
-    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites}
+    activities = Activity.objects.filter(user=profile.user).order_by('-timestamp')[:10]
+    feed = []
+    for activity in activities:
+        try:
+            parsed = json.loads(activity.content)
+            cards = []
+            card_id = parsed.get('card_id')
+            if (card_id):
+                cards.append(Card.objects.filter(id=int(card_id)).first())
+            else:
+                details = parsed.get('details')
+                if (details):
+                    for card_details in details:
+                        cards.append(Card.objects.filter(id=int(card_details[0])).first())
+
+        except json.JSONDecodeError:
+            parsed = {'message': 'Invalid activity data'}
+        feed.append({
+            'type': activity.type,
+            'timestamp': activity.timestamp,
+            'parsed_content': parsed,
+            'cards': cards
+        })
+
+    print('Feed entries:', [f['parsed_content']['message'] for f in feed])
+
+
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed}
 
     if is_own:
         fav_cards = Card.objects.filter(
@@ -347,6 +372,16 @@ def inbox(request):
 
 @login_required
 def pack_opener(request):
+
+    def log_pack_open(user, booster, cards_added):
+        if not cards_added:
+            return
+        
+        card_details = [(card.id, card.tcg_id, card.name) for card in cards_added]
+        set_name = booster.sets.first().name if booster.sets.exists() else 'Unknown'
+        content = json.dumps({'message': f"{booster.name} ({set_name}) Pack", 'details': card_details})
+        Activity.objects.create(user=user, type='pack_open', content=content)
+
     if request.method == 'POST':
         errors = []
         booster_id = request.POST.get('booster_id')
@@ -360,8 +395,10 @@ def pack_opener(request):
                 others = selected_cards.get('others', [])
                 booster = get_object_or_404(Booster, id=booster_id)
 
+                cards_selected = []
                 for card_id in commons:
                     card = get_object_or_404(Card, id=card_id)
+                    cards_selected.append(card)
                     if card not in booster.cards.all() or card.rarity != 'One Diamond':
                         errors.append(f"Invalid common card {card.name}")
                     else:
@@ -372,6 +409,7 @@ def pack_opener(request):
 
                 for card_id in others:
                     card = get_object_or_404(Card, id=card_id)
+                    cards_selected.append(card)
                     if card not in booster.cards.all() or card.rarity == 'One Diamond':
                         errors.append(f"Invalid other card {card.name}")
                     else:
@@ -379,6 +417,8 @@ def pack_opener(request):
                         if not created:
                             obj.quantity += 1
                             obj.save()
+
+                log_pack_open(request.user, booster, cards_selected)
 
                 if errors:
                     sets = Set.objects.all().prefetch_related('boosters').order_by('-tcg_id')

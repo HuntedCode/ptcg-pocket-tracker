@@ -241,3 +241,66 @@ footer a {
 .hover td:hover {
   @apply scale-105 font-bold
 }
+
+@keyframes shimmer {
+  0% {
+      background-position: 200% 0;
+  }
+  100% {
+      background-position: -200% 0;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  background-size: 200% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-text.pack-open-display {
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  background-size: 200% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-text.rarity-diamond {
+  background: linear-gradient(90deg, transparent, oklch(74% .16 232.661), transparent);
+  background-size: 200% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-text.rarity-star {
+  background: linear-gradient(90deg, transparent, oklch(82% .189 84.429), transparent);
+  background-size: 200% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-text.rarity-shiny {
+  background: linear-gradient(90deg, transparent, oklch(65% .241 354.308), transparent);
+  background-size: 200% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.shimmer-text.rarity-crown {
+  background: linear-gradient(90deg, transparent, oklch(71% .194 13.428), transparent);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}

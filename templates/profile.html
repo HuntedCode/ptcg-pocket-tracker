@@ -138,6 +138,81 @@
             </div>
 
             <div class="profile-section">
+                <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
+                <ul class="space-y-4">
+                    {% for item in feed %}
+                    <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
+                        <input type="checkbox" />
+                        <div class="collapse-title flex justify-between items-center">
+                            <span class="font-semibold text-primary">
+                                {% if item.type == 'pack_open' %}
+                                <i class="fas fa-box-open mr-2 text-accent"></i>
+                                Opened <span class="shimmer-text text-lg pack-open-display"><i class="fas fa-box-open"></i> {{ item.parsed_content.message }} <i class="fas fa-box-open"></i></span> and got <span class="font-bold text-lg text-accent">{{ item.cards|length }}</span> cards!
+                                {% elif item.type == 'collection_add' %}
+                                <i class="fas fa-plus-circle mr-2 text-accent"></i>
+                                {% with rarity_lower=item.cards.0.rarity|lower %}
+                                Added <span class="shimmer-text text-lg
+                                {% if 'diamond' in rarity_lower %}rarity-diamond">💎 {{ item.parsed_content.message }} 💎
+                                {% elif 'star' in rarity_lower %}rarity-star">★ {{ item.parsed_content.message }} ★
+                                {% elif 'shiny' in rarity_lower %}rarity-shiny">✨ {{ item.parsed_content.message }} ✨
+                                {% elif 'crown' in rarity_lower %}rarity-crown">👑 {{ item.parsed_content.message }} 👑
+                                {% endif %}</span> to their collection!
+                                {% endwith %}
+                                {% endif %}
+                            </span>
+                            <span class="text-sm italic text-gray-500">{{ item.timestamp|date:"SHORT_DATE_FORMAT" }}</span>
+                        </div>
+                        <div class="collapse-content flex flex-row justify-center pt-2">
+                            {% if item.type == 'pack_open' %}
+                            {% for card in item.cards %}
+                            <div class="grid grid-cols-2 gap-2">
+                                {% with rarity_lower=card.rarity|lower %}
+                                <div class="card w-32 bg-base-100 relative card-floating card-interactive
+                                {% if 'diamond' in rarity_lower %}rarity-diamond
+                                {% elif 'star' in rarity_lower %}rarity-star
+                                {% elif 'shiny' in rarity_lower %}rarity-shiny
+                                {% elif 'crown' in rarity_lower %}rarity-crown
+                                {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
+                                {% endwith %}
+                                    <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                                        <figure>
+                                            <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                        </figure>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-gray-600">No details.</p>
+                            {% endfor %}
+
+                            {% elif item.type == 'collection_add' %}
+                            {% for card in item.cards %}
+                            {% with rarity_lower=card.rarity|lower %}
+                            <div class="card w-60 bg-base-100 relative card-floating card-interactive
+                            {% if 'diamond' in rarity_lower %}rarity-diamond
+                            {% elif 'star' in rarity_lower %}rarity-star
+                            {% elif 'shiny' in rarity_lower %}rarity-shiny
+                            {% elif 'crown' in rarity_lower %}rarity-crown
+                            {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
+                            {% endwith %}
+                                <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                                    <figure>
+                                        <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                    </figure>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% empty %}
+                    <p class="text-center text-gray-500 italic">No recent activity yet!</p>
+                    {% endfor %}
+                </ul>
+                <button id="show-more-btn" class="btn btn-outline border-accent text-accent w-full mt-4 {% if feed|length <= 3 %}hidden{% endif %}">Show More</button>
+            </div>
+
+            <div class="profile-section">
                 <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
                 <div class="overflow-visible">
                     <table class="table table-zebra w-full">
@@ -252,6 +327,16 @@
         setFilter.addEventListener('change', applyFilters);
         rarityFilter.addEventListener('change', applyFilters);
         applyFilters();
+    }
+
+    const showMoreBtn = document.getElementById('show-more-btn');
+    const moreItems = document.querySelectorAll('.more-item');
+
+    if (showMoreBtn && moreItems.length > 0) {
+        showMoreBtn.addEventListener('click', () => {
+            moreItems.forEach(item => item.classList.remove('hidden'));
+            showMoreBtn.classList.add('hidden');
+        });
     }
 </script>
 {% endblock %}
