@@ -39,6 +39,47 @@
                     <label for="is_trading_active" class="form-check-input cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
                     <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
                 </div>
+                <div class="form-control">
+                    <label class="label font-semibold mb-4">Display Favorites (up to 10)</label>
+                    <div class="flex gap-4 mb-6">
+                        <select id="set-filter" class="select select-primary w-full">
+                            <option value="">All Sets</option>
+                            {% for set_obj in fav_sets %}
+                            <option value="{{ set_obj.1 }}">{{ set_obj.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="rarity-filter" class="select select-accent w-full">
+                            <option value="">All Rarities</option>
+                            {% for rarity in fav_rarities %}
+                            <option value="{{ rarity }}">{{ rarity }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-10 gap-4 mb-4" id="favorites-gallery">
+                        {% for card in fav_cards %}
+                        {% with rarity_lower=card.rarity|lower %}
+                        <div class="card cursor-pointer w-32 bg-base-100 relative card-floating card-interactive {% if card.id not in profile.display_favorites %}grayscale{% endif %}
+                        {% if 'diamond' in rarity_lower %}rarity-diamond
+                        {% elif 'star' in rarity_lower %}rarity-star
+                        {% elif 'shiny' in rarity_lower %}rarity-shiny
+                        {% elif 'crown' in rarity_lower %}rarity-crown
+                        {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" data-card-set="{{ card.card_set.name }}" role="button" tabindex="0">
+                        {% endwith %}
+                            <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                                <figure>
+                                    <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                </figure>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>No favorites to select! Add from tracker!</p>
+                        {% endfor %}
+                    </div>
+                    {{ form.display_favorites }}
+                    <p id="select-count" class="text-sm">0/10 selected</p>
+                    {% if form.display_favorites.errors %}<p class="text-error">{{ form.display_favorites.errors.0 }}</p>{% endif %}
+                </div>
                 <button type="submit" class="btn btn-primary w-full">Save Changes</button>
             </form>
             {% else %}
@@ -71,6 +112,30 @@
                 </div>
             </div>
             {% endif %}
+
+            <div class="profile-section">
+                <h3 class="text-xl font-semibold text-accent">Featured Favorites</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {% for card in displayed_favorites %}
+                    {% with rarity_lower=card.rarity|lower %}
+                    <div class="card w-60 bg-base-100 relative card-floating card-interactive-profile
+                    {% if 'diamond' in rarity_lower %}rarity-diamond
+                    {% elif 'star' in rarity_lower %}rarity-star
+                    {% elif 'shiny' in rarity_lower %}rarity-shiny
+                    {% elif 'crown' in rarity_lower %}rarity-crown
+                    {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
+                    {% endwith %}
+                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                            <figure>
+                                <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                            </figure>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p>No favorites selected yet!</p>
+                    {% endfor %}
+                </div>
+            </div>
 
             <div class="profile-section">
                 <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
@@ -114,4 +179,79 @@
         </div>
     </div>
 </div>
+
+<script>
+    const gallery = document.getElementById('favorites-gallery');
+    if (gallery) {
+        const hiddenInput = document.querySelector('input[name="display_favorites"]');
+        const countEl = document.getElementById('select-count');
+        const max = 10;
+
+        let initialValue = hiddenInput.value || '';
+        let cleanedValue = initialValue.replace(/[\[\]]/g, '').replace(/\s/g, '');
+        let selected = cleanedValue ? cleanedValue.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : [];
+
+        function updateCount() {
+            countEl.textContent = `${selected.length}/${max} selected`;
+        }
+        updateCount();
+
+        gallery.addEventListener('click', (e) => {
+            const card = e.target.closest('.card-interactive');
+            console.log(card);
+            if (!card) return;
+            const id = parseInt(card.dataset.cardId);
+            if (isNaN(id)) return;
+            console.log(id);
+
+            if (selected.includes(id)) {
+                selected = selected.filter(s => s !== id);
+                card.classList.add('grayscale');
+            } else if (selected.length < max) {
+                selected.push(id);
+                card.classList.remove('grayscale');
+            } else {
+                alert('Max 10 favorites!');
+                return;
+            }
+            selected.sort((a,b) => a - b);
+            hiddenInput.value = selected.join(',');
+            console.log(hiddenInput.value)
+            updateCount();
+        });
+    }
+
+    const setFilter = document.getElementById('set-filter');
+    const rarityFilter = document.getElementById('rarity-filter');
+    const cards = gallery.querySelectorAll('.card-interactive');
+
+    function reapply_float() {
+        cards.forEach(card => {
+            card.classList.remove('card-floating');
+                setTimeout(() => {
+                    card.classList.add('card-floating');
+                }, 0);
+        }); 
+    }
+
+    function applyFilters() {
+        const selectedSet = setFilter.value;
+        const selectedRarity = rarityFilter.value;
+        cards.forEach(card => {
+            const cardSet = card.dataset.cardSet;
+            const cardRarity = card.dataset.rarity;
+            const matchesSet = !selectedSet || cardSet === selectedSet;
+            const matchesRarity = !selectedRarity || cardRarity === selectedRarity;
+            card.style.display = (matchesSet && matchesRarity) ? 'block' : 'none';
+        });
+
+        reapply_float();
+    }
+
+    if (setFilter && rarityFilter) {
+        setFilter.addEventListener('change', applyFilters);
+        rarityFilter.addEventListener('change', applyFilters);
+        applyFilters();
+    }
+</script>
 {% endblock %}

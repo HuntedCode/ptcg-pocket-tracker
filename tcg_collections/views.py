@@ -24,7 +24,6 @@ def register(request):
 
 @login_required
 def profile(request, token):
-    print(request.POST)
     profile = get_object_or_404(Profile, share_token=token)
     user = get_object_or_404(User, profile=profile)
     is_own = request.user == user
@@ -33,12 +32,13 @@ def profile(request, token):
         form = ProfileForm(request.POST ,instance=profile)
         if is_own and form.is_valid():
             form.save()
+        else:
+            print("Form invalid, full errors:", form.errors.as_data())
 
         return redirect('profile', token=profile.share_token)
 
     form = ProfileForm(instance=profile) if is_own else None
     total_unique_cards = UserCollection.objects.filter(user=request.user).aggregate(owned=Count('card', distinct=True))['owned']
-    print("total cards:", total_unique_cards)
 
     BASE_RARITIES = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond']
     OTHER_RARITIES = ['One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown']
@@ -63,8 +63,27 @@ def profile(request, token):
             'total_rare': total_rare_in_set,
             'rare_completion': round(rare_completion, 1)
         })
+    
+    displayed_favorites=  []
+    if profile.display_favorites:
+        displayed_favorites = Card.objects.filter(id__in=profile.display_favorites).order_by('tcg_id')
 
-    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns}
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites}
+
+    if is_own:
+        fav_cards = Card.objects.filter(
+            usercollection__user=profile.user,
+            usercollection__is_favorite=True,
+            usercollection__quantity__gt=0
+        ).distinct().order_by('tcg_id')
+
+        fav_sets = fav_cards.values('card_set__id', 'card_set__name').distinct().order_by('card_set__tcg_id')
+        fav_rarities = fav_cards.values_list('rarity', flat=True).distinct()
+
+        context['fav_cards'] = fav_cards
+        context['fav_sets'] = [(set['card_set__id'], set['card_set__name']) for set in fav_sets]
+        context['fav_rarities'] = sorted(set(fav_rarities))
+
     return render(request, 'profile.html', context)
 
 @login_required

@@ -147,7 +147,12 @@ footer a {
   will-change: transform, box-shadow, border-color;
 }
 
-.card-interactive:hover {
+.card-interactive-profile {
+  @apply transition-all duration-300 ease-in-out border-4;
+  will-change: transform, box-shadow, border-color;
+}
+
+.card-interactive:hover, .card-opener-interactive:hover, .card-interactive-profile:hover {
   @apply scale-105 shadow-lg rotate-2;
 }
 
@@ -156,12 +161,7 @@ footer a {
   will-change: transform, box-shadow, border-color;
 }
 
-.card-opener-interactive:hover {
-  @apply scale-105 shadow-lg rotate-2;
-}
-
-
-.card-interactive.rarity-diamond:hover {
+.rarity-diamond:hover {
   border-color: oklch(74% .16 232.661);
 }
 
@@ -169,15 +169,15 @@ footer a {
   border-color: oklch(74% .16 232.661);
 }
 
-.card-interactive.rarity-star:hover {
+.rarity-star:hover {
   border-color: oklch(82% .189 84.429);
 }
 
-.card-interactive.rarity-shiny:hover {
+.rarity-shiny:hover {
   border-color: oklch(65% .241 354.308);
 }
 
-.card-interactive.rarity-crown:hover {
+.rarity-crown:hover {
   border-color: oklch(71% .194 13.428);
 }
 
