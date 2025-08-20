@@ -65,7 +65,7 @@
             {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
                 <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
                     <figure>
-                        <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover{% if want_item.1 == 0 %} grayscale hover:grayscale-0{% endif %}" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                        <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-44 object-cover{% if not want_item.1 %} grayscale hover:grayscale-0{% endif %}" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
                     </figure>
                 </div>
             </div>

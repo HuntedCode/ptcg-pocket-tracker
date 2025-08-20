@@ -16,9 +16,59 @@ class ProfileForm(forms.ModelForm):
         required=False,
         initial=''
     )
+
+    ICON_CHOICES = [
+        ('abra.png', 'Abra'),
+        ('bellsprout.png', 'Bellsprout'),
+        ('bulbasaur.png', 'Bulbasaur'),
+        ('caterpie.png', 'Caterpie'),
+        ('charmander.png', 'Charmander'),
+        ('dratini.png', 'Dratini'),
+        ('eevee.png', 'Eevee'),
+        ('jigglypuff.png', 'Jigglypuff'),
+        ('mankey.png', 'Mankey'),
+        ('meowth.png', 'Meowth'),
+        ('mew.png', 'Mew'),
+        ('pidgey.png', 'Pidgey'),
+        ('pikachu.png', 'Pikachu'),
+        ('pokeball.png', 'Pokeball'),
+        ('psyduck.png', 'Psyduck'),
+        ('rattata.png', 'Rattata'),
+        ('snorlax.png', 'Snorlax'),
+        ('squirtle.png', 'Squirtle'),
+        ('venonat.png', 'Venonat'),
+        ('zubat.png', 'Zubat')
+    ]
+
+    COLOR_CHOICES = [
+        ('#f0ede3', 'Off White (Colorless)'),
+        ('#364855', 'Dark Gray (Darkness)'),
+        ('#b79b44', 'Gold (Dragon)'),
+        ('#d6549c', 'Pink (Fairy)'),
+        ('#e85935', 'Orange (Fighting)'),
+        ('#f54334', 'Red (Fire)'),
+        ('#00a355', 'Green (Grass)'),
+        ('#f3e44c', 'Yellow (Lightning)'),
+        ('#9aa1a7', 'Light Gray (Metal)'),
+        ('#96539c', 'Purple (Psychic)'),
+        ('#0e8cc7', 'Blue (Water)')
+    ]
+
+    pic_icon = forms.ChoiceField(
+        choices=ICON_CHOICES,
+        widget=forms.Select(attrs={'class': 'select'}), 
+        label='Profile Icon'
+    )
+
+    pic_bg_color = forms.ChoiceField(
+        choices=COLOR_CHOICES,
+        widget=forms.Select(attrs={'class': 'select'}),
+        label='Background Color'
+    )
+
     class Meta:
         model = Profile
-        fields = ['is_trading_active', 'bio', 'favorite_set', 'display_favorites']
+        fields = ['is_trading_active', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color']
         widgets = {
             'is_trading_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
@@ -34,16 +84,25 @@ class ProfileForm(forms.ModelForm):
                 usercollection__quantity__gt=0
             ).distinct().order_by('name')
             self.fields['display_favorites'].initial = ','.join(map(str, self.instance.display_favorites))
+            
+            config = self.instance.pic_config
+            self.fields['pic_icon'].initial = config.get('icon', 'pokeball.png')
+            self.fields['pic_bg_color'].initial = config.get('bg_color', '#0e8cc7')
         
     def clean_display_favorites(self):
         value = self.cleaned_data.get('display_favorites', '')
+        value = value.replace('[', '').replace(']', '').replace(' ', '')
+        if not value.strip():
+            return []
         if value:
             try:
                 selected = [int(id_str.strip()) for id_str in value.split(',') if id_str.strip()]
-            except ValueError:
-                raise forms.ValidationError('Invalid favorite IDs.')
+            except ValueError as e:
+                print("ValueError: ", e)
         else:
             selected = []
+        
+        print("Selected:", selected)
         if len(selected) > 10:
             raise forms.ValidationError('Max 10 favorites.')
         return selected
@@ -52,8 +111,13 @@ class ProfileForm(forms.ModelForm):
         instance = super().save(commit=False)
         selected_str = self.cleaned_data['display_favorites']
         instance.display_favorites = [int(s) for s in selected_str]
+        instance.pic_config = {
+            'icon': self.cleaned_data['pic_icon'],
+            'bg_color': self.cleaned_data['pic_bg_color']
+        }
+        print(instance.pic_config)
         if commit:
-            instance.save(update_fields=['display_favorites'])
+            instance.save()
         return instance
         
 class MessageForm(forms.ModelForm):

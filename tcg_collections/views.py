@@ -31,12 +31,15 @@ def profile(request, token):
     if request.method == 'POST':
         form = ProfileForm(request.POST ,instance=profile)
         if is_own and form.is_valid():
+            print(form.cleaned_data)
             form.save()
+        else:
+            print("Post-valid errors:", form.errors, form.non_field_errors())
 
         return redirect('profile', token=profile.share_token)
 
     form = ProfileForm(instance=profile) if is_own else None
-    total_unique_cards = UserCollection.objects.filter(user=request.user).aggregate(owned=Count('card', distinct=True))['owned']
+    total_unique_cards = UserCollection.objects.filter(user=user).aggregate(owned=Count('card', distinct=True))['owned']
 
     BASE_RARITIES = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond']
     OTHER_RARITIES = ['One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown']
@@ -46,10 +49,10 @@ def profile(request, token):
 
     for set_obj in all_sets:
         total_base_in_set = Card.objects.filter(card_set=set_obj, rarity__in=BASE_RARITIES).count()
-        owned_base_in_set = UserCollection.objects.filter(user=request.user, card__card_set=set_obj, card__rarity__in=BASE_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
+        owned_base_in_set = UserCollection.objects.filter(user=user, card__card_set=set_obj, card__rarity__in=BASE_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
         base_completion = (owned_base_in_set / total_base_in_set * 100) if total_base_in_set else 0
         total_rare_in_set = Card.objects.filter(card_set=set_obj, rarity__in=OTHER_RARITIES).count()
-        owned_rare_in_set = UserCollection.objects.filter(user=request.user, card__card_set=set_obj, card__rarity__in=OTHER_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
+        owned_rare_in_set = UserCollection.objects.filter(user=user, card__card_set=set_obj, card__rarity__in=OTHER_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
         rare_completion = (owned_rare_in_set / total_rare_in_set * 100) if total_rare_in_set else 0
 
         set_breakdowns.append({
@@ -66,7 +69,7 @@ def profile(request, token):
     if profile.display_favorites:
         displayed_favorites = Card.objects.filter(id__in=profile.display_favorites).order_by('tcg_id')
 
-    activities = Activity.objects.filter(user=profile.user).order_by('-timestamp')[:10]
+    activities = Activity.objects.filter(user=user).order_by('-timestamp')[:10]
     feed = []
     for activity in activities:
         try:
@@ -90,14 +93,11 @@ def profile(request, token):
             'cards': cards
         })
 
-    print('Feed entries:', [f['parsed_content']['message'] for f in feed])
-
-
     context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed}
 
     if is_own:
         fav_cards = Card.objects.filter(
-            usercollection__user=profile.user,
+            usercollection__user=user,
             usercollection__is_favorite=True,
             usercollection__quantity__gt=0
         ).distinct().order_by('tcg_id')

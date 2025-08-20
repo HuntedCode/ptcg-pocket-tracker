@@ -83,6 +83,7 @@ class UserWant(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
+    pic_config = models.JSONField(default=dict)
     is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
     bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
     favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")

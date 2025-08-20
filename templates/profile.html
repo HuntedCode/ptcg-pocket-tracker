@@ -7,12 +7,14 @@
         <div class="card-body">
             <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="avatar placeholder">
-                        <div class="bg-neutral text-neutral-content rounded-full w-24 text-center flex flex-row items-center">
-                            <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
-                        </div>
+                    <div style="background-color: {{ profile.pic_config.bg_color|default:'#0e8cc7' }};" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                        {% if profile.pic_config.icon %}
+                        <img src="{% static '/images/profile_images/'|add:profile.pic_config.icon %}" alt="Profile Icon" class="w-16 h-16">
+                        {% else %}
+                        <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
+                        {% endif %}
                     </div>
-                    <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+                <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
                 </div>
                 <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-lg text-accent-content">
                     View My Wishlist!
@@ -22,6 +24,17 @@
             {% if is_own %}
             <form method="post" class="space-y-6 profile-section">
                 {% csrf_token %}
+                <div class="form-control flex flex-row items-center gap-4">
+                    <label>Profile Icon</label>
+                    {{ form.pic_icon }}
+                </div>
+                <div class="form-control flex flex-row items-center gap-4">
+                    <label>Background Color</label>
+                    {{ form.pic_bg_color }}
+                </div>
+                <div id="pic-preview" style="background-color: #0e8cc7;" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                    <img src="{% static '/images/profile_images/pokeball.png' %}" id="preview-img" alt="Preview" class="w-16 h-16">
+                </div>
                 <div class="form-control flex flex-row items-center gap-4">
                     <label for="bio" class="label font-semibold w-32 text-right">Bio</label>
                     <textarea id="bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
@@ -139,6 +152,7 @@
 
             <div class="profile-section">
                 <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
+                <p>{{ feed|length }}</p>
                 <ul class="space-y-4">
                     {% for item in feed %}
                     <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
@@ -294,39 +308,39 @@
             console.log(hiddenInput.value)
             updateCount();
         });
-    }
 
-    const setFilter = document.getElementById('set-filter');
-    const rarityFilter = document.getElementById('rarity-filter');
-    const cards = gallery.querySelectorAll('.card-interactive');
+        const setFilter = document.getElementById('set-filter');
+        const rarityFilter = document.getElementById('rarity-filter');
+        const cards = gallery.querySelectorAll('.card-interactive');
 
-    function reapply_float() {
-        cards.forEach(card => {
-            card.classList.remove('card-floating');
-                setTimeout(() => {
-                    card.classList.add('card-floating');
-                }, 0);
-        }); 
-    }
+        function reapply_float() {
+            cards.forEach(card => {
+                card.classList.remove('card-floating');
+                    setTimeout(() => {
+                        card.classList.add('card-floating');
+                    }, 0);
+            }); 
+        }
 
-    function applyFilters() {
-        const selectedSet = setFilter.value;
-        const selectedRarity = rarityFilter.value;
-        cards.forEach(card => {
-            const cardSet = card.dataset.cardSet;
-            const cardRarity = card.dataset.rarity;
-            const matchesSet = !selectedSet || cardSet === selectedSet;
-            const matchesRarity = !selectedRarity || cardRarity === selectedRarity;
-            card.style.display = (matchesSet && matchesRarity) ? 'block' : 'none';
-        });
+        function applyFilters() {
+            const selectedSet = setFilter.value;
+            const selectedRarity = rarityFilter.value;
+            cards.forEach(card => {
+                const cardSet = card.dataset.cardSet;
+                const cardRarity = card.dataset.rarity;
+                const matchesSet = !selectedSet || cardSet === selectedSet;
+                const matchesRarity = !selectedRarity || cardRarity === selectedRarity;
+                card.style.display = (matchesSet && matchesRarity) ? 'block' : 'none';
+            });
 
-        reapply_float();
-    }
+            reapply_float();
+        }
 
-    if (setFilter && rarityFilter) {
-        setFilter.addEventListener('change', applyFilters);
-        rarityFilter.addEventListener('change', applyFilters);
-        applyFilters();
+        if (setFilter && rarityFilter) {
+            setFilter.addEventListener('change', applyFilters);
+            rarityFilter.addEventListener('change', applyFilters);
+            applyFilters();
+        }
     }
 
     const showMoreBtn = document.getElementById('show-more-btn');
@@ -337,6 +351,19 @@
             moreItems.forEach(item => item.classList.remove('hidden'));
             showMoreBtn.classList.add('hidden');
         });
+    }
+
+    const iconSelect = document.querySelector('select[name="pic_icon"]');
+    const colorSelect = document.querySelector('select[name="pic_bg_color"]');
+    const previewDiv = document.getElementById('pic-preview');
+    const previewImg = document.getElementById('preview-img');
+
+    if (iconSelect && colorSelect && previewDiv) {
+        iconSelect.addEventListener('change', () => previewImg.src = `/static/images/profile_images/${iconSelect.value}`);
+        colorSelect.addEventListener('change', () => previewDiv.style.backgroundColor = colorSelect.value);
+
+        previewImg.src = `/static/images/profile_images/${iconSelect.value}`;
+        previewDiv.style.backgroundColor = colorSelect.value;
     }
 </script>
 {% endblock %}
