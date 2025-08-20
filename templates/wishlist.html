@@ -26,12 +26,15 @@
     {% else %}
     {% for set_obj, wants in sorted_sets %}
     <div class="mb-8 set-section">
-        <h2 class="text-2xl font-semibold mb-4 flex items-center">
-            <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
-            {{ set_obj.name }}
-            <span class="ml-2 text-sm text-gray-500">({{ wants|length }} cards)</span>
-        </h2>
-        <div class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
+        <div class="flex justify-between items-center mb-4 p-2">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
+                {{ set_obj.name }}
+                <span class="ml-2 text-sm text-gray-500">({{ wants|length }} cards)</span>
+            </h2>
+            <button class="btn btn-sm bg-base-200 toggle-btn hover:bg-primary hover:text-primary-content" data-target="cards-{{ set_obj.id }}">▼</button>
+        </div>
+        <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
             {% for want_item in wants %}
             {% if profile.user == request.user %}
             {% with want=want_item rarity_lower=want_item.card.rarity|lower %}
@@ -210,5 +213,19 @@
                 });
         });
     }
+
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+        const targetId = button.dataset.target;
+        const cardsDiv = document.getElementById(targetId);
+
+        button.addEventListener('click', function() {
+            cardsDiv.classList.toggle('hidden');
+            if (cardsDiv.classList.contains('hidden')) {
+                this.textContent = '▲';
+            } else {
+                this.textContent = '▼';
+            }
+        });
+    });
 </script>
 {% endblock %}
