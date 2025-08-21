@@ -2,82 +2,159 @@
 {% load static %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="card bg-base-100 shadow-xl profile-card">
-        <div class="card-body">
-            <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div style="background-color: {{ profile.pic_config.bg_color|default:'#0e8cc7' }};" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
-                        {% if profile.pic_config.icon %}
-                        <img src="{% static '/images/profile_images/'|add:profile.pic_config.icon %}" alt="Profile Icon" class="w-16 h-16">
-                        {% else %}
-                        <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
-                        {% endif %}
-                    </div>
-                <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
-                </div>
-                <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-lg text-accent-content">
-                    View My Wishlist!
-                </button>
-            </div>
 
-            {% if is_own %}
-            <form method="post" class="space-y-6 profile-section">
-                {% csrf_token %}
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label>Profile Icon</label>
-                    {{ form.pic_icon }}
+<div style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};">
+    <div class="container mx-auto px-4 py-8">
+        <div class="card bg-base-100 shadow-xl profile-card">
+            <div class="card-body">
+                <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div style="background-color: {{ profile.pic_config.bg_color|default:'#0e8cc7' }};" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                            {% if profile.pic_config.icon %}
+                            <img src="{% static '/images/profile_images/'|add:profile.pic_config.icon %}" alt="Profile Icon" class="w-16 h-16">
+                            {% else %}
+                            <span class="text-3xl">{{ profile.user.username|slice:":1" }}</span>
+                            {% endif %}
+                        </div>
+                    <h2 class="card-title text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+                    </div>
+                    <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-lg text-accent-content">
+                        View My Wishlist!
+                    </button>
                 </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label>Background Color</label>
-                    {{ form.pic_bg_color }}
-                </div>
-                <div id="pic-preview" style="background-color: #0e8cc7;" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
-                    <img src="{% static '/images/profile_images/pokeball.png' %}" id="preview-img" alt="Preview" class="w-16 h-16">
-                </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label for="bio" class="label font-semibold w-32 text-right">Bio</label>
-                    <textarea id="bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
-                </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label for="favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
-                    <select id="favorite_set" name="favorite_set" class="select select-primary flex-grow">
-                        <option value="" {% if not profile.favorite_set %}selected{% endif %}>None</option>
-                        {% for set in all_sets %}
-                        <option value="{{ set.id }}" {% if profile.favorite_set == set %}selected{% endif %}>{{ set.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label for="is_trading_active" class="form-check-input cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
-                    <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
-                </div>
-                <div class="form-control">
-                    <label class="label font-semibold mb-4">Display Favorites (up to 10)</label>
-                    <div class="flex gap-4 mb-6">
-                        <select id="set-filter" class="select select-primary w-full">
-                            <option value="">All Sets</option>
-                            {% for set_obj in fav_sets %}
-                            <option value="{{ set_obj.1 }}">{{ set_obj.1 }}</option>
-                            {% endfor %}
-                        </select>
-                        <select id="rarity-filter" class="select select-accent w-full">
-                            <option value="">All Rarities</option>
-                            {% for rarity in fav_rarities %}
-                            <option value="{{ rarity }}">{{ rarity }}</option>
+
+                {% if is_own %}
+                <form method="post" class="space-y-6 profile-section">
+                    {% csrf_token %}
+                    <div class="flex flex-row items-center justify-between">
+                        <div class="form-control flex flex-row items-center gap-4">
+                            <label class="label font-semibold w-32 text-right">Build-A-PFP!</label>
+                            <div class="flex flex-row gap-4 flex-grow">
+                                <div class="form-control">
+                                    <label>Profile Icon</label>
+                                    {{ form.pic_icon }}
+                                </div>
+                                <div class="form-control">
+                                    <label>Background Color</label>
+                                    {{ form.pic_bg_color }}
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div id="pic-preview" style="background-color: #0e8cc7;" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                                    <img src="{% static '/images/profile_images/pokeball.png' %}" id="preview-img" alt="Preview" class="w-16 h-16">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form control flex flex-row items-center gap-4">
+                                <label class="label font-semibold w-32 text-right">Profile Theme</label>
+                                {{ form.theme }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-control flex flex-row items-center gap-4">
+                        <label for="bio" class="label font-semibold w-32 text-right">Bio</label>
+                        <textarea id="bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
+                    </div>
+                    <div class="form-control flex flex-row items-center gap-4">
+                        <label for="favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
+                        <select id="favorite_set" name="favorite_set" class="select select-primary flex-grow">
+                            <option value="" {% if not profile.favorite_set %}selected{% endif %}>None</option>
+                            {% for set in all_sets %}
+                            <option value="{{ set.id }}" {% if profile.favorite_set == set %}selected{% endif %}>{{ set.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="form-control flex flex-row items-center gap-4">
+                        <label for="is_trading_active" class="form-check-input cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
+                        <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
+                    </div>
+                    <div class="form-control">
+                        <label class="label font-semibold mb-4">Display Favorites (up to 10)</label>
+                        <div class="flex gap-4 mb-6">
+                            <select id="set-filter" class="select select-primary w-full">
+                                <option value="">All Sets</option>
+                                {% for set_obj in fav_sets %}
+                                <option value="{{ set_obj.1 }}">{{ set_obj.1 }}</option>
+                                {% endfor %}
+                            </select>
+                            <select id="rarity-filter" class="select select-accent w-full">
+                                <option value="">All Rarities</option>
+                                {% for rarity in fav_rarities %}
+                                <option value="{{ rarity }}">{{ rarity }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-10 gap-4 mb-4" id="favorites-gallery">
-                        {% for card in fav_cards %}
+                        <div class="grid grid-cols-2 md:grid-cols-10 gap-4 mb-4" id="favorites-gallery">
+                            {% for card in fav_cards %}
+                            {% with rarity_lower=card.rarity|lower %}
+                            <div class="card cursor-pointer w-32 bg-base-100 relative card-floating card-interactive {% if card.id not in profile.display_favorites %}grayscale{% endif %}
+                            {% if 'diamond' in rarity_lower %}rarity-diamond
+                            {% elif 'star' in rarity_lower %}rarity-star
+                            {% elif 'shiny' in rarity_lower %}rarity-shiny
+                            {% elif 'crown' in rarity_lower %}rarity-crown
+                            {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" data-card-set="{{ card.card_set.name }}" role="button" tabindex="0">
+                            {% endwith %}
+                                <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                                    <figure>
+                                        <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                    </figure>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p>No favorites to select! Add from tracker!</p>
+                            {% endfor %}
+                        </div>
+                        {{ form.display_favorites }}
+                        <p id="select-count" class="text-sm">0/10 selected</p>
+                        {% if form.display_favorites.errors %}<p class="text-error">{{ form.display_favorites.errors.0 }}</p>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                </form>
+                {% else %}
+                <div class="profile-section">
+                    <h3 class="text-xl font-semibold text-accent">Bio</h3>
+                    <p class="text-base-content">{{ profile.bio|linebreaks }}</p>
+                </div>
+
+                <div class="profile-section">
+                    <h3 class="text-xl font-semibold text-accent">Favorites & Stats</h3>
+                    <div class="stats stats-vertical md:stats-horizontal shadow">
+                        <div class="stat">
+                            <div class="stat-title">Favorite Set</div>
+                            <div class="stat-value">{{ profile.favorite_set.name|default:"None" }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Unique Cards Owned</div>
+                            <div class="stat-value">{{ total_unique_cards }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Trading Active</div>
+                            <div class="stat-value {% if profile.is_trading_active %}text-success{% else %}text-error{% endif %}">
+                                {{ profile.is_trading_active|yesno:"Yes,No" }}
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Last Active</div>
+                            <div class="stat-value">{{ profile.last_active|date:"SHORT_DATE_FORMAT" }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="profile-section">
+                    <h3 class="text-xl font-semibold text-accent">Featured Favorites</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {% for card in displayed_favorites %}
                         {% with rarity_lower=card.rarity|lower %}
-                        <div class="card cursor-pointer w-32 bg-base-100 relative card-floating card-interactive {% if card.id not in profile.display_favorites %}grayscale{% endif %}
+                        <div class="card w-60 bg-base-100 relative card-floating card-interactive-profile
                         {% if 'diamond' in rarity_lower %}rarity-diamond
                         {% elif 'star' in rarity_lower %}rarity-star
                         {% elif 'shiny' in rarity_lower %}rarity-shiny
                         {% elif 'crown' in rarity_lower %}rarity-crown
-                        {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" data-card-set="{{ card.card_set.name }}" role="button" tabindex="0">
+                        {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
                         {% endwith %}
                             <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
                                 <figure>
@@ -86,102 +163,63 @@
                             </div>
                         </div>
                         {% empty %}
-                        <p>No favorites to select! Add from tracker!</p>
+                        <p>No favorites selected yet!</p>
                         {% endfor %}
                     </div>
-                    {{ form.display_favorites }}
-                    <p id="select-count" class="text-sm">0/10 selected</p>
-                    {% if form.display_favorites.errors %}<p class="text-error">{{ form.display_favorites.errors.0 }}</p>{% endif %}
                 </div>
-                <button type="submit" class="btn btn-primary w-full">Save Changes</button>
-            </form>
-            {% else %}
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Bio</h3>
-                <p class="text-base-content">{{ profile.bio|linebreaks }}</p>
-            </div>
 
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Favorites & Stats</h3>
-                <div class="stats stats-vertical md:stats-horizontal shadow">
-                    <div class="stat">
-                        <div class="stat-title">Favorite Set</div>
-                        <div class="stat-value">{{ profile.favorite_set.name|default:"None" }}</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-title">Unique Cards Owned</div>
-                        <div class="stat-value">{{ total_unique_cards }}</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-title">Trading Active</div>
-                        <div class="stat-value {% if profile.is_trading_active %}text-success{% else %}text-error{% endif %}">
-                            {{ profile.is_trading_active|yesno:"Yes,No" }}
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-title">Last Active</div>
-                        <div class="stat-value">{{ profile.last_active|date:"SHORT_DATE_FORMAT" }}</div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Featured Favorites</h3>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {% for card in displayed_favorites %}
-                    {% with rarity_lower=card.rarity|lower %}
-                    <div class="card w-60 bg-base-100 relative card-floating card-interactive-profile
-                    {% if 'diamond' in rarity_lower %}rarity-diamond
-                    {% elif 'star' in rarity_lower %}rarity-star
-                    {% elif 'shiny' in rarity_lower %}rarity-shiny
-                    {% elif 'crown' in rarity_lower %}rarity-crown
-                    {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
-                    {% endwith %}
-                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
-                            <figure>
-                                <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
-                            </figure>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p>No favorites selected yet!</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
-                <p>{{ feed|length }}</p>
-                <ul class="space-y-4">
-                    {% for item in feed %}
-                    <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
-                        <input type="checkbox" />
-                        <div class="collapse-title flex justify-between items-center">
-                            <span class="font-semibold text-primary">
+                <div class="profile-section">
+                    <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
+                    <ul class="space-y-4">
+                        {% for item in feed %}
+                        <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
+                            <input type="checkbox" />
+                            <div class="collapse-title flex justify-between items-center">
+                                <span class="font-semibold text-primary">
+                                    {% if item.type == 'pack_open' %}
+                                    <i class="fas fa-box-open mr-2 text-accent"></i>
+                                    Opened <span class="shimmer-text text-lg pack-open-display"><i class="fas fa-box-open"></i> {{ item.parsed_content.message }} <i class="fas fa-box-open"></i></span> and got <span class="font-bold text-lg text-accent">{{ item.cards|length }}</span> cards!
+                                    {% elif item.type == 'collection_add' %}
+                                    <i class="fas fa-plus-circle mr-2 text-accent"></i>
+                                    {% with rarity_lower=item.cards.0.rarity|lower %}
+                                    Added <span class="shimmer-text text-lg
+                                    {% if 'diamond' in rarity_lower %}rarity-diamond">💎 {{ item.parsed_content.message }} 💎
+                                    {% elif 'star' in rarity_lower %}rarity-star">★ {{ item.parsed_content.message }} ★
+                                    {% elif 'shiny' in rarity_lower %}rarity-shiny">✨ {{ item.parsed_content.message }} ✨
+                                    {% elif 'crown' in rarity_lower %}rarity-crown">👑 {{ item.parsed_content.message }} 👑
+                                    {% endif %}</span> to their collection!
+                                    {% endwith %}
+                                    {% endif %}
+                                </span>
+                                <span class="text-sm italic text-gray-500">{{ item.timestamp|date:"SHORT_DATE_FORMAT" }}</span>
+                            </div>
+                            <div class="collapse-content flex flex-row justify-center pt-2">
                                 {% if item.type == 'pack_open' %}
-                                <i class="fas fa-box-open mr-2 text-accent"></i>
-                                Opened <span class="shimmer-text text-lg pack-open-display"><i class="fas fa-box-open"></i> {{ item.parsed_content.message }} <i class="fas fa-box-open"></i></span> and got <span class="font-bold text-lg text-accent">{{ item.cards|length }}</span> cards!
+                                {% for card in item.cards %}
+                                <div class="grid grid-cols-2 gap-2">
+                                    {% with rarity_lower=card.rarity|lower %}
+                                    <div class="card w-32 bg-base-100 relative card-floating card-interactive
+                                    {% if 'diamond' in rarity_lower %}rarity-diamond
+                                    {% elif 'star' in rarity_lower %}rarity-star
+                                    {% elif 'shiny' in rarity_lower %}rarity-shiny
+                                    {% elif 'crown' in rarity_lower %}rarity-crown
+                                    {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
+                                    {% endwith %}
+                                        <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
+                                            <figure>
+                                                <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                            </figure>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-gray-600">No details.</p>
+                                {% endfor %}
+
                                 {% elif item.type == 'collection_add' %}
-                                <i class="fas fa-plus-circle mr-2 text-accent"></i>
-                                {% with rarity_lower=item.cards.0.rarity|lower %}
-                                Added <span class="shimmer-text text-lg
-                                {% if 'diamond' in rarity_lower %}rarity-diamond">💎 {{ item.parsed_content.message }} 💎
-                                {% elif 'star' in rarity_lower %}rarity-star">★ {{ item.parsed_content.message }} ★
-                                {% elif 'shiny' in rarity_lower %}rarity-shiny">✨ {{ item.parsed_content.message }} ✨
-                                {% elif 'crown' in rarity_lower %}rarity-crown">👑 {{ item.parsed_content.message }} 👑
-                                {% endif %}</span> to their collection!
-                                {% endwith %}
-                                {% endif %}
-                            </span>
-                            <span class="text-sm italic text-gray-500">{{ item.timestamp|date:"SHORT_DATE_FORMAT" }}</span>
-                        </div>
-                        <div class="collapse-content flex flex-row justify-center pt-2">
-                            {% if item.type == 'pack_open' %}
-                            {% for card in item.cards %}
-                            <div class="grid grid-cols-2 gap-2">
+                                {% for card in item.cards %}
                                 {% with rarity_lower=card.rarity|lower %}
-                                <div class="card w-32 bg-base-100 relative card-floating card-interactive
+                                <div class="card w-60 bg-base-100 relative card-floating card-interactive
                                 {% if 'diamond' in rarity_lower %}rarity-diamond
                                 {% elif 'star' in rarity_lower %}rarity-star
                                 {% elif 'shiny' in rarity_lower %}rarity-shiny
@@ -194,75 +232,55 @@
                                         </figure>
                                     </div>
                                 </div>
+                                {% endfor %}
+                                {% endif %}
                             </div>
-                            {% empty %}
-                            <p class="text-gray-600">No details.</p>
-                            {% endfor %}
+                        </li>
+                        {% empty %}
+                        <p class="text-center text-gray-500 italic">No recent activity yet!</p>
+                        {% endfor %}
+                    </ul>
+                    <button id="show-more-btn" class="btn btn-outline border-accent text-accent w-full mt-4 {% if feed|length <= 3 %}hidden{% endif %}">Show More</button>
+                </div>
 
-                            {% elif item.type == 'collection_add' %}
-                            {% for card in item.cards %}
-                            {% with rarity_lower=card.rarity|lower %}
-                            <div class="card w-60 bg-base-100 relative card-floating card-interactive
-                            {% if 'diamond' in rarity_lower %}rarity-diamond
-                            {% elif 'star' in rarity_lower %}rarity-star
-                            {% elif 'shiny' in rarity_lower %}rarity-shiny
-                            {% elif 'crown' in rarity_lower %}rarity-crown
-                            {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
-                            {% endwith %}
-                                <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
-                                    <figure>
-                                        <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
-                                    </figure>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-                    </li>
-                    {% empty %}
-                    <p class="text-center text-gray-500 italic">No recent activity yet!</p>
-                    {% endfor %}
-                </ul>
-                <button id="show-more-btn" class="btn btn-outline border-accent text-accent w-full mt-4 {% if feed|length <= 3 %}hidden{% endif %}">Show More</button>
-            </div>
-
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
-                <div class="overflow-visible">
-                    <table class="table table-zebra w-full">
-                        <thead>
-                            <tr>
-                                <th>Set</th>
-                                <th>Owned Base Cards</th>
-                                <th>Total Base Cards</th>
-                                <th>Base Completion %</th>
-                                <th>Owned Rare Cards</th>
-                                <th>Total Rare Cards</th>
-                                <th>Rare Completion %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for breakdown in set_breakdowns %}
-                            <tr class="hover overflow-visible">
-                                <td class="hover:cursor-pointer" onclick="document.location='{% url 'tracker' breakdown.set.id %}';">{{ breakdown.set.name }}</td>
-                                <td>{{ breakdown.owned_base }}</td>
-                                <td>{{ breakdown.total_base }}</td>
-                                <td>
-                                    <progress class="progress progress-lg progress-primary w-full" value="{{ breakdown.base_completion }}" max="100"></progress>
-                                    {{ breakdown.base_completion }}%
-                                </td>
-                                <td>{{ breakdown.owned_rare }}</td>
-                                <td>{{ breakdown.total_rare }}</td>
-                                <td>
-                                    <progress class="progress progress-lg progress-accent w-full" value="{{ breakdown.rare_completion }}" max="100"></progress>
-                                    {{ breakdown.rare_completion }}%
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="7">No base cards owned yet!</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="profile-section">
+                    <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
+                    <div class="overflow-visible">
+                        <table class="table table-zebra w-full">
+                            <thead>
+                                <tr>
+                                    <th>Set</th>
+                                    <th>Owned Base Cards</th>
+                                    <th>Total Base Cards</th>
+                                    <th>Base Completion %</th>
+                                    <th>Owned Rare Cards</th>
+                                    <th>Total Rare Cards</th>
+                                    <th>Rare Completion %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for breakdown in set_breakdowns %}
+                                <tr class="hover overflow-visible">
+                                    <td class="hover:cursor-pointer" onclick="document.location='{% url 'tracker' breakdown.set.id %}';">{{ breakdown.set.name }}</td>
+                                    <td>{{ breakdown.owned_base }}</td>
+                                    <td>{{ breakdown.total_base }}</td>
+                                    <td>
+                                        <progress class="progress progress-lg progress-primary w-full" value="{{ breakdown.base_completion }}" max="100"></progress>
+                                        {{ breakdown.base_completion }}%
+                                    </td>
+                                    <td>{{ breakdown.owned_rare }}</td>
+                                    <td>{{ breakdown.total_rare }}</td>
+                                    <td>
+                                        <progress class="progress progress-lg progress-accent w-full" value="{{ breakdown.rare_completion }}" max="100"></progress>
+                                        {{ breakdown.rare_completion }}%
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7">No base cards owned yet!</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

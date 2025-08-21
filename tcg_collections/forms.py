@@ -54,6 +54,21 @@ class ProfileForm(forms.ModelForm):
         ('#0e8cc7', 'Blue (Water)')
     ]
 
+    THEME_CHOICES = [
+        ('colorless', 'Off White (Colorless)'),
+        ('darkness', 'Dark Gray (Darkness)'),
+        ('default', 'Default'),
+        ('dragon', 'Gold (Dragon)'),
+        ('fairy', 'Pink (Fairy)'),
+        ('fighting', 'Orange (Fighting)'),
+        ('fire', 'Red (Fire)'),
+        ('grass', 'Green (Grass)'),
+        ('lightning', 'Yellow (Lightning)'),
+        ('metal', 'Light Gray (Metal)'),
+        ('psychic', 'Purple (Psychic)'),
+        ('water', 'Blue (Water)'),
+    ]
+
     pic_icon = forms.ChoiceField(
         choices=ICON_CHOICES,
         widget=forms.Select(attrs={'class': 'select'}), 
@@ -66,9 +81,15 @@ class ProfileForm(forms.ModelForm):
         label='Background Color'
     )
 
+    theme = forms.ChoiceField(
+        choices=THEME_CHOICES,
+        widget=forms.Select(attrs={'class': 'select'}),
+        label='Profile Theme'
+    )
+
     class Meta:
         model = Profile
-        fields = ['is_trading_active', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color']
+        fields = ['is_trading_active', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color', 'theme']
         widgets = {
             'is_trading_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
@@ -88,6 +109,8 @@ class ProfileForm(forms.ModelForm):
             config = self.instance.pic_config
             self.fields['pic_icon'].initial = config.get('icon', 'pokeball.png')
             self.fields['pic_bg_color'].initial = config.get('bg_color', '#0e8cc7')
+            
+            self.fields['theme'].initial = self.instance.theme
         
     def clean_display_favorites(self):
         value = self.cleaned_data.get('display_favorites', '')

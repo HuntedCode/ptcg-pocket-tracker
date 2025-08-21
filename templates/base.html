@@ -2,7 +2,7 @@
 {% load custom_filters %}
 
 <!DOCTYPE html>
-<html lang="en" data-theme="pokemon">
+<html lang="en" data-theme="{% if theme %}pokemon{% else %}{% if request.user.profile.dark_mode %}pokemon-dark{% else %}pokemon{% endif %}{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
     {% tailwind_css %}
 </head>
-<body class="bg-base-100 text-base-content min-h-screen flex flex-col">
+<body {% if theme %}style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};"{% endif %} class="bg-base-300 text-base-content min-h-screen flex flex-col">
     <nav class="navbar bg-base-100 shadow-xl rounded-box">
         <div class="navbar-start">
             <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center {% if request.path == '/dashboard/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral hover:text-primary-content{% endif %}">
@@ -45,6 +45,15 @@
             </ul>
         </div>
         <div class="navbar-end">
+            {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'toggle_dark_mode' %}" id="dark-mode-form">
+                {% csrf_token %}
+                <label class="cursor-pointer label font-semibold flex items-center gap-2">
+                    <span class="label-text">Dark Mode</span>
+                    <input type="checkbox" name="dark_mode" class="toggle toggle-primary"{% if request.user.profile.dark_mode %}checked{% endif %} />
+                </label>
+            </form>
+            {% endif %}
             <form method="post" action="{% url 'logout' %}" class="inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-ghost text-accent hover:text-accent-dark">Logout</button>
@@ -53,6 +62,17 @@
     </nav>
     <main class="container py-8 bg-base-200 rounded-box shadow-md m-4 flex-grow">
         {% block content %}{% endblock %}
+    
+        <script>
+            const darkModeToggle = document.querySelector('input[name="dark_mode"]');
+            console.log(darkModeToggle);
+            darkModeToggle.addEventListener('change', () => {
+                const form = document.getElementById('dark-mode-form');
+                if (form) {
+                    form.submit();
+                }
+            });
+        </script>
     </main>
     <footer class="bg-neutral text-neutral-content text-center shadow-md py-4">
         <p>© 2025 PTCG Tracker - Built with ❤️ for the Pokemon Community - Developed By: Jeffrey Lowe (HuntedCode)</p>

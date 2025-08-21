@@ -36,6 +36,7 @@ urlpatterns = [
     path('collection/', views.collection, name='collection'),
     path('tracker/set/<int:set_id>/', views.tracker, name='tracker'),
     path('wishlist/<uuid:token>/', views.wishlist, name='wishlist'),
+    path('toggle_dark_mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

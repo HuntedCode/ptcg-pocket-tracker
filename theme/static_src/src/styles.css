@@ -60,6 +60,49 @@
   --tab-radius: 0.5rem;
 }
 
+/* Dark variant: pokemon-dark */
+@plugin "daisyui/theme" {
+  name: "pokemon-dark";  /* For data-theme="pokemon-dark" */
+  default: false;  /* Not fallback */
+  prefersdark: true;  /* Auto-switch on OS dark mode if enabled */
+  color-scheme: dark;  /* Inverts system colors */
+
+  /* Inverted vars */
+  --color-primary: #005A94;  /* Darkened blue (original #0075BE -value +sat) */
+  --color-primary-content: #FFFFFF;  /* White text on primary */
+  --color-secondary: #CC9900;  /* Darkened yellow (#FFCC00 -value) */
+  --color-secondary-content: #FFFFFF;  /* Changed: White for better contrast on darker secondary */
+  --color-accent: #7E1A1F;  /* Darkened red (#A82028 -value) */
+  --color-accent-content: #FFFFFF;
+  --color-neutral: #1A2538;  /* Darker blue-gray (#304160 -value) */
+  --color-neutral-content: #FFFFFF;
+  --color-base-100: #0C1115;  /* Very dark blue-gray (inverted light #F3F8FC) */
+  --color-base-200: #1A1F24;  /* Slight lighten off 100 */
+  --color-base-300: #282D32;  /* Further lighten for depth */
+  --color-base-content: #E0E0E0;  /* Light gray text on bases (near white for readability) */
+  --color-info: #2E7D20;  /* Darkened green (#3FA129 -value) */
+  --color-info-content: #FFFFFF;
+  --color-success: #2E7D20;  /* Same as info */
+  --color-success-content: #FFFFFF;
+  --color-warning: #C99E00;  /* Darkened yellow (#FAC000 -value) */
+  --color-warning-content: #FFFFFF;
+  --color-error: #A51A2D;
+  --color-error-content: #FFFFFF;
+    /* Optional extras (daisyUI defaults; customize for Pokémon feel) */
+  --radius-selector: 0.5rem;  /* Rounded corners for buttons, etc. */
+  --border: 1px;  /* Border width */
+  --depth: 1;  /* Shadow depth */
+  /* New additions for polish (explain: These enhance community feel with rounded, shadowed elements) */
+  --rounded-box: 1rem;  /* Softer corners for cards/modals (Pokemon rounded style) */
+  --rounded-btn: 0.5rem;  /* Buttons slightly rounded for fun */
+  --rounded-badge: 1.9rem;  /* Badges (if used) circular */
+  --animation-btn: 0.25s;  /* Faster button hovers for responsiveness */
+  --animation-input: .2s;  /* Smooth inputs */
+  --btn-focus-scale: 0.95;  /* Subtle scale on button focus (community interactivity) */
+  --tab-border: 1px;  /* If tabs added later */
+  --tab-radius: 0.5rem;
+}
+
 /* Custom override for for-trade checkboxes */
 .for-trade-checkbox {
   /* Base styles if needed (e.g., size, border) */
@@ -86,10 +129,9 @@
 
 /* New: Global overrides for minimal/professional look (explain: These ensure clean spacing and shadows) */
 body {
-  @apply bg-base-100 text-base-content;
-    font-family: var(--font-family-base);  /* Applies to all text—clean cascade */
-    font-size: 1rem;  /* Base size—professional readability (16px) */
-    line-height: 1.5;  /* Spacing for minimal feel */
+  font-family: var(--font-family-base);  /* Applies to all text—clean cascade */
+  font-size: 1rem;  /* Base size—professional readability (16px) */
+  line-height: 1.5;  /* Spacing for minimal feel */
 }
 
 .navbar {
@@ -303,4 +345,8 @@ footer a {
   -webkit-background-clip: text;
   color: transparent;
   animation: shimmer 4s linear infinite;
+}
+
+.form-control label {
+  min-width: 8rem;
 }

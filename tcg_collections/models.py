@@ -88,6 +88,8 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
     favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")
     display_favorites = models.JSONField(default=list, blank=True)
+    theme = models.CharField(max_length=20, default='default')
+    dark_mode = models.BooleanField(default=False, help_text="Enable dark mode theme")
     last_active = models.DateTimeField(auto_now=True)
 
     def __str__(self):

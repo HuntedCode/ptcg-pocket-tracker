@@ -1,10 +1,11 @@
 from collections import defaultdict
+import colorsys
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity
@@ -93,7 +94,49 @@ def profile(request, token):
             'cards': cards
         })
 
-    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed}
+    THEME_COLORS = {
+        'colorless': {'primary': '#F0EDE3', 'accent': '#A8B8F0'},
+        'darkness': {'primary': '#364855', 'accent': '#554235'},
+        'default': {'primary': '#0075BE', 'accent': '#A82028'},
+        'dragon': {'primary': '#B79B44', 'accent': '#4460B7'},
+        'fairy': {'primary': '#D6549C', 'accent': '#54D68D'},
+        'fighting': {'primary': '#e85935', 'accent': '#35C4E8'},
+        'fire': {'primary': '#F54334', 'accent': '#34E5F5'},
+        'grass': {'primary': '#00A355', 'accent': '#A3205E'},
+        'lightning': {'primary': '#F3E44C', 'accent': '#4C5AF3'},
+        'metal': {'primary': '#9AA1A7', 'accent': '#A78C74'},
+        'psychic': {'primary': '#96539C', 'accent': '#589C53'},
+        'water': {'primary': '#0E8CC7', 'accent': '#C75A27'}
+    }
+
+    def hex_to_rgb(hex_str):
+        hex_str = hex_str.lstrip('#')
+        return tuple(int(hex_str[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+    
+    def rgb_to_hex(rgb):
+        return '#%02x%02x%02x' % tuple(int(c * 255) for c in rgb)
+    
+    def generate_bases(primary_hex):
+        rgb = hex_to_rgb(primary_hex)
+        h, s, v = colorsys.rgb_to_hsv(*rgb)
+
+        base_100 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.6), 0.78))
+        base_200 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.55), 0.75))
+        base_300 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.5), 0.72))
+        return base_100, base_200, base_300
+
+    theme_key = profile.theme
+    colors = THEME_COLORS.get(theme_key, THEME_COLORS['default'])
+    primary = colors['primary']
+    accent = colors['accent']
+    if theme_key == 'default':
+        base_100, base_200, base_300 = '#F3F8FC', '#E8F0F5', '#DCE6EE'
+    else:
+        base_100, base_200, base_300 = generate_bases(primary)
+    print('Theme Colors:', primary, accent, base_100, base_200, base_300)
+    theme = {'primary': primary, 'accent': accent, 'base_100':base_100, 'base_200': base_200, 'base_300': base_300}
+
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed, 'theme': theme}
 
     if is_own:
         fav_cards = Card.objects.filter(
@@ -601,3 +644,13 @@ def collection(request):
         'errors': errors,
     }
     return render(request, 'collection.html', context)
+
+@login_required
+def toggle_dark_mode(request):
+    print('Toggle dark mode...')
+    if request.method == 'POST':
+        profile = request.user.profile
+        profile.dark_mode = not profile.dark_mode
+        profile.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/profile/' + str(profile.share_token)))
+    return HttpResponseRedirect('/')

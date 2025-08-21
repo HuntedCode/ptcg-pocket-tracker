@@ -30,7 +30,7 @@ class UserWantsAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'pic_config', 'is_trading_active', 'bio', 'share_token')
+    list_display = ('user', 'pic_config', 'is_trading_active', 'bio', 'share_token', 'theme')
     search_fields = ('user__username',)
     list_filter = ('is_trading_active',)
 
