@@ -251,6 +251,14 @@ def tracker(request, set_id):
                             collection.save()
                     elif qty > 0:
                         collection.quantity = qty
+
+                        if qty < 2:
+                            collection.for_trade = False
+                        else:
+                            want = UserWant.objects.filter(user=request.user, card=card)
+                            if want:
+                                want.delete()
+
                         collection.save()
                     elif qty == 0:
                         collection.delete()
@@ -264,9 +272,14 @@ def tracker(request, set_id):
                     card_id = int(card_id_str)
                     card = get_object_or_404(Card, id=card_id)
                     want_obj = UserWant.objects.filter(user=request.user, card=card).first()
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
+                    qty = collection.quantity if collection else 0
+
                     if want_obj:
                         want_obj.delete()
                     else:
+                        if qty > 1:
+                            errors.append(f"Cannot add {card.name} to wishlist, user already owns 2+ copies.")
                         UserWant.objects.create(user=request.user, card=card, desired_quantity=1)
                 except ValueError:
                     errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")

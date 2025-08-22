@@ -131,7 +131,7 @@
                         </button>                        
                     </td>
                     <td class="text-center">
-                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}">
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>
                             {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
                         </button>
                     </td>
@@ -181,21 +181,47 @@
         if (!row) return;
         
         const qtyValue = parseInt(quantityInput.value, 10) || 0;
+        const favoriteToggle = row.querySelector('.favorite-toggle');
         if (qtyValue <= 0) {
             row.classList.add('opacity-50', 'bg-gray-300');
-            row.querySelector('.favorite-toggle').disabled = true;
+            favoriteToggle.disabled = true;
+            if (favoriteToggle.classList.contains('btn-primary')) {
+                favoriteToggle.classList.remove('btn-primary');
+                favoriteToggle.classList.add('btn-outline');
+                favoriteToggle.textContent = 'Favorite';
+            }
         } else {
             row.classList.remove('opacity-50', 'bg-gray-300');
-            row.querySelector('.favorite-toggle').disabled = false;
+            favoriteToggle.disabled = false;
         }
 
-        forTradeToggle = row.querySelector('.for-trade-toggle');
-        if (forTradeToggle)
+        const forTradeToggle = row.querySelector('.for-trade-toggle');
+        if (forTradeToggle) {
             if (qtyValue >= 2) {
                 forTradeToggle.disabled = false;
             } else {
                 forTradeToggle.disabled = true;
+                if (forTradeToggle.classList.contains('btn-accent')) {
+                    forTradeToggle.classList.remove('btn-accent');
+                    forTradeToggle.classList.add('btn-outline');
+                    forTradeToggle.textContent = 'Tradeable';
+                }
             }
+        }
+
+        const wishlistToggle = row.querySelector('.wishlist-toggle');
+        if (wishlistToggle) {
+            if (qtyValue > 1) {
+                wishlistToggle.disabled = true;
+                if (wishlistToggle.classList.contains('btn-success')) {
+                    wishlistToggle.classList.remove('btn-success');
+                    wishlistToggle.classList.add('btn-outline');
+                    wishlistToggle.textContent = 'Wishlist';
+                }
+            } else {
+                wishlistToggle.disabled = false;
+            }
+        }
 
         const imageTd = row.querySelector('.card-image');
         if (!imageTd) {
@@ -359,15 +385,12 @@
     function add_toggle_button_event_listeners(buttons, type) {
         buttons.forEach(button => {
             button.addEventListener('click', async () => {
-                console.log("Processing type...", type);
                 const cardId = button.dataset.cardId;
                 if (!cardId) {
-                    console.log("Returning")
                     return;
                 }
                 const formData = new FormData();
                 formData.append(`${type}_toggle_${cardId}`, 'on');
-                console.log(formData);
 
                 const csrfToken = getCookie('csrftoken');
                 try {
