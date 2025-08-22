@@ -19,8 +19,9 @@
     {% endif %}
     {% if not sorted_sets %}
     <div class="alert alert-info shadow-lg">
-        <div>
-            <img src="{% static 'images/icons/pokeball-open-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">Your wishlist is empty! Head to your collection to add some cards!
+        <div class="flex flex-row items-center">
+            <img src="{% static 'images/icons/pokeball-open-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">
+            <p class="font-semibold">Your wishlist is empty! Head to your collection to add some cards!</p>
         </div>
     </div>
     {% else %}
