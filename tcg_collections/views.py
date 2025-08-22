@@ -1,14 +1,16 @@
 from collections import defaultdict
 import colorsys
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity, Match
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm
 
 # Create your views here.
@@ -35,7 +37,6 @@ def profile(request, token):
     if request.method == 'POST':
         form = ProfileForm(request.POST ,instance=profile)
         if is_own and form.is_valid():
-            print(form.cleaned_data)
             form.save()
         else:
             print("Post-valid errors:", form.errors, form.non_field_errors())
@@ -98,18 +99,18 @@ def profile(request, token):
         })
 
     THEME_COLORS = {
-        'colorless': {'primary': '#F0EDE3', 'accent': '#A8B8F0'},
-        'darkness': {'primary': '#364855', 'accent': '#554235'},
+        'colorless': {'primary': '#F0EDE3', 'accent': "#DED8C2"},
+        'darkness': {'primary': '#364855', 'accent': "#4A6274"},
         'default': {'primary': '#0075BE', 'accent': '#A82028'},
-        'dragon': {'primary': '#B79B44', 'accent': '#4460B7'},
-        'fairy': {'primary': '#D6549C', 'accent': '#54D68D'},
-        'fighting': {'primary': '#e85935', 'accent': '#35C4E8'},
-        'fire': {'primary': '#F54334', 'accent': '#34E5F5'},
-        'grass': {'primary': '#00A355', 'accent': '#A3205E'},
-        'lightning': {'primary': '#F3E44C', 'accent': '#4C5AF3'},
-        'metal': {'primary': '#9AA1A7', 'accent': '#A78C74'},
-        'psychic': {'primary': '#96539C', 'accent': '#589C53'},
-        'water': {'primary': '#0E8CC7', 'accent': '#C75A27'}
+        'dragon': {'primary': '#B79B44', 'accent': '#C7AF67'},
+        'fairy': {'primary': '#D6549C', 'accent': "#C73084"},
+        'fighting': {'primary': '#E85935', 'accent': "#D23D18"},
+        'fire': {'primary': '#F54334', 'accent': "#EA1D0C"},
+        'grass': {'primary': '#00A355', 'accent': '#00D670'},
+        'lightning': {'primary': '#F3E44C', 'accent': '#F0DD1C'},
+        'metal': {'primary': '#9AA1A7', 'accent': '#7F888F'},
+        'psychic': {'primary': '#96539C', 'accent': '#AD6FB3'},
+        'water': {'primary': '#0E8CC7', 'accent': '#19ABEF'}
     }
 
     def hex_to_rgb(hex_str):
@@ -136,7 +137,6 @@ def profile(request, token):
         base_100, base_200, base_300 = '#F3F8FC', '#E8F0F5', '#DCE6EE'
     else:
         base_100, base_200, base_300 = generate_bases(primary)
-    print('Theme Colors:', primary, accent, base_100, base_200, base_300)
     theme = {'primary': primary, 'accent': accent, 'base_100':base_100, 'base_200': base_200, 'base_300': base_300}
 
     context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed, 'theme': theme}
@@ -184,13 +184,131 @@ def send_message(request, receiver_id):
 
 @login_required
 def toggle_dark_mode(request):
-    print('Toggle dark mode...')
     if request.method == 'POST':
         profile = request.user.profile
         profile.dark_mode = not profile.dark_mode
         profile.save()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/profile/' + str(profile.share_token)))
     return HttpResponseRedirect('/')
+
+# Trade Match Views
+
+@login_required
+def trade_matches(request):
+    def get_user_wants(user):
+        user_wants = UserWant.objects.filter(user=user, desired_quantity__gt=0).select_related('card')
+        user_wants_by_rarity = defaultdict(set)
+        for want in user_wants:
+            user_wants_by_rarity[want.card.rarity].add(want.card.id)
+        return user_wants_by_rarity
+    
+    def get_user_haves(user):
+        user_haves = UserCollection.objects.filter(user=user, quantity__gte=2, for_trade=True, card__is_tradeable=True).select_related('card')
+        user_haves_by_rarity = defaultdict(set)
+        for have in user_haves:
+            user_haves_by_rarity[have.card.rarity].add(have.card.id)
+        return user_haves_by_rarity
+    
+    my_wants_by_rarity = get_user_wants(request.user)
+    my_haves_by_rarity = get_user_haves(request.user)
+    if not any(my_wants_by_rarity.values()) or not any(my_haves_by_rarity.values()):
+        return render(request, 'trade_matches.html',{'matches': [], 'message': 'Add wants and for trade cards in the tracker to find matches!'})
+
+    other_users = User.objects.exclude(id=request.user.id).filter(
+        profile__is_trading_active=True,
+        profile__last_active__gte=timezone.now() - timedelta(days=7)
+    )
+
+    potentials = []
+    for user in other_users:
+        user_wants_by_rarity = get_user_wants(user)
+        user_haves_by_rarity = get_user_haves(user)
+
+        rarity_matches = {}
+        for rarity in set(my_wants_by_rarity.keys()) & set(user_haves_by_rarity.keys()):
+            they_offer_me_ids = my_wants_by_rarity[rarity] & user_haves_by_rarity[rarity]
+            if they_offer_me_ids:
+                they_offer_cards = Card.objects.filter(id__in=they_offer_me_ids)
+                rarity_matches.setdefault(rarity, {'they_offer': they_offer_cards, 'i_offer': []})
+        
+        for rarity in set(my_haves_by_rarity.keys()) & set(user_wants_by_rarity.keys()):
+            i_offer_them_ids = my_haves_by_rarity[rarity] & user_wants_by_rarity[rarity]
+            if i_offer_them_ids:
+                i_offer_cards = Card.objects.filter(id__in=i_offer_them_ids)
+                if rarity in rarity_matches:
+                    rarity_matches[rarity]['i_offer'] = i_offer_cards
+                else:
+                    rarity_matches[rarity] = {'they_offer': [], 'i_offer': i_offer_cards}
+        
+        valid_rarity_matches = {r: data for r, data in rarity_matches.items() if data['they_offer'] and data['i_offer']}
+        if valid_rarity_matches:
+            existing_match = Match.objects.filter(
+                Q(initiator=request.user, recipient=user) | Q(initiator=user, recipient=request.user),
+                created_at__gte=timezone.now() - timedelta(days=7)
+            ).first()
+            status = existing_match.status if existing_match else 'none'
+            anon_id = f"Trader #{user.id % 10000}"
+            real_username = user.username if status == 'accepted' else anon_id
+            overlap_score = sum(len(data['they_offer']) + len(data['i_offer']) for data in valid_rarity_matches.values())
+
+            potentials.append({
+                'user_id': user.id,
+                'username': real_username,
+                'rarity_matches': valid_rarity_matches,
+                'status': status,
+                'overlap_score': overlap_score
+            })
+    
+    potentials.sort(key=lambda p: p['overlap_score'], reverse=True)
+    
+    context = {'matches': potentials}
+    return render(request, 'trade_matches.html', context)
+
+@login_required
+def propose_match(request, recipient_id):
+    if request.method !='POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    recipient = get_object_or_404(User, id=recipient_id)
+    if not recipient.profile.is_trading_active or request.user == recipient or not request.user.profile.is_trading_active:
+        return JsonResponse({'error': 'Cannot propose'}, status=400)
+    
+    existing = Match.objects.filter(
+        Q(initiator=request.user, recipient=recipient) | Q(initiator=recipient, recipient=request.user),
+        updated_at__gte=timezone.now() - timedelta(days=1)
+    ).exists()
+    if existing:
+        return JsonResponse({'error': 'Match recently handled'}, status=400)
+    
+    match = Match.objects.create(initiator=request.user, recipient=recipient)
+    return JsonResponse({'success': 'Match proposed!', 'match_id': match.id})
+
+@login_required
+def accept_match(request, match_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    match = get_object_or_404(Match, id=match_id, recipient=request.user)
+    match.status = 'accepted'
+    match.save()
+    # Add friend later?
+    return JsonResponse({'success': 'Match accepted!'})
+
+@login_required
+def reject_match(request, match_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    match = get_object_or_404(Match, id=match_id, recipient=request.user)
+    match.status = 'rejected'
+    match.save()
+    return JsonResponse({'success': 'Match rejected!'})
+
+@login_required
+def ignore_match(request, match_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    match = get_object_or_404(Match, id=match_id, recipient=request.user)
+    match.status = 'ignored'
+    match.save()
+    return JsonResponse({'success': 'Match ignored!'})
 
 # Collection Views
 
@@ -273,7 +391,6 @@ def tracker(request, set_id):
                 card_id_str = key[9:]
                 try:
                     card_id = int(card_id_str)
-                    print(f"Processing card_id: {card_id} for set: {set_obj.id}")
                     card= get_object_or_404(Card, id=card_id)
                     collection = UserCollection.objects.filter(user=request.user, card=card).first()
                 except ValueError:
@@ -306,7 +423,6 @@ def tracker(request, set_id):
                     errors.append(f"Invalid quantity for card Id {card_id}")
 
             elif key.startswith('want_toggle_'):
-                print("Processing wishlist toggle...")
                 card_id_str = key[12:]
                 try:
                     card_id = int(card_id_str)
@@ -326,7 +442,6 @@ def tracker(request, set_id):
                     continue
             
             elif key.startswith('for_trade_toggle_'):
-                print("Processing for trade toggle...")
                 card_id_str = key[17:]
                 try:
                     card_id = int(card_id_str)
@@ -341,7 +456,6 @@ def tracker(request, set_id):
                     errors.append(f"Invalid card ID for trading: {card_id_str}")
 
             elif key.startswith('favorite_toggle_'):
-                print("Processing favorite toggle...")
                 card_id_str = key[16:]
                 try:
                     card_id = int(card_id_str)
@@ -365,7 +479,6 @@ def tracker(request, set_id):
             else:
                 return redirect('collection', set_id=set_id)  # Fallback for non-AJAX
         else:
-            print('Errors:', errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'errors': errors}, status=400)
                 
@@ -465,7 +578,6 @@ def get_booster_cards(request):
         for c in others    
     ]
 
-    print(others_list)
     return JsonResponse({
         'commons': common_list,
         'others': others_list,
@@ -499,7 +611,6 @@ def wishlist(request, token):
             return redirect('dashboard')
         
         for key in request.POST:
-            print("Key: ", key)
             if key.startswith('remove_want_'):
                 card_id_str = key[12:]
                 try:

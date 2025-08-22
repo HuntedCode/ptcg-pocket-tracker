@@ -28,14 +28,14 @@
                     {% csrf_token %}
                     <div class="flex flex-row items-center justify-between">
                         <div class="form-control flex flex-row items-center gap-4">
-                            <label class="label font-semibold w-32 text-right">Build-A-PFP!</label>
+                            <label class="label text-accent font-semibold w-32 text-right">Build-A-PFP!</label>
                             <div class="flex flex-row gap-4 flex-grow">
                                 <div class="form-control">
-                                    <label>Profile Icon</label>
+                                    <label class="text-accent">Profile Icon</label>
                                     {{ form.pic_icon }}
                                 </div>
                                 <div class="form-control">
-                                    <label>Background Color</label>
+                                    <label class="text-accent">Background Color</label>
                                     {{ form.pic_bg_color }}
                                 </div>
                             </div>
@@ -47,19 +47,19 @@
                         </div>
                         <div>
                             <div class="form control flex flex-row items-center gap-4">
-                                <label class="label font-semibold w-32 text-right">Profile Theme</label>
+                                <label class="label text-accent font-semibold w-32 text-right">Profile Theme</label>
                                 {{ form.theme }}
                             </div>
                         </div>
                     </div>
 
                     <div class="form-control flex flex-row items-center gap-4">
-                        <label for="bio" class="label font-semibold w-32 text-right">Bio</label>
-                        <textarea id="bio" name="bio" class="textarea textarea-primary flex-grow h-24">{{ profile.bio }}</textarea>
+                        <label for="bio" class="label text-accent font-semibold w-32 text-right">Bio</label>
+                        <textarea id="bio" name="bio" class="textarea textarea-accent flex-grow h-24">{{ profile.bio }}</textarea>
                     </div>
                     <div class="form-control flex flex-row items-center gap-4">
-                        <label for="favorite_set" class="label font-semibold w-32 text-right">Favorite Set</label>
-                        <select id="favorite_set" name="favorite_set" class="select select-primary flex-grow">
+                        <label for="favorite_set" class="label text-accent font-semibold w-32 text-right">Favorite Set</label>
+                        <select id="favorite_set" name="favorite_set" class="select select-accent flex-grow">
                             <option value="" {% if not profile.favorite_set %}selected{% endif %}>None</option>
                             {% for set in all_sets %}
                             <option value="{{ set.id }}" {% if profile.favorite_set == set %}selected{% endif %}>{{ set.name }}</option>
@@ -67,11 +67,11 @@
                         </select>
                     </div>
                     <div class="form-control flex flex-row items-center gap-4">
-                        <label for="is_trading_active" class="form-check-input cursor-pointer label font-semibold w-32 text-right">Trading Active</label>
-                        <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-primary" {% if profile.is_trading_active %}checked{% endif %}>
+                        <label for="is_trading_active" class="form-check-input cursor-pointer label text-accent font-semibold w-32 text-right">Trading Active</label>
+                        <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-accent" {% if profile.is_trading_active %}checked{% endif %}>
                     </div>
                     <div class="form-control">
-                        <label class="label font-semibold mb-4">Display Favorites (up to 10)</label>
+                        <label class="label text-accent font-semibold mb-4">Display Favorites (up to 10)</label>
                         <div class="flex gap-4 mb-6">
                             <select id="set-filter" class="select select-primary w-full">
                                 <option value="">All Sets</option>
@@ -104,11 +104,11 @@
                                 </div>
                             </div>
                             {% empty %}
-                            <p>No favorites to select! Add from tracker!</p>
+                            <p class="text-accent font-semibold">No favorites to select! Add from tracker!</p>
                             {% endfor %}
                         </div>
                         {{ form.display_favorites }}
-                        <p id="select-count" class="text-sm">0/10 selected</p>
+                        <p id="select-count" class="text-sm text-accent">0/10 selected</p>
                         {% if form.display_favorites.errors %}<p class="text-error">{{ form.display_favorites.errors.0 }}</p>{% endif %}
                     </div>
                     <button type="submit" class="btn btn-primary w-full">Save Changes</button>
