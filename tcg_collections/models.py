@@ -7,6 +7,8 @@ import json
 import uuid
 
 # Create your models here.
+# Card/Collection Models
+
 class Booster(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
@@ -16,6 +18,24 @@ class Booster(models.Model):
 
     def __str__(self):
         return self.name
+
+class BoosterDropRate(models.Model):
+    booster = models.ForeignKey(Booster, on_delete=models.CASCADE)
+    slot = models.CharField(max_length=50, choices=[
+        ('1-3', 'Slots 1-3 (Always One Diamond)'),
+        ('4', 'Slot 4 (Non-One Diamond, Weighted Low)'),
+        ('5', 'Slot 5 (Non-One Diamond, Better Odds)'),
+        ('god', 'God Pack (All One-Star+, Rare)'),
+        ('6', '6th Card (5% Chance, Exclusives)')
+    ])
+    rarity = models.CharField(max_length=50)
+    probability = models.FloatField(help_text='Probability (0.0 to 1.0)')
+
+    class Meta:
+        unique_together = ('booster', 'slot', 'rarity')
+
+    def __str__(self):
+        return f"{self.booster.name} - {self.slot}: {self.rarity} ({self.probability * 100}%)"
 
 class Set(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
@@ -80,21 +100,6 @@ class UserWant(models.Model):
     def __str__(self):
         return f"{self.user.username} wants {self.card.name} (x{self.desired_quantity})"
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
-    pic_config = models.JSONField(default=dict)
-    is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
-    bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
-    favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")
-    display_favorites = models.JSONField(default=list, blank=True)
-    theme = models.CharField(max_length=20, default='default')
-    dark_mode = models.BooleanField(default=False, help_text="Enable dark mode theme")
-    last_active = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s profile"
-
 class Activity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
     type = models.CharField(max_length=50, choices=[
@@ -110,6 +115,23 @@ class Activity(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.type} at {self.timestamp}"
 
+# Profile/Social Models
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
+    pic_config = models.JSONField(default=dict)
+    is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
+    bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
+    favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")
+    display_favorites = models.JSONField(default=list, blank=True)
+    theme = models.CharField(max_length=20, default='default')
+    dark_mode = models.BooleanField(default=False, help_text="Enable dark mode theme")
+    last_active = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
@@ -123,23 +145,7 @@ class Message(models.Model):
     def __str__(self):
         return f"From {self.sender} to {self.receiver} at {self.timestamp}"
 
-class BoosterDropRate(models.Model):
-    booster = models.ForeignKey(Booster, on_delete=models.CASCADE)
-    slot = models.CharField(max_length=50, choices=[
-        ('1-3', 'Slots 1-3 (Always One Diamond)'),
-        ('4', 'Slot 4 (Non-One Diamond, Weighted Low)'),
-        ('5', 'Slot 5 (Non-One Diamond, Better Odds)'),
-        ('god', 'God Pack (All One-Star+, Rare)'),
-        ('6', '6th Card (5% Chance, Exclusives)')
-    ])
-    rarity = models.CharField(max_length=50)
-    probability = models.FloatField(help_text='Probability (0.0 to 1.0)')
-
-    class Meta:
-        unique_together = ('booster', 'slot', 'rarity')
-
-    def __str__(self):
-        return f"{self.booster.name} - {self.slot}: {self.rarity} ({self.probability * 100}%)"
+# Receivers
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
