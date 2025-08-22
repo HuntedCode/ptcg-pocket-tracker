@@ -132,6 +132,24 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s profile"
 
+class Match(models.Model):
+    initiator = models.ForeignKey(User, related_name='initiated_matches', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, related_name='received_matches', on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('ignored', 'Ignored')
+    ], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('initiator', 'recipient')
+    
+    def __str__(self):
+        return f"{self.initiator.username} -> {self.recipient.username}: {self.status}"
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
