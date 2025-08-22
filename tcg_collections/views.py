@@ -12,6 +12,9 @@ from .models import UserCollection, Set, UserWant, Card, Message, Booster, Boost
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm
 
 # Create your views here.
+
+# User Views
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -153,6 +156,43 @@ def profile(request, token):
         context['fav_rarities'] = sorted(set(fav_rarities))
 
     return render(request, 'profile.html', context)
+
+@login_required
+def inbox(request):
+    received = Message.objects.filter(receiver=request.user).order_by('-timestamp')
+    sent = Message.objects.filter(sender=request.user).order_by('-timestamp')
+    context = {'received': received, 'sent': sent}
+    return render(request, 'inbox.html', context)
+
+@login_required
+def send_message(request, receiver_id):
+    receiver = get_object_or_404(User, id=receiver_id)
+    if not receiver.profile.is_trading_active or not request.user.profile.is_trading_active:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.receiver = receiver
+            message.save()
+            return redirect('inbox')
+    else:
+        form = MessageForm()
+    return render(request, 'send_message.html', {'form': form, 'receiver': receiver.username})
+
+@login_required
+def toggle_dark_mode(request):
+    print('Toggle dark mode...')
+    if request.method == 'POST':
+        profile = request.user.profile
+        profile.dark_mode = not profile.dark_mode
+        profile.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/profile/' + str(profile.share_token)))
+    return HttpResponseRedirect('/')
+
+# Collection Views
 
 @login_required
 def dashboard(request):
@@ -339,92 +379,6 @@ def tracker(request, set_id):
         'errors': errors,
     }
     return render(request, 'tracker.html', context)
-
-@login_required
-def trade_matches(request):
-
-    def get_user_wants(user):
-        user_wants = UserWant.objects.filter(user=user, desired_quantity__gt=0).select_related('card')
-        user_wants_by_rarity = defaultdict(set)
-        for want in user_wants:
-            user_wants_by_rarity[want.card.rarity].add(want.card.id)
-        return user_wants_by_rarity
-
-    def get_user_haves(user):
-        user_haves = UserCollection.objects.filter(user=user, quantity__gte=2, for_trade=True, card__is_tradeable=True).select_related('card')
-        user_haves_by_rarity = defaultdict(set)
-        for have in user_haves:
-            user_haves_by_rarity[have.card.rarity].add(have.card.id)
-        return user_haves_by_rarity
-
-    # User wants/haves
-    my_wants_by_rarity = get_user_wants(request.user)
-    my_haves_by_rarity = get_user_haves(request.user)
-
-    # Check if no wants/haves
-    if not any(my_wants_by_rarity.values()) or not any(my_haves_by_rarity.values()):
-        context = {'matches': [], 'message': 'Add some wants and mark tradeable haves to find matches.'}
-        return render(request, 'trade_matches.html', context)
-
-    # Get other user wants/haves
-    other_users = User.objects.exclude(id=request.user.id)
-    matches = []
-    for user in other_users:
-        user_wants_by_rarity = get_user_wants(user)
-        user_haves_by_rarity = get_user_haves(user)
-
-        # Matches
-        rarity_matches = {}
-        for rarity in set(my_wants_by_rarity.keys()) & set(user_haves_by_rarity.keys()):
-            they_offer_me_ids = my_wants_by_rarity[rarity].intersection(user_haves_by_rarity[rarity])
-            if they_offer_me_ids:
-                they_offer_cards = Card.objects.filter(id__in=they_offer_me_ids)
-                rarity_matches.setdefault(rarity, {'they_offer': they_offer_cards, 'i_offer': []})
-        
-        for rarity in set(my_haves_by_rarity.keys()) & set(user_wants_by_rarity.keys()):
-            i_offer_them_ids = my_haves_by_rarity[rarity].intersection(user_wants_by_rarity[rarity])
-            if i_offer_them_ids:
-                i_offer_cards = Card.objects.filter(id__in=i_offer_them_ids)
-                if rarity in rarity_matches:
-                    rarity_matches[rarity]['i_offer'] = i_offer_cards
-                else:
-                    rarity_matches[rarity] = {'they_offer': [], 'i_offer': i_offer_cards}
-        
-        valid_rarity_matches = {r: data for r, data in rarity_matches.items() if data['they_offer'] and data['i_offer']}
-        if valid_rarity_matches:
-            matches.append({
-                'username': user.username,
-                'user_id': user.id,
-                'rarity_matches': valid_rarity_matches,
-            })
-    
-    context = {'matches': matches}
-    return render(request, 'trade_matches.html', context)
-
-@login_required
-def send_message(request, receiver_id):
-    receiver = get_object_or_404(User, id=receiver_id)
-    if not receiver.profile.is_trading_active or not request.user.profile.is_trading_active:
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        form = MessageForm(request.POST)
-        if form.is_valid():
-            message = form.save(commit=False)
-            message.sender = request.user
-            message.receiver = receiver
-            message.save()
-            return redirect('inbox')
-    else:
-        form = MessageForm()
-    return render(request, 'send_message.html', {'form': form, 'receiver': receiver.username})
-
-@login_required
-def inbox(request):
-    received = Message.objects.filter(receiver=request.user).order_by('-timestamp')
-    sent = Message.objects.filter(sender=request.user).order_by('-timestamp')
-    context = {'received': received, 'sent': sent}
-    return render(request, 'inbox.html', context)
 
 @login_required
 def pack_opener(request):
@@ -657,13 +611,3 @@ def collection(request):
         'errors': errors,
     }
     return render(request, 'collection.html', context)
-
-@login_required
-def toggle_dark_mode(request):
-    print('Toggle dark mode...')
-    if request.method == 'POST':
-        profile = request.user.profile
-        profile.dark_mode = not profile.dark_mode
-        profile.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/profile/' + str(profile.share_token)))
-    return HttpResponseRedirect('/')
