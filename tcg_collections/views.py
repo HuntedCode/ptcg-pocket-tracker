@@ -5,13 +5,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Sum, Count, Q
-from django.http import JsonResponse, HttpResponseRedirect
+from django.db.models import Sum, Count, Q, F
+from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils import timezone
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity, Match
-from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm
+import random
+from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
+from .utils import TRAINER_CLASSES
 
 # Create your views here.
 
@@ -195,104 +197,128 @@ def toggle_dark_mode(request):
 
 @login_required
 def trade_matches(request):
-    def get_user_wants(user):
-        user_wants = UserWant.objects.filter(user=user, desired_quantity__gt=0).select_related('card')
-        user_wants_by_rarity = defaultdict(set)
-        for want in user_wants:
-            user_wants_by_rarity[want.card.rarity].add(want.card.id)
-        return user_wants_by_rarity
-    
-    def get_user_haves(user):
-        user_haves = UserCollection.objects.filter(user=user, quantity__gte=2, card__is_tradeable=True).select_related('card')
-        user_haves_by_rarity = defaultdict(set)
-        for have in user_haves:
-            user_haves_by_rarity[have.card.rarity].add(have.card.id)
-        return user_haves_by_rarity
-    
-    my_wants_by_rarity = get_user_wants(request.user)
-    my_haves_by_rarity = get_user_haves(request.user)
-    if not any(my_wants_by_rarity.values()) or not any(my_haves_by_rarity.values()):
-        return render(request, 'trade_matches.html',{'matches': [], 'message': 'Add cards to your wishlist to find matches!'})
+    form = TradeWantForm(user=request.user)
+    matches = []
+    if request.method == 'POST':
+        form = TradeWantForm(request.POST, user=request.user)
+        if form.is_valid():
+            wanted_card = form.cleaned_data['wanted_card'].card
+            rarity = wanted_card.rarity
 
-    other_users = User.objects.exclude(id=request.user.id).filter(
-        profile__is_trading_active=True,
-        profile__last_active__gte=timezone.now() - timedelta(days=7)
-    )
+            my_profile = request.user.profile
+            my_haves = UserCollection.objects.filter(
+                user=request.user,
+                quantity__gt=my_profile.trade_threshold,
+                card__rarity=rarity,
+                card__is_tradeable=True
+            ).select_related('card')
 
-    potentials = []
-    for user in other_users:
-        user_wants_by_rarity = get_user_wants(user)
-        user_haves_by_rarity = get_user_haves(user)
+            potential_users = User.objects.filter(
+                profile__is_trading_active=True,
+                profile__last_active__gte=timezone.now() - timedelta(days=7),
+                usercollection__card=wanted_card,
+                usercollection__quantity__gt=F('profile__trade_threshold')
+            ).distinct()[:10]
 
-        rarity_matches = {}
-        for rarity in set(my_wants_by_rarity.keys()) & set(user_haves_by_rarity.keys()):
-            they_offer_me_ids = my_wants_by_rarity[rarity] & user_haves_by_rarity[rarity]
-            if they_offer_me_ids:
-                they_offer_cards = Card.objects.filter(id__in=they_offer_me_ids)
-                rarity_matches.setdefault(rarity, {'they_offer': they_offer_cards, 'i_offer': []})
-        
-        for rarity in set(my_haves_by_rarity.keys()) & set(user_wants_by_rarity.keys()):
-            i_offer_them_ids = my_haves_by_rarity[rarity] & user_wants_by_rarity[rarity]
-            if i_offer_them_ids:
-                i_offer_cards = Card.objects.filter(id__in=i_offer_them_ids)
-                if rarity in rarity_matches:
-                    rarity_matches[rarity]['i_offer'] = i_offer_cards
+            for user in potential_users:
+                their_wants = UserWant.objects.filter(
+                    user=user,
+                    desired_quantity__gt=0,
+                    card__rarity=rarity
+                ).select_related('card')
+
+                possible_offers_qs = my_haves.filter(card__in=their_wants.values_list('card', flat=True))
+                
+                same_set_offers = possible_offers_qs.filter(card__card_set=wanted_card.card_set)
+                if same_set_offers.exists():
+                    best_offer = same_set_offers.order_by('-quantity').first()
                 else:
-                    rarity_matches[rarity] = {'they_offer': [], 'i_offer': i_offer_cards}
-        
-        valid_rarity_matches = {r: data for r, data in rarity_matches.items() if data['they_offer'] and data['i_offer']}
-        if valid_rarity_matches:
-            existing_match = Match.objects.filter(
-                Q(initiator=request.user, recipient=user) | Q(initiator=user, recipient=request.user),
-                created_at__gte=timezone.now() - timedelta(days=7)
-            ).first()
-            status = 'none'
-            match_id = None
+                    if possible_offers_qs.exists():
+                        best_offer = possible_offers_qs.order_by('-quantity').first()
+                    else:
+                        best_offer = None
 
-            if existing_match:
-                if existing_match.status in ['rejected', 'ignored']:
-                    status = existing_match.status
-                else:
-                    status = 'accepted' if existing_match.status == 'accepted' else 'pending'
-                    if status == 'pending':
-                        status = 'pending_out' if existing_match.initiator == request.user else 'pending_in'
-                    match_id = existing_match.id
+                if best_offer:
+                    random_class = random.choice(TRAINER_CLASSES)
+                    random_num = f"{random.randint(0, 9999):04d}"
+                    anon_name = f"{random_class} {random_num}"
 
-            anon_id = f"Trader #{user.id % 10000}"
-            real_username = user.username if status == 'accepted' else anon_id
-            overlap_score = sum(len(data['they_offer']) + len(data['i_offer']) for data in valid_rarity_matches.values())
-
-            potentials.append({
-                'user_id': user.id,
-                'username': real_username,
-                'match_id': match_id,
-                'rarity_matches': valid_rarity_matches,
-                'status': status,
-                'overlap_score': overlap_score
-            })
+                    matches.append({
+                        'recipient': user,
+                        'received_card': wanted_card,
+                        'offered_card': best_offer.card,
+                        'is_same_set': same_set_offers.exists(),
+                        'anon_name': anon_name
+                    })
     
-    potentials.sort(key=lambda p: p['overlap_score'], reverse=True)
-    
-    context = {'matches': potentials}
+    context = {'form': form, 'matches': matches}
     return render(request, 'trade_matches.html', context)
 
 @login_required
-def propose_match(request, recipient_id):
-    if request.method !='POST':
-        return JsonResponse({'error': 'Invalid method'}, status=405)
-    recipient = get_object_or_404(User, id=recipient_id)
-    if not recipient.profile.is_trading_active or request.user == recipient or not request.user.profile.is_trading_active:
-        return JsonResponse({'error': 'Cannot propose'}, status=400)
+def propose_trades(request):
+    if request.method != 'POST':
+        return redirect('trade_matches')
     
-    existing = Match.objects.filter(
-        Q(initiator=request.user, recipient=recipient) | Q(initiator=recipient, recipient=request.user),
-        updated_at__gte=timezone.now() - timedelta(days=1)
-    ).exists()
-    if existing:
-        return JsonResponse({'error': 'Match recently handled'}, status=400)
+    selected = request.POST.getlist('selected_matches')
+    errors = []
+    created_matches = []
+
+    pending_count = Match.objects.filter(initiator=request.user, status='pending').count()
+    if pending_count + len(selected) > 5:
+        errors.append('Exceeded max 5 outstanding proposals.')
+    else:
+        for sel in selected:
+            try:
+                rec_id, rec_card_id, off_card_id = map(int, sel.split('|'))
+                recipient = get_object_or_404(User, id=rec_id)
+                received_card = get_object_or_404(Card, id=rec_card_id)
+                offered_card = get_object_or_404(Card, id=off_card_id)
+
+                if recipient == request.user:
+                    errors.append('Cannot trade with self.')
+                    continue
+
+                if Match.objects.filter(
+                    initiator=request.user, recipient=recipient, status='pending', 
+                    received_card=received_card, offered_card=offered_card
+                ).exists():
+                    errors.append('Duplicate proposal.')
+                    continue
+                
+                match = Match.objects.create(
+                    initiator=request.user, recipient=recipient, status='pending',
+                    received_card=received_card, offered_card=offered_card
+                )
+                created_matches.append(match)
+            except ValueError:
+                errors.append('Invalid selection.')
     
-    match = Match.objects.create(initiator=request.user, recipient=recipient)
-    return JsonResponse({'success': 'Match proposed!', 'match_id': match.id})
+    if errors:
+        return render(request, 'trade_matches.html', {'errors': errors})
+    return redirect('trade_matches')
+
+@login_required
+def trade_detail(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    if request.user not in [match.initiator, match.recipient]:
+        raise Http404("Not authorized.")
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if match.status == 'pending:':
+            if request.user == match.recipient:
+                if action == 'accept':
+                    match.status = 'accepted'
+                elif action == 'deny':
+                    match.status = 'rejected'
+            elif request.user == match.initiator:
+                if action == 'rescind':
+                    match.status = 'rejected'
+        match.save()
+        return redirect('trade_detail', match_id=match.id)
+    
+    context = {'match': match}
+    return render(request, 'trade_detail.html', context)
 
 @login_required
 def accept_match(request, match_id):

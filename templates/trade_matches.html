@@ -22,10 +22,8 @@
     {% else %}
     <div class="hero min-h-32 bg-base-200 rounded-box mb-6">
         <div class="hero-content text-center">
-            <div class="max-w-md">
-                <h1 class="text-3xl font-bold">Your Trade Matches</h1>
-                <p class="py-2">Potential trading partners based on your "wants" and "haves"! Propose a match to start!</p>
-            </div>
+            <h1 class="text-3xl font-bold">Find Trade</h1>
+            <p>Select a card from your wishlist to generate potential trade matches!</p>
         </div>
     </div>
     {% if message %}
@@ -36,119 +34,53 @@
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% for match in matches %}
-        <div id="match-card-{{ match.user_id }}" class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-                <h2 class="card-title">
-                    {{ match.username }}
-                    {% if match.status == 'pending_out' %}<div class="badge badge-info">Pending (Sent)</div>{% endif %}
-                    {% if match.status == 'pending_in' %}<div class="badge badge-warning">Pending (Received)</div>{% endif %}
-                    {% if match.status == 'accepted' %}<div class="badge badge-success">Accepted</div>{% endif %}
-                </h2>
-                <div class="badge badge-primary badge-outline">Score: {{ match.overlap_score }}</div>
+    {% if form.fields.wanted_card.queryset.exists %}
+    <form method="post" class="form-control mb-6">
+        {% csrf_token %}
+        <label class="label" for="{{ form.wanted_card.id_for_label }}">Wanted Card:</label>
+        {{ form.wanted_card }}
+        <button class="btn btn-primary mt-4" type="submit">Generate Trades</button>
+    </form>
+    {% else %}
+    <div class="alert alert-info">No items on your wishlist! Add some to start trading!</div>
+    {% endif %}
 
-                <div class="collapse collapse-arrow bg-base-200 mt-2">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-xl font-medium">Trade Details</div>
-                    <div class="collapse-content">
-                        {% for rarity, data in match.rarity_matches.items %}
-                        <div class="mt-2">
-                            <h3 class="font-bold">{{ rarity }}</h3>
-                            <table class="table table-zebra w-full">
-                                <thead>
-                                    <tr>
-                                        <th>They Offer You</th>
-                                        <th>You Offer Them</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <ul>
-                                                {% for card in data.they_offer %}
-                                                <li>{{ card.name }} ({{ card.tcg_id }})</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </td>
-                                        <td>
-                                            <ul>
-                                                {% for card in data.i_offer %}
-                                                <li>{{ card.name }} ({{ card.tcg_id }})</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="card-actions justify-end mt-4">
-                    {% if match.status == 'none' or match.status in 'rejected ignored' %}
-                    <form id="propose-form-{{ match.user_id }}" method="post" action="{% url 'propose_match' match.user_id %}">
-                        {% csrf_token %}
-                        <button class="btn btn-primary" type="submit">Propose Match</button>
-                    </form>
-                    {% elif match.status == 'pending_out' %}
-                    <div class="badge badge-info">Awaiting Their Response</div>
-                    {% elif match.status == 'pending_in' %}
-                    <button class="btn btn-success" onclick="postAction('{% url 'accept_match' match.match_id %}')">Accept</button>
-                    <button class="btn btn-error" onclick="postAction('{% url 'reject_match' match.match_id %}')">Reject</button>
-                    <button class="btn btn-warning" onclick="postAction('{% url 'ignore_match' match.match_id %}')">Ignore</button>
-                    {% elif match.status == 'accepted' %}
-                    <a href="{% url 'send_message' match.user_id %}" class="btn btn-accent">Message</a>
-                    {% endif %}
-                </div>
-            </div>
+    {% if matches %}
+    <form method="post" action="{% url 'propose_trades' %}">
+        {% csrf_token %}
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Trader</th>
+                        <th>You Receive</th>
+                        <th>You Offer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr>
+                        <td><input type="checkbox" name="selected_matches" value="{{ match.recipient.id }}|{{ match.received_card.id }}|{{ match.offered_card.id }}" /></td>
+                        <td>{{ match.anon_name }}</td>
+                        <td>{{ match.received_card.name }} ({{ match.received_card.tcg_id }})</td>
+                        <td>
+                            {{ match.offered_card.name }} ({{ match.offered_card.tcg_id }})
+                            {% if match.is_same_set %}<div class="badge badge-primary ml-2">Same Set</div>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="btn btn-accent mt-4" type="submit">Send Selected Trade Requests!</button>
         </div>
-        {% empty %}
-        <div class="text-center">No matches yet-check your wants/haves!</div>
-        {% endfor %}
-    </div>
+    </form>
+    {% else %}
+    {% if request.method == 'POST' %}
+    <div class="alert alert-warning mt-4">No matches found for this card. Try another from your wishlist or check back later.</div>
+    {% endif %}
+    {% endif %}
     {% endif %}
 </div>
 
-<script>
-    function postAction(url) {
-        if (confirm('Confirm action?')) {
-            fetch(url, {
-                method: 'POST',
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const cardId = url.split('/').slice(-2, -1)[0];
-                    const card = document.getElementById(`match-card-${cardId}`);
-                    if (card) {
-                        const actions = card.querySelector('.card-actions');
-                        if (actions) {
-                            actions.innerHTML = '<div class="badge badge-info">Awaiting Their Response</div>'; 
-                        }
-                        const title = card.querySelector('.card-title');
-                        if (title) {
-                            title.innerHTML += '<div class="badge badge-info">Pending (Sent)</div>';
-                        }
-                    }
-                } else {
-                    alert(data.error || 'Error occurred');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
-
-    document.querySelectorAll('[id^="propose-form-"]').forEach(form => {
-        console.log(form.innerHTML);
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const url = form.action;
-            postAction(url);
-        });
-    });
-</script>
 {% endblock %}
