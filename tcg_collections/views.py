@@ -203,7 +203,7 @@ def trade_matches(request):
         return user_wants_by_rarity
     
     def get_user_haves(user):
-        user_haves = UserCollection.objects.filter(user=user, quantity__gte=2, for_trade=True, card__is_tradeable=True).select_related('card')
+        user_haves = UserCollection.objects.filter(user=user, quantity__gte=2, card__is_tradeable=True).select_related('card')
         user_haves_by_rarity = defaultdict(set)
         for have in user_haves:
             user_haves_by_rarity[have.card.rarity].add(have.card.id)
@@ -212,7 +212,7 @@ def trade_matches(request):
     my_wants_by_rarity = get_user_wants(request.user)
     my_haves_by_rarity = get_user_haves(request.user)
     if not any(my_wants_by_rarity.values()) or not any(my_haves_by_rarity.values()):
-        return render(request, 'trade_matches.html',{'matches': [], 'message': 'Add wants and for trade cards in the tracker to find matches!'})
+        return render(request, 'trade_matches.html',{'matches': [], 'message': 'Add cards to your wishlist to find matches!'})
 
     other_users = User.objects.exclude(id=request.user.id).filter(
         profile__is_trading_active=True,
@@ -390,8 +390,8 @@ def tracker(request, set_id):
     all_sets = Set.objects.all().order_by('tcg_id')
     cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
 
-    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade', 'is_favorite')
-    owned_dict = {cid: (qty, for_trade, is_fav) for cid, qty, for_trade, is_fav in owned}
+    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'is_favorite')
+    owned_dict = {cid: (qty, is_fav) for cid, qty, is_fav in owned}
     wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
     errors = []
@@ -421,9 +421,7 @@ def tracker(request, set_id):
                     elif qty > 0:
                         collection.quantity = qty
 
-                        if qty < 2:
-                            collection.for_trade = False
-                        else:
+                        if qty >= 2:
                             want = UserWant.objects.filter(user=request.user, card=card)
                             if want:
                                 want.delete()
@@ -452,20 +450,6 @@ def tracker(request, set_id):
                 except ValueError:
                     errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
                     continue
-            
-            elif key.startswith('for_trade_toggle_'):
-                card_id_str = key[17:]
-                try:
-                    card_id = int(card_id_str)
-                    card = get_object_or_404(Card, id=card_id)
-                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
-                    if collection and card.is_tradeable and collection.quantity > 0:
-                        collection.for_trade = not collection.for_trade
-                        collection.save()
-                    else:
-                        errors.append(f"Cannot toggle for trade for this card Id {card_id}")
-                except ValueError:
-                    errors.append(f"Invalid card ID for trading: {card_id_str}")
 
             elif key.startswith('favorite_toggle_'):
                 card_id_str = key[16:]
@@ -482,8 +466,8 @@ def tracker(request, set_id):
                     errors.append(f"Invalid card ID for favorite: {card_id_str}")
 
         if not errors:
-            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'for_trade', 'is_favorite')
-            owned_dict = {cid: (qty, for_trade, is_fav) for cid, qty, for_trade, is_fav in owned}
+            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'is_favorite')
+            owned_dict = {cid: (qty, is_fav) for cid, qty, is_fav in owned}
             wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX
@@ -537,7 +521,7 @@ def pack_opener(request):
                     if card not in booster.cards.all() or card.rarity != 'One Diamond':
                         errors.append(f"Invalid common card {card.name}")
                     else:
-                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'for_trade': False, 'is_seen': False})
+                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'is_seen': False})
                         if not created:
                             obj.quantity += 1
                             obj.save()
@@ -548,7 +532,7 @@ def pack_opener(request):
                     if card not in booster.cards.all() or card.rarity == 'One Diamond':
                         errors.append(f"Invalid other card {card.name}")
                     else:
-                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'for_trade': False, 'is_seen': False})
+                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'is_seen': False})
                         if not created:
                             obj.quantity += 1
                             obj.save()
@@ -609,7 +593,7 @@ def wishlist(request, token):
                 wants_by_set[want.card.card_set].append(want)
             else:
                 obj = UserCollection.objects.filter(user=request.user, card=want.card).first()
-                calling_user_has_for_trade = obj and obj.for_trade
+                calling_user_has_for_trade = obj and obj.quantity > request.user.profile.trade_threshold
                 wants_by_set[want.card.card_set].append((want, calling_user_has_for_trade))
 
         return sorted(wants_by_set.items(), key=lambda x: x[0].tcg_id)

@@ -11,6 +11,13 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ('username', 'email', 'password1', 'password2')
 
 class ProfileForm(forms.ModelForm):
+    trade_threshold = forms.ChoiceField(
+        choices=Profile.trade_threshold.field.choices,
+        widget=forms.Select(attrs={'class': 'select select-accent'}),
+        label='Trading Preference'
+    )
+
+
     display_favorites = forms.CharField(
         widget=forms.HiddenInput(),
         required=False,
@@ -89,7 +96,7 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['is_trading_active', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color', 'theme']
+        fields = ['is_trading_active', 'trade_threshold', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color', 'theme']
         widgets = {
             'is_trading_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
@@ -99,6 +106,8 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance:
+            self.fields['trade_threshold'].initial = self.instance.trade_threshold
+
             fav_cards = Card.objects.filter(
                 usercollection__user=self.instance.user,
                 usercollection__is_favorite=True,
@@ -132,6 +141,7 @@ class ProfileForm(forms.ModelForm):
     
     def save(self, commit=True):
         instance = super().save(commit=False)
+        instance.trade_threshold = int(self.cleaned_data['trade_threshold'])
         selected_str = self.cleaned_data['display_favorites']
         instance.display_favorites = [int(s) for s in selected_str]
         instance.pic_config = {

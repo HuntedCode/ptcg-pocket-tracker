@@ -14,7 +14,7 @@
     {% else %}
     <div class="flex flex-col items-center justify-center pb-6">
         <h1 class="text-4xl font-bold text-primary">{{ profile.user.username }}'s Wishlist!</h1>
-        <p class="text-md font-semibold">(Highlighted cards are on your 'for-trade' list!)</p>
+        <p class="text-md font-semibold">(Highlighted card: you own enough copies to trade!)</p>
     </div>
     {% endif %}
     {% if not sorted_sets %}

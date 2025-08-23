@@ -46,7 +46,7 @@
                             </div>
                         </div>
                         <div>
-                            <div class="form control flex flex-row items-center gap-4">
+                            <div class="form-control flex flex-row items-center gap-4">
                                 <label class="label text-accent font-semibold w-32 text-right">Profile Theme</label>
                                 {{ form.theme }}
                             </div>
@@ -69,6 +69,10 @@
                     <div class="form-control flex flex-row items-center gap-4">
                         <label for="is_trading_active" class="form-check-input cursor-pointer label text-accent font-semibold w-32 text-right">Trading Active</label>
                         <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-accent" {% if profile.is_trading_active %}checked{% endif %}>
+                    </div>
+                    <div class="form-control flex flex-row items-center gap-4">
+                        <label class="label text-accent font-semibold w-32 text-right">Trade Threshold</label>
+                        {{ form.trade_threshold }}
                     </div>
                     <div class="form-control">
                         <label class="label text-accent font-semibold mb-4">Display Favorites (up to 10)</label>

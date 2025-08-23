@@ -37,7 +37,6 @@
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
-                    <th class="sticky top-0 z-10 bg-base-100 text-center">For Trade</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th>
                     <th class="sticky top-0 z-10 bg-base-100 text-center">Favorite</th>
                 </tr>
@@ -126,17 +125,11 @@
                     </td>
                     {% if card.is_tradeable %}
                     <td class="text-center">
-                        <button data-card-id="{{ card.id }}" name="for_trade_{{ card.id }}" type="button" class="btn btn-md for-trade-toggle {% if owned.1 %}btn-accent{% else %}btn-outline{% endif %}" {% if not owned or owned.0 < 2 %}disabled{% endif %}>
-                            {% if owned.1 %}For Trade!{% else %}Tradeable{% endif %}
-                        </button>                        
-                    </td>
-                    <td class="text-center">
-                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-success{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>
+                        <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-accent{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>
                             {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
                         </button>
                     </td>
                     {% else %}
-                    <td></td>
                     <td></td>
                     {% endif %}
                     <td class="text-center">
@@ -195,26 +188,12 @@
             favoriteToggle.disabled = false;
         }
 
-        const forTradeToggle = row.querySelector('.for-trade-toggle');
-        if (forTradeToggle) {
-            if (qtyValue >= 2) {
-                forTradeToggle.disabled = false;
-            } else {
-                forTradeToggle.disabled = true;
-                if (forTradeToggle.classList.contains('btn-accent')) {
-                    forTradeToggle.classList.remove('btn-accent');
-                    forTradeToggle.classList.add('btn-outline');
-                    forTradeToggle.textContent = 'Tradeable';
-                }
-            }
-        }
-
         const wishlistToggle = row.querySelector('.wishlist-toggle');
         if (wishlistToggle) {
             if (qtyValue > 1) {
                 wishlistToggle.disabled = true;
-                if (wishlistToggle.classList.contains('btn-success')) {
-                    wishlistToggle.classList.remove('btn-success');
+                if (wishlistToggle.classList.contains('btn-accent')) {
+                    wishlistToggle.classList.remove('btn-accent');
                     wishlistToggle.classList.add('btn-outline');
                     wishlistToggle.textContent = 'Wishlist';
                 }
@@ -402,27 +381,16 @@
                     const data = await response.json();
                     if (data.status === 'success') {
                         if (type === 'want') {
-                            if (button.classList.contains('btn-success')) {
-                                button.classList.remove('btn-success');
+                            if (button.classList.contains('btn-accent')) {
+                                button.classList.remove('btn-accent');
                                 button.classList.add('btn-outline');
                                 button.textContent = 'Wishlist';
                             } else {
-                                button.classList.add('btn-success');
+                                button.classList.add('btn-accent');
                                 button.classList.remove('btn-outline');
                                 button.textContent = 'Wishlisted!';
                             }
                             showIndicator('Wishlist updated!');
-                        } else if (type === 'for_trade') {
-                            if (button.classList.contains('btn-accent')) {
-                                button.classList.remove('btn-accent');
-                                button.classList.add('btn-outline');
-                                button.textContent = 'Tradeable';
-                            } else {
-                                button.classList.add('btn-accent');
-                                button.classList.remove('btn-outline');
-                                button.textContent = 'For Trade!';
-                            }
-                            showIndicator('Trade status updated!');
                         } else if (type === 'favorite') {
                             if (button.classList.contains('btn-primary')) {
                                 button.classList.remove('btn-primary');
@@ -445,8 +413,6 @@
         });
     }
 
-    const forTradeButtons = document.querySelectorAll('.for-trade-toggle');
-    add_toggle_button_event_listeners(forTradeButtons, 'for_trade');
     const wishlistButtons = document.querySelectorAll('.wishlist-toggle');
     add_toggle_button_event_listeners(wishlistButtons, 'want');
     const favoriteButtons = document.querySelectorAll('.favorite-toggle');

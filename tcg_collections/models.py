@@ -79,7 +79,6 @@ class UserCollection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
-    for_trade = models.BooleanField(default=False)
     is_seen = models.BooleanField(default=False)
     is_favorite = models.BooleanField(default=False)
 
@@ -122,6 +121,7 @@ class Profile(models.Model):
     share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
     pic_config = models.JSONField(default=dict)
     is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
+    trade_threshold = models.PositiveSmallIntegerField(default=2, choices=[(1, 'Trade down to 1'), (2, 'Keep 2 for decks')])
     bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
     favorite_set = models.ForeignKey(Set, on_delete=SET_NULL, null=True, blank=True, help_text="Your favorite TCG Pocket set.")
     display_favorites = models.JSONField(default=list, blank=True)

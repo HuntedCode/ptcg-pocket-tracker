@@ -28,7 +28,7 @@ class CardAdmin(admin.ModelAdmin):
 
 @admin.register(UserCollection)
 class UserCollectionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'card', 'quantity', 'for_trade')
+    list_display = ('user', 'card', 'quantity')
     search_fields = ('user__username', 'card__name', 'card__tcg_id')
 
 @admin.register(UserWant)
