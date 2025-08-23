@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Profile, Message, Booster, Card
+from .models import Profile, Message, Booster, Card, UserWant
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -151,3 +151,19 @@ class MessageForm(forms.ModelForm):
 
 class PackOpenerForm(forms.Form):
     booster = forms.ModelChoiceField(queryset=Booster.objects.all().order_by('name'), label="Select Booster")
+
+class TradeWantForm(forms.Form):
+    wanted_card = forms.ModelChoiceField(
+        queryset=UserWant.objects.none(),
+        label='Select a Card from Your Wishlist',
+        widget=forms.Select(attrs={'class': 'select select-primary w-full'})
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['wanted_card'].queryset = UserWant.objects.filter(
+                user=user,
+                desired_quantity__gt=0
+            ).select_related('card').order_by('card__tcg_id')
+            

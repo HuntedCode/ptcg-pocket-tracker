@@ -141,6 +141,8 @@ class Match(models.Model):
         ('rejected', 'Rejected'),
         ('ignored', 'Ignored')
     ], default='pending')
+    offered_card = models.ForeignKey(Card, related_name='offered_in_matches', on_delete=SET_NULL, null=True)
+    received_card = models.ForeignKey(Card, related_name='received_in_matches', on_delete=SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

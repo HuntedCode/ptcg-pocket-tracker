@@ -246,7 +246,18 @@ def trade_matches(request):
                 Q(initiator=request.user, recipient=user) | Q(initiator=user, recipient=request.user),
                 created_at__gte=timezone.now() - timedelta(days=7)
             ).first()
-            status = existing_match.status if existing_match else 'none'
+            status = 'none'
+            match_id = None
+
+            if existing_match:
+                if existing_match.status in ['rejected', 'ignored']:
+                    status = existing_match.status
+                else:
+                    status = 'accepted' if existing_match.status == 'accepted' else 'pending'
+                    if status == 'pending':
+                        status = 'pending_out' if existing_match.initiator == request.user else 'pending_in'
+                    match_id = existing_match.id
+
             anon_id = f"Trader #{user.id % 10000}"
             real_username = user.username if status == 'accepted' else anon_id
             overlap_score = sum(len(data['they_offer']) + len(data['i_offer']) for data in valid_rarity_matches.values())
@@ -254,6 +265,7 @@ def trade_matches(request):
             potentials.append({
                 'user_id': user.id,
                 'username': real_username,
+                'match_id': match_id,
                 'rarity_matches': valid_rarity_matches,
                 'status': status,
                 'overlap_score': overlap_score

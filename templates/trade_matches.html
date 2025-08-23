@@ -1,31 +1,154 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Your Trade Matches</h2>
-{% if message %}
-<p>{{ message }}</p>
-{% else %}
-{% for match in matches %}
-<h3>Match with {{ match.username }}</h3>
-{% for rarity, data in match.rarity_matches.items %}
-<h4>In {{ rarity }} Rarity</h4>
-<p>They can offer you:</p>
-<ul>
-    {% for card in data.they_offer %}
-    <li>{{ card.name }} ({{ card.tcg_id }}) | ({{ card.rarity }}) from {{ card.card_set.name }}</li>
-    {% endfor %}
-</ul>
-<p>You can offer them:</p>
-<ul>
-    {% for card in data.i_offer %}
-    <li>{{ card.name }} ({{ card.tcg_id }}) | ({{ card.rarity }}) from {{ card.card_set.name }}</li>
-    {% endfor %}
-</ul>
-{% endfor %}
-<a href="{% url 'send_message' match.user_id %}">Message {{ match.username }}</a>
-{% empty %}
-<p>No matches found yet. Try adjusting your wants or haves.</p>
-{% endfor %}
-{% endif %}
-<a href="{% url 'dashboard' %}">Back to Dashboard</a>
+
+<div class="container mx-auto p-4">
+    {% if not request.user.profile.is_trading_active %}
+    <div class="hero min-h-32 bg-base-200 rounded-box mb-6">
+        <div class="hero-content text-center">
+            <div class="max-w-md">
+                <h1 class="text-3xl font-bold">Your Trade Matches</h1>
+                <p class="py-2">You don't have trading enabled! Head to your profile to set yourself as open to trading!</p>
+            </div>
+        </div>
+    </div>
+    {% if message %}
+    <div class="alert alert-info shadow-lg">
+        <div>
+            <span>{{ message }}</span>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="hero min-h-32 bg-base-200 rounded-box mb-6">
+        <div class="hero-content text-center">
+            <div class="max-w-md">
+                <h1 class="text-3xl font-bold">Your Trade Matches</h1>
+                <p class="py-2">Potential trading partners based on your "wants" and "haves"! Propose a match to start!</p>
+            </div>
+        </div>
+    </div>
+    {% if message %}
+    <div class="alert alert-info shadow-lg">
+        <div>
+            <span>{{ message }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for match in matches %}
+        <div id="match-card-{{ match.user_id }}" class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">
+                    {{ match.username }}
+                    {% if match.status == 'pending_out' %}<div class="badge badge-info">Pending (Sent)</div>{% endif %}
+                    {% if match.status == 'pending_in' %}<div class="badge badge-warning">Pending (Received)</div>{% endif %}
+                    {% if match.status == 'accepted' %}<div class="badge badge-success">Accepted</div>{% endif %}
+                </h2>
+                <div class="badge badge-primary badge-outline">Score: {{ match.overlap_score }}</div>
+
+                <div class="collapse collapse-arrow bg-base-200 mt-2">
+                    <input type="checkbox" />
+                    <div class="collapse-title text-xl font-medium">Trade Details</div>
+                    <div class="collapse-content">
+                        {% for rarity, data in match.rarity_matches.items %}
+                        <div class="mt-2">
+                            <h3 class="font-bold">{{ rarity }}</h3>
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>They Offer You</th>
+                                        <th>You Offer Them</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <ul>
+                                                {% for card in data.they_offer %}
+                                                <li>{{ card.name }} ({{ card.tcg_id }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                {% for card in data.i_offer %}
+                                                <li>{{ card.name }} ({{ card.tcg_id }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="card-actions justify-end mt-4">
+                    {% if match.status == 'none' or match.status in 'rejected ignored' %}
+                    <form id="propose-form-{{ match.user_id }}" method="post" action="{% url 'propose_match' match.user_id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-primary" type="submit">Propose Match</button>
+                    </form>
+                    {% elif match.status == 'pending_out' %}
+                    <div class="badge badge-info">Awaiting Their Response</div>
+                    {% elif match.status == 'pending_in' %}
+                    <button class="btn btn-success" onclick="postAction('{% url 'accept_match' match.match_id %}')">Accept</button>
+                    <button class="btn btn-error" onclick="postAction('{% url 'reject_match' match.match_id %}')">Reject</button>
+                    <button class="btn btn-warning" onclick="postAction('{% url 'ignore_match' match.match_id %}')">Ignore</button>
+                    {% elif match.status == 'accepted' %}
+                    <a href="{% url 'send_message' match.user_id %}" class="btn btn-accent">Message</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center">No matches yet-check your wants/haves!</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function postAction(url) {
+        if (confirm('Confirm action?')) {
+            fetch(url, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const cardId = url.split('/').slice(-2, -1)[0];
+                    const card = document.getElementById(`match-card-${cardId}`);
+                    if (card) {
+                        const actions = card.querySelector('.card-actions');
+                        if (actions) {
+                            actions.innerHTML = '<div class="badge badge-info">Awaiting Their Response</div>'; 
+                        }
+                        const title = card.querySelector('.card-title');
+                        if (title) {
+                            title.innerHTML += '<div class="badge badge-info">Pending (Sent)</div>';
+                        }
+                    }
+                } else {
+                    alert(data.error || 'Error occurred');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    document.querySelectorAll('[id^="propose-form-"]').forEach(form => {
+        console.log(form.innerHTML);
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const url = form.action;
+            postAction(url);
+        });
+    });
+</script>
 {% endblock %}
