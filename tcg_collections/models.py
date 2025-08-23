@@ -128,6 +128,9 @@ class Profile(models.Model):
     theme = models.CharField(max_length=20, default='default')
     dark_mode = models.BooleanField(default=False, help_text="Enable dark mode theme")
     last_active = models.DateTimeField(auto_now=True)
+    is_premium = models.BooleanField(default=False, help_text="Premium subscriber status.")
+    accepted_trades_this_month = models.PositiveIntegerField(default=0, help_text="Count of accepted trades in current month.")
+    last_trade_month = models.DateField(null=True, blank=True, help_text="Last month trades were reset.")
 
     def __str__(self):
         return f"{self.user.username}'s profile"
