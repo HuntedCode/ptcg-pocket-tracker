@@ -3,79 +3,84 @@
 
 {% block content %}
 <div class="container mx-auto p-4">
-    <div id="boosters-container" class="flex flex-wrap justify-center gap-6">
-        {% for set in sets %}
-        {% if set.boosters.values|length > 0 %}
-        <div class="raised-card min-w-80 p-4 rounded-lg shadow-md flex flex-col items-center">
-            {% if set.logo_path %}
-            <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-48 h-24 mb-12">
-            {% else %}
-            <h2 class="text-xl font-semibold mb-2 h-12">{{ set.name }}</h2>
-            {% endif %}
-            <div class="flex flex-wrap justify-center gap-4">
-                {% for booster in set.boosters.all %}
-                <div class="tooltip tooltip-primary booster-card card-floating cursor-pointer border-5 border-transparent rounded-lg" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
-                    {% if booster.local_image_small %}
-                    <img src="{% static booster.local_image_small %}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
+    <div class="card bg-base-100 shadow-xl profile-card">
+        <div class="card-body">
+
+            <div id="boosters-container" class="flex flex-wrap justify-center gap-6">
+                {% for set in sets %}
+                {% if set.boosters.values|length > 0 %}
+                <div class="raised-card min-w-80 p-4 rounded-lg shadow-md flex flex-col items-center">
+                    {% if set.logo_path %}
+                    <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-48 h-24 mb-12">
+                    {% else %}
+                    <h2 class="text-xl font-semibold mb-2 h-12">{{ set.name }}</h2>
                     {% endif %}
+                    <div class="flex flex-wrap justify-center gap-4">
+                        {% for booster in set.boosters.all %}
+                        <div class="tooltip tooltip-primary booster-card card-floating cursor-pointer border-5 border-transparent rounded-lg" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
+                            {% if booster.local_image_small %}
+                            <img src="{% static booster.local_image_small %}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-center">No boosters in this set.</p>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
                 {% empty %}
-                <p class="text-center">No boosters in this set.</p>
+                <p>No sets available. Add some in the admin panel.</p>
                 {% endfor %}
             </div>
+            <button id="proceed-btn" class="btn btn-accent mt-4" disabled>Proceed to Cards</button>
+
+            <form method="post" id="pack-form">
+                {% csrf_token %}
+                <div id="card-section" class="hidden mt-8">
+                    <div class="flex flex-row gap-4">
+                        <div class="flex-grow flex flex-col">
+                            <div class="set-section p-4 bg-base-200 rounded-lg shadow-md mb-8">
+                                <div class="flex-grow flex flex-col items-center">
+                                    <h3 class="text-xl font-semibold mb-2">Slots 1-3: One Diamond <span id="commons-count-preview" class="text-sm">(0/3)</span></h3>
+                                    <div id="commons-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
+                                </div>
+                            </div>
+
+                            <div class="set-section p-4 bg-base-200 rounded-lg shadow-md">
+                                <div class="flex-grow flex flex-col items-center">
+                                    <h3 class="text-xl font-semibold mb-2">Slots 4-5: Higher Rarities <span id="others-count-preview" class="text-sm">(0/2)</span></h3>
+                                    <div id="others-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="floating-preview" class="set-section justify-center text-center sticky top-[50%] translate-y-[-50%] self-start z-10">
+                            <h1 class="text-xl font-semibold mb-4 text-center">Selected Pack</h1>
+                            <div id="booster-preview" class="mb-2 text-center"></div>
+                            <div class="mb-4">
+                                <p class="text-xs mb-1 text-center">Slots 1-3 <span id="commons-count">(0/3)</span></p>
+                                <div id="commons-selected" class="flex flex-row gap-2 justify-center">
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs mb-1 text-center">Slots 4-5 <span id="others-count">(0/2)</span></p>
+                                <div id="others-selected" class="flex flex-row gap-2 justify-center">
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
+                                </div>
+                            </div>
+                            <button id="submit-pack" class="btn btn-accent mt-4" disabled>Add to Collection</button>
+                        </div>
+                    </div>  
+                </div>
+                <input type="hidden" name="booster_id" id="booster_id" value="">
+                <input type="hidden" name="selected_cards" id="selected_cards" value="">
+            </form>
         </div>
-        {% endif %}
-        {% empty %}
-        <p>No sets available. Add some in the admin panel.</p>
-        {% endfor %}
     </div>
-    <button id="proceed-btn" class="btn btn-accent mt-4" disabled>Proceed to Cards</button>
-
-    <form method="post" id="pack-form">
-        {% csrf_token %}
-        <div id="card-section" class="hidden mt-8">
-            <div class="flex flex-row gap-4">
-                <div class="flex-grow flex flex-col">
-                    <div class="set-section p-4 bg-base-200 rounded-lg shadow-md mb-8">
-                        <div class="flex-grow flex flex-col items-center">
-                            <h3 class="text-xl font-semibold mb-2">Slots 1-3: One Diamond <span id="commons-count-preview" class="text-sm">(0/3)</span></h3>
-                            <div id="commons-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
-                        </div>
-                    </div>
-
-                    <div class="set-section p-4 bg-base-200 rounded-lg shadow-md">
-                        <div class="flex-grow flex flex-col items-center">
-                            <h3 class="text-xl font-semibold mb-2">Slots 4-5: Higher Rarities <span id="others-count-preview" class="text-sm">(0/2)</span></h3>
-                            <div id="others-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="floating-preview" class="set-section justify-center text-center sticky top-[50%] translate-y-[-50%] self-start z-10">
-                    <h1 class="text-xl font-semibold mb-4 text-center">Selected Pack</h1>
-                    <div id="booster-preview" class="mb-2 text-center"></div>
-                    <div class="mb-4">
-                        <p class="text-xs mb-1 text-center">Slots 1-3 <span id="commons-count">(0/3)</span></p>
-                        <div id="commons-selected" class="flex flex-row gap-2 justify-center">
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-xs mb-1 text-center">Slots 4-5 <span id="others-count">(0/2)</span></p>
-                        <div id="others-selected" class="flex flex-row gap-2 justify-center">
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-32 h-44"></div>
-                        </div>
-                    </div>
-                    <button id="submit-pack" class="btn btn-accent mt-4" disabled>Add to Collection</button>
-                </div>
-            </div>  
-        </div>
-        <input type="hidden" name="booster_id" id="booster_id" value="">
-        <input type="hidden" name="selected_cards" id="selected_cards" value="">
-    </form>
 </div>
 
 <script>

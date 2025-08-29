@@ -4,7 +4,7 @@
 {% block content %}
 
 <div style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4">
         <div class="card bg-base-100 shadow-xl profile-card">
             <div class="card-body">
                 <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
@@ -384,7 +384,7 @@
         iconSelect.addEventListener('change', () => previewImg.src = `/static/images/profile_images/${iconSelect.value}`);
         colorSelect.addEventListener('change', () => previewDiv.style.backgroundColor = colorSelect.value);
 
-        previewImg.src = `/static/images/profile_images/${iconSelect.value}`;
+        previewImg.src = `/theme/static/images/profile_images/${iconSelect.value}`;
         previewDiv.style.backgroundColor = colorSelect.value;
     }
 </script>

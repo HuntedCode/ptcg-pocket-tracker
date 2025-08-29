@@ -13,7 +13,7 @@ import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity, Match
 import random
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
-from .utils import TRAINER_CLASSES
+from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES
 
 # Create your views here.
 
@@ -99,21 +99,6 @@ def profile(request, token):
             'parsed_content': parsed,
             'cards': cards
         })
-
-    THEME_COLORS = {
-        'colorless': {'primary': '#F0EDE3', 'accent': "#DED8C2"},
-        'darkness': {'primary': '#364855', 'accent': "#4A6274"},
-        'default': {'primary': '#0075BE', 'accent': '#A82028'},
-        'dragon': {'primary': '#B79B44', 'accent': '#C7AF67'},
-        'fairy': {'primary': '#D6549C', 'accent': "#C73084"},
-        'fighting': {'primary': '#E85935', 'accent': "#D23D18"},
-        'fire': {'primary': '#F54334', 'accent': "#EA1D0C"},
-        'grass': {'primary': '#00A355', 'accent': '#00D670'},
-        'lightning': {'primary': '#F3E44C', 'accent': '#F0DD1C'},
-        'metal': {'primary': '#9AA1A7', 'accent': '#7F888F'},
-        'psychic': {'primary': '#96539C', 'accent': '#AD6FB3'},
-        'water': {'primary': '#0E8CC7', 'accent': '#19ABEF'}
-    }
 
     def hex_to_rgb(hex_str):
         hex_str = hex_str.lstrip('#')
@@ -220,6 +205,13 @@ def trade_matches(request):
                 usercollection__quantity__gt=F('profile__trade_threshold')
             ).distinct()[:10]
 
+            filtered_users = []
+            for user in potential_users:
+                recipient_slots = get_trade_slots(user)
+                if recipient_slots['incoming_free'] > 0:
+                    filtered_users.append(user)
+            potential_users = filtered_users
+
             for user in potential_users:
                 their_wants = UserWant.objects.filter(
                     user=user,
@@ -251,7 +243,7 @@ def trade_matches(request):
                         'anon_name': anon_name
                     })
     
-    context = {'form': form, 'matches': matches}
+    context = {'form': form, 'matches': matches, 'slots': get_trade_slots(request.user)}
     return render(request, 'trade_matches.html', context)
 
 @login_required
@@ -262,11 +254,11 @@ def propose_trades(request):
     selected = request.POST.getlist('selected_matches')
     errors = []
     created_matches = []
+    slots = get_trade_slots(request.user)
+    if len(selected) > slots['outgoing_free']:
+        errors.append(f"Not enough free outgoing slots ({slots['outgoing_occupied']}/{FREE_TRADE_SLOTS if not request.user.profile.is_premium else PREMIUM_TRADE_SLOTS} occupied.) Rescind some pending trades to free up slots!")
 
-    pending_count = Match.objects.filter(initiator=request.user, status='pending').count()
-    if pending_count + len(selected) > 5:
-        errors.append('Exceeded max 5 outstanding proposals.')
-    else:
+    if not errors:
         for sel in selected:
             try:
                 rec_id, rec_card_id, off_card_id = map(int, sel.split('|'))
@@ -291,15 +283,16 @@ def propose_trades(request):
                 )
                 created_matches.append(match)
             except ValueError:
-                errors.append('Invalid selection.')
-    
-    if errors:
+                errors.append('Invalid selection.')        
+    else:
         return render(request, 'trade_matches.html', {'errors': errors})
+    
     return redirect('trade_matches')
 
 @login_required
 def trade_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
+    print(match)
     if request.user not in [match.initiator, match.recipient]:
         raise Http404("Not authorized.")
 
@@ -317,8 +310,41 @@ def trade_detail(request, match_id):
         match.save()
         return redirect('trade_detail', match_id=match.id)
     
-    context = {'match': match}
+    context = {'match': match, 'match_id': match_id}
     return render(request, 'trade_detail.html', context)
+
+def get_trade_slots(user):
+    current_month = timezone.now().date().replace(day=1)
+    if user.profile.last_trade_month != current_month:
+        user.profile.accepted_trades_this_month = 0
+        user.profile.last_trade_month = current_month
+        user.profile.save()
+
+    outgoing_pendings = Match.objects.filter(initiator=user, status='pending').prefetch_related('offered_card', 'received_card').order_by('-created_at')
+    incoming_pendings = Match.objects.filter(recipient=user, status='pending').prefetch_related('offered_card', 'received_card').order_by('-created_at')
+
+    outgoing_accepteds = Match.objects.filter(initiator=user, status='accepted').prefetch_related('offered_card', 'received_card').order_by('-created_at')
+    incoming_accepteds = Match.objects.filter(recipient=user, status='accepted').prefetch_related('offered_card', 'received_card').order_by('-created_at')
+
+    outgoing_occupied = outgoing_pendings.count() + outgoing_accepteds.count()
+    incoming_occupied = incoming_pendings.count() + incoming_accepteds.count()
+
+    base_slots = PREMIUM_TRADE_SLOTS if user.profile.is_premium else FREE_TRADE_SLOTS
+    outgoing_free = base_slots - outgoing_occupied
+    incoming_free = base_slots - incoming_occupied
+
+    return {
+        'base_slots': base_slots,
+        'premium_slots': PREMIUM_TRADE_SLOTS,
+        'outgoing_occupied': outgoing_occupied,
+        'outgoing_free': max(0, outgoing_free),
+        'incoming_occupied': incoming_occupied,
+        'incoming_free': max(0, incoming_free),
+        'outgoing_pendings': outgoing_pendings,
+        'incoming_pendings': incoming_pendings,
+        'outgoing_accepteds': outgoing_accepteds,
+        'incoming_accepteds': incoming_accepteds
+    }
 
 @login_required
 def accept_match(request, match_id):

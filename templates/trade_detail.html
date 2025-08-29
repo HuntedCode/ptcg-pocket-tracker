@@ -2,38 +2,43 @@
 
 {% block content %}
 
-<div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
-        <h2 class="card-title">Trade Proposal #{{ match.id }}</h2>
-        <p>Status: <span class="badge {{ match.status|slugify }}">{{ match.status|capfirst }}</span></p>
-        <p>From: {% if match.status == 'accepted' %}{{ match.initiator.username }}{% else %}Anonymous Trader{% endif %}</p>
-        <p>You Receive: {{ match.received_card.name }} ({{ match.received_card.tcg_id }})</p>
-        <p>You Offer: {{ match.offered_card.name }} ({{ match.offered_card.tcg_id }})</p>
-        <div class="card-actions">
-            {% if match.status == 'pending' %}
-            {% if request.user == match.recipient %}
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="accept">
-                <button class="btn btn-success">Accept</button>
-            </form>
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="deny">
-                <button class="btn btn-error">Deny</button>
-            </form>
-            {% elif request.user == match.initiator %}
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="rescind">
-                <btn class="btn btn-warning">Rescind</btn>
-            </form>
-            {% endif %}
-            {% endif %}
-            {% if match.status == 'accepted' %}
-            <a href="{% url 'send_message' match.recipient.id %}" class="btn btn-accent">Chat to Complete</a>
-            {% endif }
+<div class="hero min-h-screen bg-base-200">
+    <div class="hero-content flex-col lg:flex-row">
+        <div class="card w-96 bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Trade Proposal #{{ match.id }}</h2>
+                <p>Status: <span class="badge badge-{{ match.status|slugify }}">{{ match.status|capfirst }}</span></p>
+                <p>From: {% if match.status == 'accepted' %}{{ match.initiator.username }}{% else %}{{ match.anon_name }}{% endif %}</p>
+                <p>You Receive: {{ match.received_card.name }} ({{ match.received_card.tcg_id }})</p>
+                <p>You Offer: {{ match.offered_card.name }} ({{ match.offered_card.tcg_id }})</p>
+                <div class="card-actions justify-end">
+                    {% if match.status == 'pending' %}
+                    {% if request.user == match.recipient %}
+                    <button class="btn btn-success" onclick="confirmAction('accept', '{% url 'trade_detail' match.id %}')">Accept</button>
+                    <button class="btn btn-error" onclick="confirmAction('deny', '{% url 'trade_detail' match.id %}')">Deny</button>
+                    {% elif request.user == match.initiator %}
+                    <button class="btn btn-warning" onclick="confirmAction('rescind', '{% url 'trade_detail' match.id %}')">Rescind</button>
+                    {% endif %}
+                    {% endif %}
+                    {% if match.status == 'accepted' %}
+                    <a href="{% url 'send_message' match.recipient.id %}" class="btn btn-accent">Chat to Trade</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    function confirmAction(action, url) {
+        if (confirm('Confirm ${action}?')) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = url;
+            form.innerHTML = '{% csrf_token %}<input type="hidden" name="action" value="' + action + '">';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
 {% endblock %}

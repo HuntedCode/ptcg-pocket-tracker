@@ -3,129 +3,133 @@
 
 {% block content %}
 <div class="container mx-auto px-4">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
     
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 rounded-lg bg-base-300 border-2 border-neutral shadow-md shadow-neutral">
-        <form id="unownedForm" method="get" action="." class="flex items-center gap-2 lable cursor-pointer">
-            <span class="label-text text-sm font-semibold">Show Unowned</span>
-            <input type="checkbox" name="show_unowned" value="1" {% if show_unowned %}checked{% endif %} class="checkbox checkbox-primary" name="show_unowned" value="1" onchange="this.form.submit()">
-        </form>
-    
-        <div class="flex flex-wrap gap-4 divide-x divide-neutral">
-            <div class="flex items-center gap-2 pr-4">
-                <span class="text-sm font-medium text-primary">Diamonds 💎</span>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">1</span>
-                    <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="One Diamond" checked>
-                </label>
-             <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">2</span>
-                    <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Two Diamond" checked>
-                </label>
-             <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">3</span>
-                    <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Three Diamond" checked>
-                </label>
-             <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">4</span>
-                    <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Four Diamond" checked>
-                </label>
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 rounded-lg bg-base-300 border-2 border-neutral shadow-md shadow-neutral">
+                <form id="unownedForm" method="get" action="." class="flex items-center gap-2 lable cursor-pointer">
+                    <span class="label-text text-sm font-semibold">Show Unowned</span>
+                    <input type="checkbox" name="show_unowned" value="1" {% if show_unowned %}checked{% endif %} class="checkbox checkbox-primary" name="show_unowned" value="1" onchange="this.form.submit()">
+                </form>
+            
+                <div class="flex flex-wrap gap-4 divide-x divide-neutral">
+                    <div class="flex items-center gap-2 pr-4">
+                        <span class="text-sm font-medium text-primary">Diamonds 💎</span>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">1</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="One Diamond" checked>
+                        </label>
+                    <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">2</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Two Diamond" checked>
+                        </label>
+                    <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">3</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Three Diamond" checked>
+                        </label>
+                    <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">4</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rarity-filter" data-filter="Four Diamond" checked>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-2 pr-4">
+                        <span class="text-sm font-medium text-secondary">Stars ★</span>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">1</span>
+                            <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="One Star" checked>
+                        </label>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">2</span>
+                            <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="Two Star" checked>
+                        </label>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">3</span>
+                            <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="Three Star" checked>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-2 pr-4">
+                        <span class="text-sm font-medium text-accent">Shinies ✨</span>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">1</span>
+                            <input type="checkbox" class="checkbox checkbox-accent checkbox-xs rarity-filter" data-filter="One Shiny" checked>
+                        </label>
+                        <label class="label cursor-pointer gap-1">
+                            <span class="label-text text-xs">2</span>
+                            <input type="checkbox" class="checkbox checkbox-accent checkbox-xs rarity-filter" data-filter="Two Shiny" checked>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-2 pr-4">
+                        <span class="text-sm font-medium text-error">Crown 👑</span>
+                        <label class="label cursor-pointer gap-1">
+                            <input type="checkbox" class="checkbox checkbox-error checkbox-xs rarity-filter" data-filter="Crown" checked>
+                        </label>
+                    </div>
+                </div>  
             </div>
 
-            <div class="flex items-center gap-2 pr-4">
-                <span class="text-sm font-medium text-secondary">Stars ★</span>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">1</span>
-                    <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="One Star" checked>
-                </label>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">2</span>
-                    <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="Two Star" checked>
-                </label>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">3</span>
-                    <input type="checkbox" class="checkbox checkbox-secondary checkbox-xs rarity-filter" data-filter="Three Star" checked>
-                </label>
+            {% if not sorted_sets %}
+            <div class="alert alert-info shadow-lg">
+                <div>
+                    <img src="{% static 'images/icons/pokeball-open-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">Your collection is empty! Head to the tracker to add some cards!
+                </div>
             </div>
-
-            <div class="flex items-center gap-2 pr-4">
-                <span class="text-sm font-medium text-accent">Shinies ✨</span>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">1</span>
-                    <input type="checkbox" class="checkbox checkbox-accent checkbox-xs rarity-filter" data-filter="One Shiny" checked>
-                </label>
-                <label class="label cursor-pointer gap-1">
-                    <span class="label-text text-xs">2</span>
-                    <input type="checkbox" class="checkbox checkbox-accent checkbox-xs rarity-filter" data-filter="Two Shiny" checked>
-                </label>
-            </div>
-
-            <div class="flex items-center gap-2 pr-4">
-                <span class="text-sm font-medium text-error">Crown 👑</span>
-                <label class="label cursor-pointer gap-1">
-                    <input type="checkbox" class="checkbox checkbox-error checkbox-xs rarity-filter" data-filter="Crown" checked>
-                </label>
-            </div>
-        </div>  
-    </div>
-
-    {% if not sorted_sets %}
-    <div class="alert alert-info shadow-lg">
-        <div>
-            <img src="{% static 'images/icons/pokeball-open-favicon.png' %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">Your collection is empty! Head to the tracker to add some cards!
-        </div>
-    </div>
-    {% else %}
-    {% for set_obj, items, owned_count, unowned_count, has_unseen in sorted_sets %}
-    <div class="mb-8 set-section">
-        <div class="flex justify-between items-center mb-4 p-2">
-            <h2 class="text-2xl font-semibold flex items-center">
-                <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
-                {{ set_obj.name }}
-                <span class="ml-2 text-sm text-gray-500">({{ owned_count }} Owned Cards{% if show_unowned %} / {{ unowned_count }} Unowned Cards{% endif %})</span>
-                {% if has_unseen %}
-                <img src="{% static 'images/icons/new2.png' %}" alt="New Cards!" class="w-8 h-8 ml-4 set-unseen-notification-{{ set_obj.id }}">
-                {% endif %}
-            </h2>
-            <button class="btn btn-sm bg-base-200 toggle-btn hover:bg-primary hover:text-primary-content" data-target="cards-{{ set_obj.id }}">▼</button>
-        </div>
-        <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
-            {% for item in items %}
-            {% with rarity_lower=item.card.rarity|lower %}
-            <div class="card w-32 bg-base-100 relative card-floating card-interactive
-            {% if 'diamond' in rarity_lower %}rarity-diamond
-            {% elif 'star' in rarity_lower %}rarity-star
-            {% elif 'shiny' in rarity_lower %}rarity-shiny
-            {% elif 'crown' in rarity_lower %}rarity-crown
-            {% endif %}" data-card-id="{{ item.card.id }}" data-rarity="{{ item.card.rarity }}" role="button" tabindex="0">
-            {% endwith %}
-                <div class="tooltip" data-tip="{{ item.card.name }} - {{ item.card.rarity }}">
-                    <figure>
-                        <img src="{% static item.card.local_image_small %}" alt="{{ item.card.name }}" class="card-small-img w-full h-44 object-cover {% if item.quantity == 0 %}grayscale hover:grayscale-0{% endif %}" data-large-src="{{ item.card.image_base }}/high.png" data-rarity="{{ item.card.rarity }}" loading="lazy">
-                    </figure>
-                    {% if item.collection and not item.collection.is_seen %}
-                    <img src="{% static 'images/icons/new2.png' %}" alt="New card!" class="absolute top-[-.75rem] right-[-.75rem] w-8 h-8 z-10" data-unseen-icon>
-                    {% endif %}
-                    {% if item.collection %}
-                    <form method="post" data-mark-seen-form>
-                        {% csrf_token %}
-                        <input type="hidden" name="mark_seen_{{ item.collection.id }}" value="true">
-                    </form>
-                    {% endif %}
+            {% else %}
+            {% for set_obj, items, owned_count, unowned_count, has_unseen in sorted_sets %}
+            <div class="mb-8 set-section">
+                <div class="flex justify-between items-center mb-4 p-2">
+                    <h2 class="text-2xl font-semibold flex items-center">
+                        <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-8 mr-2">
+                        {{ set_obj.name }}
+                        <span class="ml-2 text-sm text-gray-500">({{ owned_count }} Owned Cards{% if show_unowned %} / {{ unowned_count }} Unowned Cards{% endif %})</span>
+                        {% if has_unseen %}
+                        <img src="{% static 'images/icons/new2.png' %}" alt="New Cards!" class="w-8 h-8 ml-4 set-unseen-notification-{{ set_obj.id }}">
+                        {% endif %}
+                    </h2>
+                    <button class="btn btn-sm bg-base-200 toggle-btn hover:bg-primary hover:text-primary-content" data-target="cards-{{ set_obj.id }}">▼</button>
+                </div>
+                <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center">
+                    {% for item in items %}
+                    {% with rarity_lower=item.card.rarity|lower %}
+                    <div class="card card-collection w-32 bg-base-100 relative card-floating card-interactive
+                    {% if 'diamond' in rarity_lower %}rarity-diamond
+                    {% elif 'star' in rarity_lower %}rarity-star
+                    {% elif 'shiny' in rarity_lower %}rarity-shiny
+                    {% elif 'crown' in rarity_lower %}rarity-crown
+                    {% endif %}" data-card-id="{{ item.card.id }}" data-rarity="{{ item.card.rarity }}" role="button" tabindex="0">
+                    {% endwith %}
+                        <div class="tooltip" data-tip="{{ item.card.name }} - {{ item.card.rarity }}">
+                            <figure>
+                                <img src="{% static item.card.local_image_small %}" alt="{{ item.card.name }}" class="card-small-img w-full h-44 object-cover {% if item.quantity == 0 %}grayscale hover:grayscale-0{% endif %}" data-large-src="{{ item.card.image_base }}/high.png" data-rarity="{{ item.card.rarity }}" loading="lazy">
+                            </figure>
+                            {% if item.collection and not item.collection.is_seen %}
+                            <img src="{% static 'images/icons/new2.png' %}" alt="New card!" class="absolute top-[-.75rem] right-[-.75rem] w-8 h-8 z-10" data-unseen-icon>
+                            {% endif %}
+                            {% if item.collection %}
+                            <form method="post" data-mark-seen-form>
+                                {% csrf_token %}
+                                <input type="hidden" name="mark_seen_{{ item.collection.id }}" value="true">
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
+            {% endif %}
+
+            {% if errors %}
+                <div class="alert alert-error mt-4">
+                    {% for error in errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
-    {% endfor %}
-    {% endif %}
-
-    {% if errors %}
-        <div class="alert alert-error mt-4">
-            {% for error in errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        </div>
-    {% endif %}
 </div>
 <div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
     <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-xl">
@@ -224,13 +228,13 @@
                 visibilityMap[filter.dataset.filter] = filter.checked;
             });
 
-            const allCards = document.querySelectorAll('.card');
+            const allCards = document.querySelectorAll('.card-collection');
             allCards.forEach(card => {
                 const isVisible = visibilityMap[card.dataset.rarity] ?? true;
                 card.classList.toggle('hidden', !isVisible);
             })
 
-            const visibleCards = document.querySelectorAll('.card:not(.hidden)')
+            const visibleCards = document.querySelectorAll('.card-collection:not(.hidden)')
             visibleCards.forEach(card => {
                 card.classList.remove('card-floating');
                 setTimeout(() => {

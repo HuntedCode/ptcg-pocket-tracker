@@ -29,6 +29,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('trade/matches/', views.trade_matches, name='trade_matches'),
     path('trade/propose/', views.propose_trades, name='propose_trades'),
+    path('trade/detail/<int:match_id>', views.trade_detail, name='trade_detail'),
     path('trade/accept/<int:match_id>/', views.accept_match, name='accept_match'),
     path('trade/reject/<int:match_id>/', views.reject_match, name='reject_match'),
     path('trade/ignore/<int:match_id>/', views.ignore_match, name='ignore_match'),

@@ -15,3 +15,10 @@ def startswith(text, starts):
     if isinstance(text, str):
         return text.startswith(starts)
     return False
+
+@register.filter
+def times(value):
+    try:
+        return range(int(value))
+    except (ValueError, TypeError):
+        return range(0)
