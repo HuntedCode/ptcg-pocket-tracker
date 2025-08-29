@@ -7,6 +7,8 @@ __pycache__/
 db.sqlite3
 *.log
 
+# Large image folders
+theme/static/cards
 
 # Virtual environment
 venv/

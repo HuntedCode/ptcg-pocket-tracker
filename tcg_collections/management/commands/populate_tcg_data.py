@@ -40,10 +40,21 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Error fetching set {set_id}: {e}"))
                 return
         else:
-            for set_info in sets_data.get('sets', []):
-                if not refresh_full and new_only and Set.objects.filter(tcg_id=set_info['id']).exists():
-                    self.stdout.write(self.style.NOTICE(f"Skipping existing set {set_info['id']}"))
+            for cards_data in sets_data.get('sets', []):
+                if not refresh_full and new_only and Set.objects.filter(tcg_id=cards_data['id']).exists():
+                    self.stdout.write(self.style.NOTICE(f"Skipping existing set {cards_data['id']}"))
                     continue
+                
+                set_info = {
+                    'id': cards_data['id'],
+                    'name': cards_data['name'],
+                    'cardCount': cards_data.get('cardCount', {}),
+                    'logo_path': f"images/set_logos/{cards_data['id']}_logo.png",
+                    'symbol': cards_data.get('symbol', '')
+                }
+                
+                print(set_info)
+
                 self.create_or_update_set(set_info, lang, last_set_id=last_set_id, refresh_full=refresh_full, booster_refresh=booster_refresh)
 
         self.stdout.write(self.style.SUCCESS('DB population complete!'))
@@ -102,7 +113,6 @@ class Command(BaseCommand):
             # Prefer to get set data from the set endpoint instead of series endpoint if possible.
             set_obj.card_count_official = cards_data.get('cardCount', {}).get('official', set_obj.card_count_official)
             set_obj.card_count_total = cards_data.get('cardCount', {}).get('total', set_obj.card_count_total)
-            set_obj.logo = cards_data.get('logo', set_obj.logo)
             set_obj.symbol = cards_data.get('symbol', set_obj.symbol)
             set_obj.save()
 

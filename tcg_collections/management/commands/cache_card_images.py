@@ -16,7 +16,7 @@ class Command(BaseCommand):
         if set_id:
             cards = cards.filter(card_set__tcg_id=set_id)
         
-        os.makedirs(os.path.join(settings.MEDIA_ROOT, 'cards'), exist_ok=True)
+        os.makedirs(os.path.join(settings.STATIC_ROOT, 'cards'), exist_ok=True)
 
         for card in cards:
             if card.local_image_small:
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             url = f"{card.image_base}/low.png"
             response = requests.get(url)
             if response.status_code == 200:
-                file_path = os.path.join(settings.MEDIA_ROOT, 'cards', f"{card.tcg_id}_low.png")
+                file_path = os.path.join(settings.STATIC_ROOT, 'cards', f"{card.tcg_id}_low.png")
                 with open(file_path, 'wb') as f:
                     f.write(response.content)
                 card.local_image_small = f"cards/{card.tcg_id}_low.png"
