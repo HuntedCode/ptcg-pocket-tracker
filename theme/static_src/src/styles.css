@@ -351,6 +351,10 @@ footer .foot-link {
   @apply bg-base-100 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
 }
 
+.raised-card-dark {
+  @apply bg-base-300 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
+}
+
 .raised-card-disabled {
   @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral opacity-75;
   background-color: hsl(0, 0%, 69%) !important;
