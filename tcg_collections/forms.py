@@ -17,13 +17,6 @@ class ProfileForm(forms.ModelForm):
         label='Trading Preference'
     )
 
-
-    display_favorites = forms.CharField(
-        widget=forms.HiddenInput(),
-        required=False,
-        initial=''
-    )
-
     ICON_CHOICES = [
         ('abra.png', 'Abra'),
         ('bellsprout.png', 'Bellsprout'),
@@ -78,72 +71,44 @@ class ProfileForm(forms.ModelForm):
 
     pic_icon = forms.ChoiceField(
         choices=ICON_CHOICES,
-        widget=forms.Select(attrs={'class': 'select'}), 
+        widget=forms.Select(attrs={'class': 'select select-accent'}), 
         label='Profile Icon'
     )
 
     pic_bg_color = forms.ChoiceField(
         choices=COLOR_CHOICES,
-        widget=forms.Select(attrs={'class': 'select'}),
+        widget=forms.Select(attrs={'class': 'select select-accent'}),
         label='Background Color'
     )
 
     theme = forms.ChoiceField(
         choices=THEME_CHOICES,
-        widget=forms.Select(attrs={'class': 'select'}),
+        widget=forms.Select(attrs={'class': 'select select-accent'}),
         label='Profile Theme'
     )
 
     class Meta:
         model = Profile
-        fields = ['is_trading_active', 'trade_threshold', 'bio', 'favorite_set', 'display_favorites', 'pic_icon', 'pic_bg_color', 'theme']
+        fields = ['is_trading_active', 'trade_threshold', 'bio', 'pic_icon', 'pic_bg_color', 'theme']
         widgets = {
             'is_trading_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'favorite_set': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance:
             self.fields['trade_threshold'].initial = self.instance.trade_threshold
-
-            fav_cards = Card.objects.filter(
-                usercollection__user=self.instance.user,
-                usercollection__is_favorite=True,
-                usercollection__quantity__gt=0
-            ).distinct().order_by('name')
-            self.fields['display_favorites'].initial = ','.join(map(str, self.instance.display_favorites))
             
             config = self.instance.pic_config
             self.fields['pic_icon'].initial = config.get('icon', 'pokeball.png')
             self.fields['pic_bg_color'].initial = config.get('bg_color', '#0e8cc7')
             
             self.fields['theme'].initial = self.instance.theme
-        
-    def clean_display_favorites(self):
-        value = self.cleaned_data.get('display_favorites', '')
-        value = value.replace('[', '').replace(']', '').replace(' ', '')
-        if not value.strip():
-            return []
-        if value:
-            try:
-                selected = [int(id_str.strip()) for id_str in value.split(',') if id_str.strip()]
-            except ValueError as e:
-                print("ValueError: ", e)
-        else:
-            selected = []
-        
-        print("Selected:", selected)
-        if len(selected) > 10:
-            raise forms.ValidationError('Max 10 favorites.')
-        return selected
     
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.trade_threshold = int(self.cleaned_data['trade_threshold'])
-        selected_str = self.cleaned_data['display_favorites']
-        instance.display_favorites = [int(s) for s in selected_str]
         instance.pic_config = {
             'icon': self.cleaned_data['pic_icon'],
             'bg_color': self.cleaned_data['pic_bg_color']

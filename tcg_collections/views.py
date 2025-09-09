@@ -71,10 +71,6 @@ def profile(request, token):
             'total_rare': total_rare_in_set,
             'rare_completion': round(rare_completion, 1)
         })
-    
-    displayed_favorites=  []
-    if profile.display_favorites:
-        displayed_favorites = Card.objects.filter(id__in=profile.display_favorites).order_by('tcg_id')
 
     activities = Activity.objects.filter(user=user).order_by('-timestamp')[:10]
     feed = []
@@ -126,22 +122,7 @@ def profile(request, token):
         base_100, base_200, base_300 = generate_bases(primary)
     theme = {'primary': primary, 'accent': accent, 'base_100':base_100, 'base_200': base_200, 'base_300': base_300}
 
-    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'displayed_favorites': displayed_favorites, 'feed': feed, 'theme': theme}
-
-    if is_own:
-        fav_cards = Card.objects.filter(
-            usercollection__user=user,
-            usercollection__is_favorite=True,
-            usercollection__quantity__gt=0
-        ).distinct().order_by('tcg_id')
-
-        fav_sets = fav_cards.values('card_set__id', 'card_set__name').distinct().order_by('card_set__tcg_id')
-        fav_rarities = fav_cards.values_list('rarity', flat=True).distinct()
-
-        context['fav_cards'] = fav_cards
-        context['fav_sets'] = [(set['card_set__id'], set['card_set__name']) for set in fav_sets]
-        context['fav_rarities'] = sorted(set(fav_rarities))
-
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'feed': feed, 'theme': theme}
     return render(request, 'profile.html', context)
 
 @login_required
@@ -442,8 +423,8 @@ def tracker(request, set_id):
     all_sets = Set.objects.all().order_by('tcg_id')
     cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
 
-    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'is_favorite')
-    owned_dict = {cid: (qty, is_fav) for cid, qty, is_fav in owned}
+    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
+    owned_dict = {cid: qty for cid, qty in owned}
     wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
     errors = []
@@ -503,23 +484,9 @@ def tracker(request, set_id):
                     errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
                     continue
 
-            elif key.startswith('favorite_toggle_'):
-                card_id_str = key[16:]
-                try:
-                    card_id = int(card_id_str)
-                    card = get_object_or_404(Card, id=card_id)
-                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
-                    if collection and collection.quantity > 0:
-                        collection.is_favorite = not collection.is_favorite
-                        collection.save()
-                    else:
-                        errors.append(f"Cannot favorite unowned card ID {card_id}")
-                except ValueError:
-                    errors.append(f"Invalid card ID for favorite: {card_id_str}")
-
         if not errors:
-            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity', 'is_favorite')
-            owned_dict = {cid: (qty, is_fav) for cid, qty, is_fav in owned}
+            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
+            owned_dict = {cid: qty for cid, qty in owned}
             wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX

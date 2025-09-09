@@ -37,10 +37,21 @@
                     <li><a href="{% url 'tracker' latest_set_id %}" class="card drop-item">Tracker</a></li>
                     <li><a href="{% url 'wishlist' request.user.profile.share_token %}" class="card drop-item">Wishlist</a></li>
                     <li><a href="{% url 'trade_matches' %}" class="card drop-item">Trade</a></li>
-                    <li><a href="{% url 'collection' %}" class="card drop-item">Collection</a>
+                    <li>     
+                        {% if unseen_count > 0 %}
+                        <a href="{% url 'collection' %}" class="card drop-item flex flex-row gap-2">Collection
+                            <img class="unseen-notification-badge w-5 h-5" src="{% static 'images/icons/pokeball-favicon.png' %}">
+                        </a>
+                        {% else %}
+                        <a href="{% url 'collection' %}" class="card drop-item">Collection</a>
+                        {% endif %}
+                    </li>
                     <li><a href="{% url 'pack_opener' %}" class="card drop-item">Open Pack</a></li>
                     <li><a href="{% url 'profile' request.user.profile.share_token %}" class="card drop-item">Profile</a></li>
                 </ul>
+                {% if unseen_count > 0 %}
+                    <img class="unseen-notification-badge absolute top-[0.25rem] right-[0.25rem] w-3 h-3" src="{% static 'images/icons/red-dot.png' %}">
+                {% endif %}
             </div>
             <!-- End Mobile -->
              

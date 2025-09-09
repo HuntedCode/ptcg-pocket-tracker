@@ -416,7 +416,7 @@ footer .foot-link {
 }
 
 .shimmer-text {
-  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
   background-size: 200% 50%;
   background-clip: text;
   -webkit-background-clip: text;
@@ -425,7 +425,7 @@ footer .foot-link {
 }
 
 .shimmer-text.pack-open-display {
-  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
   background-size: 200% 50%;
   background-clip: text;
   -webkit-background-clip: text;
