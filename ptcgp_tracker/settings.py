@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'tcg_collections.context_processors.random_navbar_icon',
                 'tcg_collections.context_processors.unseen_count_processor',
+                'tcg_collections.context_processors.latest_set_id'
             ],
         },
     },

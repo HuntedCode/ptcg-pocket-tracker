@@ -1,5 +1,5 @@
 import random
-from .models import UserCollection
+from .models import UserCollection, Set
 
 def random_navbar_icon(request):
     icons = [
@@ -31,3 +31,6 @@ def unseen_count_processor(request):
     if request.user.is_authenticated:
         return {'unseen_count': UserCollection.objects.filter(user=request.user, is_seen=False).count()}
     return {'unseen_count': 0}
+
+def latest_set_id(request):
+    return {'latest_set_id': Set.objects.latest('id').id}

@@ -2,6 +2,12 @@
 {% load static %}
 
 {% block content %}
+        <p>Base</p>
+        <p class="hidden sm:block">Sm</p>
+        <p class="hidden md:block">Md</p>
+        <p class="hidden lg:block">Lg</p>
+        <p class="hidden xl:block">Xl</p>
+        <p class="hidden 2xl:block">2Xl</p>
 
 <div style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};">
     <div class="container mx-auto px-4">

@@ -14,164 +14,272 @@
 @source "../../../**/*.{html,py,js}";
 
 @plugin "daisyui" {
-  themes: pokemon --default;  /* Registers your custom theme and sets it as default (no data-theme needed if global) */
+  themes: pokemon --default;
 }
 
 /* Define your custom "pokemon" theme */
 @plugin "daisyui/theme" {
-  name: "pokemon";  /* Matches what you'll use in data-theme */
-  default: true;    /* Makes it the fallback theme */
-  prefersdark: false;  /* Not auto-switching to dark; set true if you add a dark variant later */
-  color-scheme: light;  /* Base scheme; can be 'dark' for inverted colors */
+  name: "pokemon"; 
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
 
-  /* Your colors as CSS variables (maps to daisyUI's structure—direct from your old config) */
-  --color-primary: #0075BE;  /* Blue for buttons/accents */
-  --color-primary-content: #FFFFFF;  /* Text on primary (white for contrast—add if needed) */
-  --color-secondary: #FFCC00;  /* Yellow for highlights */
-  --color-secondary-content: #000000;  /* Text on secondary (black for readability) */
-  --color-accent: #A82028;  /* Red for CTAs */
+  --color-primary: #0075BE;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #FFCC00;
+  --color-secondary-content: #000000;
+  --color-accent: #A82028;
   --color-accent-content: #FFFFFF;
-  --color-neutral: #304160;  /* Dark blue-grey for borders/text */
+  --color-neutral: #304160;
   --color-neutral-content: #FFFFFF;
-  --color-base-100: #F3F8FC;  /* Changed: Subtle light blue-gray tint for community warmth (less bland than pure white) */
-  --color-base-200: #E8F0F5;  /* Adjusted: Softer hover bg to match new base */
-  --color-base-300: #DCE6EE;  /* Adjusted: Depth for cards/shadows */
-  --color-base-content: #000000;  /* Text on base backgrounds */
-  --color-info: #3FA129;  /* Green for info/success */
+  --color-base-100: #F3F8FC;
+  --color-base-200: #E8F0F5;
+  --color-base-300: #DCE6EE;
+  --color-base-content: #000000;
+  --color-info: #3FA129;
   --color-info-content: #FFFFFF;
   --color-success: #3FA129;
   --color-success-content: #FFFFFF;
-  --color-warning: #FAC000;  /* Yellow for warnings */
+  --color-warning: #FAC000;
   --color-warning-content: #000000;
-  --color-error: #D8223B;  /* Red for errors */
+  --color-error: #D8223B;
   --color-error-content: #FFFFFF;
-  /* Optional extras (daisyUI defaults; customize for Pokémon feel) */
-  --radius-selector: 0.5rem;  /* Rounded corners for buttons, etc. */
-  --border: 1px;  /* Border width */
-  --depth: 1;  /* Shadow depth */
-  /* New additions for polish (explain: These enhance community feel with rounded, shadowed elements) */
-  --rounded-box: 1rem;  /* Softer corners for cards/modals (Pokemon rounded style) */
-  --rounded-btn: 0.5rem;  /* Buttons slightly rounded for fun */
-  --rounded-badge: 1.9rem;  /* Badges (if used) circular */
-  --animation-btn: 0.25s;  /* Faster button hovers for responsiveness */
-  --animation-input: .2s;  /* Smooth inputs */
-  --btn-focus-scale: 0.95;  /* Subtle scale on button focus (community interactivity) */
-  --tab-border: 1px;  /* If tabs added later */
+
+  --radius-selector: 0.5rem;
+  --border: 1px;
+  --depth: 1;
+
+  --rounded-box: 1rem;
+  --rounded-btn: 0.5rem;
+  --rounded-badge: 1.9rem;
+  --animation-btn: 0.25s;
+  --animation-input: .2s;
+  --btn-focus-scale: 0.95;
+  --tab-border: 1px;
   --tab-radius: 0.5rem;
 }
 
 /* Dark variant: pokemon-dark */
 @plugin "daisyui/theme" {
-  name: "pokemon-dark";  /* For data-theme="pokemon-dark" */
-  default: false;  /* Not fallback */
-  prefersdark: true;  /* Auto-switch on OS dark mode if enabled */
-  color-scheme: dark;  /* Inverts system colors */
+  name: "pokemon-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
 
-  /* Inverted vars */
-  --color-primary: #005A94;  /* Darkened blue (original #0075BE -value +sat) */
-  --color-primary-content: #FFFFFF;  /* White text on primary */
-  --color-secondary: #CC9900;  /* Darkened yellow (#FFCC00 -value) */
-  --color-secondary-content: #FFFFFF;  /* Changed: White for better contrast on darker secondary */
-  --color-accent: #7E1A1F;  /* Darkened red (#A82028 -value) */
+  --color-primary: #005A94;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #CC9900;
+  --color-secondary-content: #FFFFFF;
+  --color-accent: #7E1A1F;
   --color-accent-content: #FFFFFF;
-  --color-neutral: #1A2538;  /* Darker blue-gray (#304160 -value) */
+  --color-neutral: #2A3C5B;
   --color-neutral-content: #FFFFFF;
-  --color-base-100: #0C1115;  /* Very dark blue-gray (inverted light #F3F8FC) */
-  --color-base-200: #1A1F24;  /* Slight lighten off 100 */
-  --color-base-300: #282D32;  /* Further lighten for depth */
-  --color-base-content: #E0E0E0;  /* Light gray text on bases (near white for readability) */
-  --color-info: #2E7D20;  /* Darkened green (#3FA129 -value) */
+  --color-base-100: #0C1115;
+  --color-base-200: #1A1F24;
+  --color-base-300: #282D32;
+  --color-base-content: #E0E0E0;
+  --color-info: #2E7D20;
   --color-info-content: #FFFFFF;
-  --color-success: #2E7D20;  /* Same as info */
+  --color-success: #2E7D20;
   --color-success-content: #FFFFFF;
-  --color-warning: #C99E00;  /* Darkened yellow (#FAC000 -value) */
+  --color-warning: #C99E00;
   --color-warning-content: #FFFFFF;
   --color-error: #A51A2D;
   --color-error-content: #FFFFFF;
-    /* Optional extras (daisyUI defaults; customize for Pokémon feel) */
-  --radius-selector: 0.5rem;  /* Rounded corners for buttons, etc. */
-  --border: 1px;  /* Border width */
-  --depth: 1;  /* Shadow depth */
-  /* New additions for polish (explain: These enhance community feel with rounded, shadowed elements) */
-  --rounded-box: 1rem;  /* Softer corners for cards/modals (Pokemon rounded style) */
-  --rounded-btn: 0.5rem;  /* Buttons slightly rounded for fun */
-  --rounded-badge: 1.9rem;  /* Badges (if used) circular */
-  --animation-btn: 0.25s;  /* Faster button hovers for responsiveness */
-  --animation-input: .2s;  /* Smooth inputs */
-  --btn-focus-scale: 0.95;  /* Subtle scale on button focus (community interactivity) */
-  --tab-border: 1px;  /* If tabs added later */
+
+  --radius-selector: 0.5rem;
+  --border: 1px;
+  --depth: 1;
+
+  --rounded-box: 1rem;
+  --rounded-btn: 0.5rem;
+  --rounded-badge: 1.9rem;
+  --animation-btn: 0.25s;
+  --animation-input: .2s;
+  --btn-focus-scale: 0.95;
+  --tab-border: 1px;
   --tab-radius: 0.5rem;
 }
 
-/* Custom override for for-trade checkboxes */
-.for-trade-checkbox {
-  /* Base styles if needed (e.g., size, border) */
-  @apply border-primary;  /* Uses your theme's primary border when unchecked */
+/* General */
 
-  /* When checked: Fill with blue (primary) instead of gray */
-  &:checked {
-    background-color: var(--color-primary);  /* #0075BE blue fill */
-    border-color: var(--color-primary);     /* Matching border */
-    /* Optional: Add a checkmark icon color if DaisyUI uses one */
-    color: var(--color-primary-content);    /* White checkmark for contrast */
-  }
-
-  /* Hover/focus for better UX (optional but good for accessibility) */
-  &:hover, &:focus {
-    @apply ring-2 ring-primary ring-offset-2;  /* Blue ring on interaction */
-  }
-}
-
-/* Global font application */
  :root {
-   --font-family-base: 'Poppins', sans-serif;  /* Var for easy theme swap later */
+   --font-family-base: 'Poppins', sans-serif;
  }
 
-/* New: Global overrides for minimal/professional look (explain: These ensure clean spacing and shadows) */
+
 body {
-  font-family: var(--font-family-base);  /* Applies to all text—clean cascade */
-  font-size: 1rem;  /* Base size—professional readability (16px) */
-  line-height: 1.5;  /* Spacing for minimal feel */
+  @apply bg-base-300 text-base-content min-h-screen flex flex-col;
+  font-family: var(--font-family-base);
+  font-size: 1rem;
+  line-height: 1.5;
 }
+
+.btn:hover {
+  @apply scale-105;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Navbar */
 
 .navbar {
-  @apply shadow-md;  /* Subtle shadow for depth (professional) */
+  @apply bg-base-100 shadow-xl rounded-box;
 }
 
-.navbar .menu li a {
-   @apply text-lg font-semibold;  /* Larger (1.125rem), semibold (600) for emphasis */
+.navbar-start .navbar-btn {
+  @apply ml-2;
+  @apply lg:text-lg lg:py-5 lg:px-2;
+  @apply xl:text-xl xl:py-6 xl:px-3;
+  @apply 2xl:text-2xl 2xl:py-8 2xl:px-4;
+}
+
+.navbar-start .navbar-btn:hover {
+  @apply bg-neutral text-neutral-content;
+  transition: all 0.2s ease-in-out;
+}
+
+.navbar-start .nav-logo {
+  @apply mr-0.5;
+  @apply lg:w-6 lg:h-6;
+  @apply xl:w-8 xl:h-8;
+  @apply 2xl:w-10 2xl:h-10;
+}
+
+.navbar-start .navbar-btn-text,
+.navbar-center .navbar-btn-text {
+  @apply truncate;
+}
+
+.navbar-start .menu-drop-start {
+  @apply focus:bg-base-300 focus:text-primary-content focus:scale-95 focus:border-2 focus:border-neutral;
+}
+
+.navbar-start .menu-drop {
+  @apply bg-base-100 rounded-box shadow-lg border-2 border-base-300 w-40 gap-2;
+}
+
+.navbar-start .menu-drop .drop-item {
+  @apply bg-base-300 text-lg text-base-content font-semibold shadow-lg border-2 border-neutral;
+  @apply active:bg-primary active:text-primary-content active:scale-95;
+}
+
+
+.navbar-center .navbar-menu {
+  @apply flex-row items-center justify-around gap-2 font-semibold w-full;
+}
+
+.navbar-center .nav-item,
+.navbar-center .nav-item-focused {
+  @apply text-base font-semibold;
+  @apply xl:text-lg;
+  @apply hover:text-neutral-content;
  }
 
- .navbar .menu li a:hover {
-   @apply underline scale-105;  /* Blue hover, underline for clarity, subtle scale for community fun */
-   transition: all 0.2s ease-in-out;  /* Smooth change (from your animation-btn) */
+.navbar-center .nav-item:hover {
+  @apply bg-neutral underline scale-105;
+  transition: all 0.2s ease-in-out;
  }
+
+.navbar-center .nav-item-focused {
+  @apply bg-accent text-primary-content rounded-md hover:bg-accent;
+ }
+
+.navbar-center .navbar-btn {
+  @apply text-lg py-5 px-2.5;
+  @apply active:bg-neutral active:text-neutral-content active:scale-95;
+ }
+
+.navbar-center .nav-logo {
+  @apply w-6 h-6 mr-0.5;
+ }
+
+ .navbar-end .nav-icons {
+  @apply flex-row items-center gap-1 mr-0;
+  @apply md:gap-2 md:mr-2;
+  @apply xl:gap-4 xl:mr-4;
+ }
+ 
+ /* Footer */
+
+footer {
+  @apply bg-neutral text-neutral-content text-center font-normal py-4 text-sm;
+  @apply xl:text-base;
+}
+
+footer .footer-links {
+  @apply justify-center space-x-4 pt-4;
+}
+
+footer .foot-link {
+  @apply hover:text-accent transition duration-200;
+}
+
+ /* Containers */
 
 .container {
-  @apply mx-auto px-4;  /* Center content with padding (minimal whitespace) */
+  @apply flex-grow bg-base-200 rounded-box shadow-md py-8 px-4 my-4 mx-auto;
 }
 
- /* If buttons/menus need override (DaisyUI defaults sans-serif, but ensure) */
- .btn, .menu li a {
-   font-family: var(--font-family-base);
- }
+.content-card {
+  @apply bg-base-100 shadow-xl rounded-xl border border-base-300 lg:mx-4;
+}
 
- .btn:hover {
-   @apply scale-105;  /* Slight scale on button hover for playful feel */
-   transition: transform 0.2s ease-in-out;
- }
+/* Tracker Styles */
+
+.sets-nav-mobile {
+  @apply overflow-x-auto bg-base-300 gap-4 mb-6 p-2 border-2 border-neutral rounded-box whitespace-nowrap;
+}
+
+.sets-nav-mobile .set-card-mobile,
+.sets-nav-mobile .set-card-mobile-active-tab {
+  @apply flex-none w-40 p-2 rounded-box border-2 border-neutral shadow-xl;
+  @apply active:bg-primary active:text-primary-content active:scale-95;
+}
+
+.sets-nav-mobile .set-card-mobile {
+  @apply bg-base-200 text-base-content font-normal;
+}
+
+.sets-nav-mobile .set-card-mobile-active-tab {
+  @apply bg-primary text-primary-content font-bold;
+}
+
+.sets-nav {
+  @apply flex-wrap justify-center gap-4 mb-4;
+}
+
+.sets-nav .set-card,
+.sets-nav .set-card-active-tab {
+  @apply flex-col items-center justify-center p-2 w-[200px] h-[100px]  border border-neutral rounded-md shadow-md shadow-neutral transition-all duration-200;
+  @apply hover:bg-primary hover:text-primary-content hover:font-bold hover:scale-105;
+}
+
+.sets-nav .set-card {
+  @apply bg-base-200 text-base-content font-normal;
+}
+
+.sets-nav .set-card-active-tab {
+  @apply bg-primary text-primary-content font-bold;
+}
+
+.set-logo {
+  @apply w-32 h-16 mb-1 object-contain row-span-1;
+}
+
+.set-name-text {
+  @apply text-center text-sm font-medium row-span-1;
+}
+
+.cards-container-mobile .mobile-card {
+  @apply shadow-md p-4 rounded-lg border-2;
+}
+
+
+
+
 
 .remove-overlay {
   @apply font-bold text-lg;
-}
-
- footer {
-  @apply bg-neutral text-neutral-content;  /* Dark bg/white text for contrast */
-  border-top: 1px solid var(--color-neutral);  /* Subtle separator (minimal) */
-}
-
-footer a {
-  @apply hover:text-accent transition duration-200;  /* Red hover for CTAs */
 }
 
 @keyframes float {

@@ -8,64 +8,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="PTCG Tracker - Manage your Pokemon TCG Pocket collection, find trading parners and community features!">
     <title>{% block title %}PTCG Pocket Tracker{% endblock %}</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
     <link rel="icon" href="{% static 'images/icons/pokeball-favicon.png' %}" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-    {% tailwind_css %}
 </head>
-<body {% if theme %}style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};"{% endif %} class="bg-base-300 text-base-content min-h-screen flex flex-col">
-    <nav class="navbar bg-base-100 shadow-xl rounded-box">
-        <div class="navbar-start">
-            <a href="{% url 'dashboard' %}" class="btn btn-ghost normal-case text-xl flex items-center {% if request.path == '/dashboard/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral hover:text-primary-content{% endif %}">
-                <img src="{% if request.path == '/dashboard/' %}{% static 'images/icons/pokeball-open-favicon.png' %}{% else %}{% static 'images/icons/pokeball-favicon.png' %}{% endif %}" alt="Pokeball Logo" class="w-8 h-8 mr-2">PTCG Pocket Tracker
-            </a>
-        </div>
-        <div class="navbar-center hidden lg:flex">
-            <ul class="menu menu-horizontal px-1 space-x-4 flex items-center font-semibold justify-around">
-                <li class="min-w-[100px]"><a href="{% url 'tracker' 1 %}" class="{% if request.path|startswith:'/tracker/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Tracker</a></li>
-                <li class="min-w-[100px]"><a href="{% url 'wishlist' request.user.profile.share_token %}" class="{% if request.path|startswith:'/wishlist/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Wishlist</a></li>
-                <li class="min-w-[100px]"><a href="{% url 'trade_matches' %}" class="{% if request.path == '/trade/matches/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Trade</a></li>
 
-                <span class="flex items-center px-2 tooltip tooltip-bottom" data-tip="Did you know you're cute??" data-tip->
+<body {% if theme %}style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};"{% endif %}>
+    <nav class="navbar">
+        <div class="navbar-start">
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost navbar-btn hidden lg:flex">
+                <img class="nav-logo" src="{% if request.path == '/dashboard/' %}{% static 'images/icons/pokeball-open-favicon.png' %}{% else %}{% static 'images/icons/pokeball-favicon.png' %}{% endif %}" alt="Pokeball Logo">
+                <span class="navbar-btn-text">Pocket Tracker</span>
+            </a>
+
+            <!-- Mobile -->
+            <div class="dropdown dropdown-start lg:hidden">
+                <label tabindex="0" class="btn btn-ghost menu-drop-start">
+                    {% if not request.user.profile.dark_mode %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    {% endif %}
+                </label>
+                <ul tabindex="0" class="menu dropdown-content menu-drop">
+                    <li><a href="{% url 'tracker' latest_set_id %}" class="card drop-item">Tracker</a></li>
+                    <li><a href="{% url 'wishlist' request.user.profile.share_token %}" class="card drop-item">Wishlist</a></li>
+                    <li><a href="{% url 'trade_matches' %}" class="card drop-item">Trade</a></li>
+                    <li><a href="{% url 'collection' %}" class="card drop-item">Collection</a>
+                    <li><a href="{% url 'pack_opener' %}" class="card drop-item">Open Pack</a></li>
+                    <li><a href="{% url 'profile' request.user.profile.share_token %}" class="card drop-item">Profile</a></li>
+                </ul>
+            </div>
+            <!-- End Mobile -->
+             
+        </div>
+
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal navbar-menu flex">
+                <li><a href="{% url 'tracker' latest_set_id %}" class="nav-item{% if request.path|startswith:'/tracker/' %}-focused{% endif %}">Tracker</a></li>
+                <li><a href="{% url 'wishlist' request.user.profile.share_token %}" class="nav-item{% if request.path|startswith:'/wishlist/' %}-focused{% endif %}">Wishlist</a></li>
+                <li><a href="{% url 'trade_matches' %}" class="nav-item{% if request.path == '/trade/matches/' %}-focused{% endif %}">Trade</a></li>
+
+                <span class="items-center px-2 tooltip tooltip-bottom hidden xl:flex" data-tip="Did you know you're cute??" data-tip->
                     <img src="{% static random_icon %}" alt="Random Pokemon Icon" class="w-20 h-20">
                 </span>
 
-                <li class="min-w-[100px]">
-                    <a href="{% url 'collection' %}" class="{% if request.path == '/collection/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center{% if unseen_count > 0 %} tooltip tooltip-bottom unseen-tooltip" data-tip="{{ unseen_count }} New Cards!{% endif %}">
+                <li>
+                    <a href="{% url 'collection' %}" class="nav-item{% if request.path == '/collection/' %}-focused{% endif %}{% if unseen_count > 0 %} tooltip tooltip-bottom unseen-tooltip" data-tip="{{ unseen_count }} New Cards!{% endif %}">
                     Collection
                     {% if unseen_count > 0 %}
                         <img class="unseen-notification-badge w-8 h-8" src="{% static 'images/icons/pokeball-noti.png' %}">
                     {% endif %}
                     </a>
                 </li>
-                <li class="min-w-[100px]"><a href="{% url 'pack_opener' %}" class="{% if request.path == '/pack/opener/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Open Pack</a></li>
-                <li class="min-w-[100px]"><a href="{% url 'profile' request.user.profile.share_token %}" class="{% if request.path|startswith:'/profile/' %}nav-focused bg-accent text-primary-content rounded-md hover:bg-accent{% else %} hover:bg-neutral{% endif %} hover:text-neutral-content px-4 py-2 flex items-center justify-center">Profile</a></li>
+                <li><a href="{% url 'pack_opener' %}" class="nav-item{% if request.path == '/pack/opener/' %}-focused{% endif %}">Open Pack</a></li>
+                <li><a href="{% url 'profile' request.user.profile.share_token %}" class="nav-item{% if request.path|startswith:'/profile/' %}-focused{% endif %}">Profile</a></li>
             </ul>
         </div>
+        <div class="navbar-center lg:hidden">
+            <!-- Mobile -->
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost navbar-btn">
+                <img class="nav-logo py-auto" src="{% if request.path == '/dashboard/' %}{% static 'images/icons/pokeball-open-favicon.png' %}{% else %}{% static 'images/icons/pokeball-favicon.png' %}{% endif %}" alt="Pokeball Logo">
+                <span class="navbar-btn-text">Pocket Tracker</span>
+            </a>
+            <!-- End Mobile -->
+
+        </div>
+
+
+
         <div class="navbar-end">
-            {% if request.user.is_authenticated %}
-            <form method="post" action="{% url 'toggle_dark_mode' %}" id="dark-mode-form">
-                {% csrf_token %}
-                <label class="cursor-pointer label font-semibold flex items-center gap-2">
-                    <span class="label-text">Dark Mode</span>
-                    <input type="checkbox" name="dark_mode" class="toggle toggle-primary"{% if request.user.profile.dark_mode %}checked{% endif %} />
-                </label>
-            </form>
-            {% endif %}
-            <form method="post" action="{% url 'logout' %}" class="inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-ghost text-accent hover:text-accent-dark">Logout</button>
-            </form>
+            <div class="nav-icons flex">
+                {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'toggle_dark_mode' %}" id="dark-mode-form">
+                    {% csrf_token %}
+                    <input type="checkbox" name="dark_mode" class="toggle toggle-sm toggle-primary xl:toggle-md cursor-pointer"{% if request.user.profile.dark_mode %}checked{% endif %} />
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'logout' %}" class="btn btn-sm btn-ghost btn-square rounded logout-btn">
+                    {% csrf_token %}
+                    <button type="submit" class="hidden lg:block">
+                        {% if not request.user.profile.dark_mode %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M19.8 12H9M10 3H4v18h6"/></svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M19.8 12H9M10 3H4v18h6"/></svg>
+                        {% endif %}
+                    </button>
+
+                    <!-- Mobile -->
+                    <button type="submit" class="lg:hidden">
+                        {% if not request.user.profile.dark_mode %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M19.8 12H9M10 3H4v18h6"/></svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M19.8 12H9M10 3H4v18h6"/></svg>
+                        {% endif %}
+                    </button>
+                    <!-- End Mobile -->
+
+                </form>
+            </div>
         </div>
     </nav>
-    <main class="container py-8 bg-base-200 rounded-box shadow-md m-4 flex-grow">
+    <main class="container">
         {% block content %}{% endblock %}
     
         <script>
             const darkModeToggle = document.querySelector('input[name="dark_mode"]');
-            console.log(darkModeToggle);
             darkModeToggle.addEventListener('change', () => {
                 const form = document.getElementById('dark-mode-form');
                 if (form) {
@@ -74,12 +125,13 @@
             });
         </script>
     </main>
-    <footer class="bg-neutral text-neutral-content text-center shadow-md py-4">
-        <p>© 2025 PTCG Tracker - Built with ❤️ for the Pokemon Community - Developed By: Jeffrey Lowe (HuntedCode)</p>
-        <nav class="flex justify-center space-x-4 pt-4">
-            <a href="#" class="hover:text-secondary">About</a>
-            <a href="#" class="hover:text-secondary">Contact</a>
-            <a href="#" class="hover:text-secondary">Privacy</a>
+    <footer>
+        <p>© 2025 PTCG Tracker - Built with ❤️ for the Pokémon Community</p>
+        <p>Developed By: Jeffrey Lowe (HuntedCode)</p>
+        <nav class="footer-links flex">
+            <a href="#" class="foot-link">About</a>
+            <a href="#" class="foot-link">Contact</a>
+            <a href="#" class="foot-link">Privacy</a>
         </nav>
     </footer>
 </body>

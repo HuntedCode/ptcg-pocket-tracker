@@ -734,14 +734,17 @@ def collection(request):
                     sorted_sets.append((set_obj, items, owned_count, unowned_count, has_unseen))
         return sorted_sets 
 
-    errors = []
     collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
     show_unowned = request.GET.get('show_unowned', '0') == '1'
     sorted_sets = get_sorted_sets(collections, show_unowned)
 
     if request.method == 'POST':
+        print('processing POST...')
+        errors = []
+        set_id = None
         for key in request.POST:
             if key.startswith('mark_seen_'):
+                print('Mark ONE seen')
                 item_id_str = key[10:]
                 try:
                     item_id = int(item_id_str)
@@ -749,24 +752,55 @@ def collection(request):
                     if collection_item:
                         collection_item.is_seen = True
                         collection_item.save()
+                        set_id = collection_item.card.card_set.id
                     else:
                         errors.append(f"Item ID {item_id} not found.")
                 except ValueError:
                     errors.append(f"Invalid item ID: {item_id_str}")
+            elif key.startswith('mark_all_seen_'):
+                print('Mark ALL seen')
+                set_id_str = key[14:]
+                try:
+                    set_id = int(set_id_str)
+                    id_list = request.POST.get(key).split(',') if request.POST.get(key) else []
+                    valid_ids = []
+                    for id_str in id_list:
+                        if id_str.strip():
+                            try:
+                                valid_ids.append(int(id_str))
+                            except ValueError:
+                                errors.append(f"Invalid collection ID in list: {id_str}")
+                    if valid_ids:
+                        updated_count = UserCollection.objects.filter(user=request.user, id__in=valid_ids, card__card_set__id=set_id).update(is_seen=True)
+                        if updated_count == 0:
+                            errors.append(f"No valid collection items found for set {set_id}")
+                except ValueError:
+                    errors.append(f"Invalid set ID: {set_id_str}")
 
+        collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
         sorted_sets = get_sorted_sets(collections, show_unowned)
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             unseen_count = UserCollection.objects.filter(user=request.user, is_seen=False).count()
-            set_id = collection_item.card.card_set.id
-            set_has_unseen = collections.filter(card__card_set__id=set_id).filter(is_seen=False).exists()
-            return JsonResponse({'status': 'success', 'message': 'Collection updated!', 'unseen_count': unseen_count, 'set_id': set_id, 'has_unseen': set_has_unseen} if not errors else {'status': 'error', 'errors': errors}, status=200 if not errors else 400)
+            if set_id:
+                set_has_unseen = collections.filter(card__card_set__id=set_id).filter(is_seen=False).exists()
+            status = 'success' if not errors else 'error'
+            message = 'Collection updated!' if not errors else 'Errors occured'
+            data = {
+                'status': status,
+                'message': message,
+                'unseen_count': unseen_count,
+                'has_unseen': set_has_unseen,
+                'errors': errors if errors else None
+            }
+            if set_id:
+                data['set_id'] = set_id
+            return JsonResponse(data, status=200 if not errors else 400)
         else:
             return redirect('collection')
     
     context = {
         'sorted_sets': sorted_sets,
-        'show_unowned': show_unowned,
-        'errors': errors,
+        'show_unowned': show_unowned
     }
     return render(request, 'collection.html', context)

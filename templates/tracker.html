@@ -3,159 +3,247 @@
 {% load custom_filters %}
 
 {% block content %}
-<div class="container mx-auto px-4">
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            {% if errors %}
-                <div class="alert alert-error">
-                    <ul>
-                        {% for error in errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
+<div class="card content-card">
+    <div class="card-body">
+        {% if errors %}
+            <div class="alert alert-error">
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
-            <div class="flex flex-wrap justify-center gap-4 mb-4">
-                {% for nav_set in sets %}
-                <a role="tab" href="{% url 'tracker' nav_set.id %}" class="flex flex-col items-center justify-center p-2 w-[200px] h-[100px] bg-base-200 border border-neutral rounded-md shadow-md shadow-neutral
-                                                                                hover:bg-primary hover:text-primary-content hover:scale-105 transition-all duration-200 
-                                                                                {% if nav_set.id == set_id %}bg-primary text-primary-content font-bold{% endif %}">
-                    <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="w-32 h-16 mb-1 object-contain row-span-1">
-                    <span class="text-center text-sm font-medium row-span-1">{{ nav_set.name }}</span>
-                </a>
+        <!-- Mobile -->
+        <div id="sets-nav-mobile" class="sets-nav-mobile flex lg:hidden">
+            {% for nav_set in sets reversed %}
+            <a role="tab" href="{% url 'tracker' nav_set.id %}" class="set-card-mobile{% if nav_set.id == set_id %}-active-tab{% endif %}">
+                <div class="flex flex-col items-center justify-center w-full h-full">
+                    <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="set-logo">
+                    <span class="set-name-text text-wrap p-2 w-full">{{ nav_set.name }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <!-- End Mobile -->
+
+        <div class="sets-nav hidden lg:flex">
+            {% for nav_set in sets %}
+            <a role="tab" href="{% url 'tracker' nav_set.id %}" class="set-card{% if nav_set.id == set_id %}-active-tab{% endif %} flex">
+                <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="set-logo">
+                <span class="set-name-text">{{ nav_set.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="join my-4 w-[75%] mx-auto">
+            <input type="text" id="search" placeholder="Search cards..." class="input input-primary w-full join-item" onkeyup="filterCards()">
+            <button class="btn btn-accent join-item rounded">Search</button>
+        </div>
+            <!-- Mobile -->
+            <div class="cards-container-mobile space-y-4 lg:hidden">
+                {% for card in cards%}
+                {% with owned=owned_dict|get_value:card.id %}
+                <div data-card-id="{{ card.id }}" class="card mobile-card {% if not owned or owned.0 == 0 %}bg-base-300 border-neutral/50{% else %}bg-base-100 border-neutral{% endif %}">
+                    <div class="flex items-center justify-between space-x-4">
+                        {% if card.local_image_small %}
+                        <img 
+                        src="{% static card.local_image_small %}" 
+                        alt="{{ card.name }} Image" 
+                        class="card-img card-small-img w-28 md:w-52 h-auto border-4 rounded lazyload {% if not owned or owned.0 == 0 %}grayscale{% endif %}
+                                {% if 'Diamond' in card.rarity %}
+                                    {% if card.rarity == 'One Diamond' %}border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
+                                {% elif 'Star' in card.rarity %}
+                                    {% if card.rarity == 'One Star' %}border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
+                                {% elif 'Shiny' in card.rarity %}
+                                    {% if card.rarity == 'One Shiny' %}border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
+                                {% elif card.rarity == 'Crown' %}
+                                    border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
+                                {% else %}
+                                    border-neutral
+                                {% endif %}"
+                        data-large-src="{{ card.image_base }}/high.png"
+                        data-rarity="{{ card.rarity }}"
+                        loading="lazy">
+                        {% else %}
+                        <div class="w-12 h-12 bg-gray-300 flex items-center justify-center rounded">No Img</div>
+                        {% endif %}
+                        <div class="flex-1">
+                            <h3 class="font-bold md:text-2xl">{{ card.name }}</h3>
+                            <p class="text-sm md:text-xl">ID: {{ card.tcg_id }} | Type: {% if card.type %}<img src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" alt="{{ card.type }} Type" class="w-4 h-4 inline">{% else %}No Type{% endif %}</p>
+                            <p class="text-sm md:text-xl">Rarity: 
+                                                {% if card.rarity == 'One Diamond' %}💎
+                                                {% elif card.rarity == 'Two Diamond' %}💎💎
+                                                {% elif card.rarity == 'Three Diamond' %}💎💎💎
+                                                {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
+                                                {% elif card.rarity == 'One Star' %}★
+                                                {% elif card.rarity == 'Two Star' %}★★
+                                                {% elif card.rarity == 'Three Star' %}★★★
+                                                {% elif card.rarity == 'One Shiny' %}✨
+                                                {% elif card.rarity == 'Two Shiny' %}✨✨
+                                                {% elif card.rarity == 'Crown' %}👑
+                                                {% else %}{{ card.rarity }}
+                                                {% endif %}
+                            </p>
+                            
+                            <div class="flex flex-col items-center justify-center w-full gap-2 my-2">
+                                {% if card.is_tradeable %}
+                                <button data-card-id="{{ card.id }}" class="btn btn-sm w-full max-w-75 wishlist-toggle {% if card.id in wants %}btn-accent{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>{% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}</button>
+                                {% endif %}
+                                <button data-card-id="{{ card.id }}" class="btn btn-sm w-full max-w-75 favorite-toggle {% if owned.1 %}btn-primary{% else %}btn-outline{% endif %}" {% if not owned or owned.0 == 0 %}disabled{% endif %}>{% if owned.1 %}Favorited!{% else %}Favorite{% endif %}</button>
+                            </div>
+
+                            <!-- Tablet -->
+                            <div class="mt-4 flex items-center space-x-2 hidden md:flex">
+                                <button class="btn btn-sm md:btn-md btn-error decrement" data-amount="-10">-10</button>
+                                <button class="btn btn-sm md:btn-md btn-error decrement" data-amount="-1">-1</button>
+                                <input data-card-id="{{ card.id }}" name="quantity_{{ card.id }}" type="number" value="{{ owned.0|default:'0' }}" min="0" class="input quantity-input w-full">
+                                <button class="btn btn-sm md:btn-md btn-success increment" data-amount="1">+1</button>
+                                <button class="btn btn-sm md:btn-md btn-success increment" data-amount="10">+10</button>
+                            </div>
+                            <!-- End Tablet -->
+
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center space-x-2 md:hidden">
+                        <button class="btn btn-sm md:btn-md btn-error decrement" data-amount="-10">-10</button>
+                        <button class="btn btn-sm md:btn-md btn-error decrement" data-amount="-1">-1</button>
+                        <input data-card-id="{{ card.id }}" type="number" name="quantity_{{ card.id }}" value="{{ owned.0|default:'0' }}" min="0" class="input quantity-input w-full">
+                        <button class="btn btn-sm md:btn-md btn-success increment" data-amount="1">+1</button>
+                        <button class="btn btn-sm md:btn-md btn-success increment" data-amount="10">+10</button>
+                    </div>
+                </div>
+                {% endwith %}
                 {% endfor %}
             </div>
-            <input type="text" id="search" placeholder="Search cards..." class="input input-bordered w-full my-4 sticky" onkeyup="filterCards()">
+            <!-- End Mobile -->
 
-            <form method="post">
-                {% csrf_token %}
-                <div class="raised-card">
-                    <table class="table table-md table-fixed text-base leading-relaxed text-base-content">
-                        <thead class="sticky top-0 bg-base-200 z-10 shadow-md text-lg w-full">
-                            <tr><th class="sticky top-0 z-10 bg-base-100 text-center">Owned</span></th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Image</th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Type</th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Rarity</th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Quantity</th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Wishlist</th>
-                                <th class="sticky top-0 z-10 bg-base-100 text-center">Favorite</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for card in cards %}
-                            {% with owned=owned_dict|get_value:card.id %}
-                            <tr class="{% if not owned or owned.0 == 0 %}opacity-75 bg-base-300{% endif %} bg-base-100 pt-20 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:opacity-100 hover:bg-base-200 hover:font-bold">
-                            <td class="text-center">
-                                <input type="checkbox" disabled {% if owned and owned.0 > 0 %}checked{% endif %} class="checkbox checkbox-lg" aria-label="Owned status for {{ card.name }}">
-                            </td>
-                                <td class="text-center card-image" >
-                                    <div class="tooltip" data-tip="{{ card.name }} - {{ card.rarity }}">
-                                    {% if card.local_image_small %}
-                                        <img 
-                                            src="{% static card.local_image_small %}" 
-                                            alt="{{ card.name }}" 
-                                            class="card-img w-35 h-auto rounded shadow-md cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
-                                            {% if 'Diamond' in card.rarity %}
-                                                {% if card.rarity == 'One Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-4 border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-4 border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
-                                            {% elif 'Star' in card.rarity %}
-                                                {% if card.rarity == 'One Star' %}border-4 border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-4 border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-4 border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
-                                            {% elif 'Shiny' in card.rarity %}
-                                                {% if card.rarity == 'One Shiny' %}border-4 border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-4 border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
-                                            {% elif card.rarity == 'Crown' %}
-                                                border-4 border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
-                                            {% else %}
-                                                border-4 border-neutral
-                                            {% endif %}"
-                                            data-large-src="{{ card.image_base }}/high.png"
-                                            data-rarity="{{ card.rarity }}"
-                                            loading="lazy">
+        <form method="post">
+            {% csrf_token %}
+            <div class="raised-card hidden lg:block">
+                <table class="table table-md table-fixed text-base leading-relaxed text-base-content">
+                    <thead class="sticky top-0 bg-base-200 z-10 shadow-md text-lg w-full">
+                        <tr>
+                            <th class="bg-base-100 text-center">Image</th>
+                            <th class="bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 2)" data-sort-dir="asc">Name <span class="icon"></span></th>
+                            <th class="bg-base-100 text-center cursor-pointer" onclick="sortTable(this, 3)" data-sort-dir="asc">ID <span class="icon"></span></th>
+                            <th class="bg-base-100 text-center">Type</th>
+                            <th class="bg-base-100 text-center">Rarity</th>
+                            <th class="bg-base-100 text-center">Quantity</th>
+                            <th class="bg-base-100 text-center">Wishlist</th>
+                            <th class="bg-base-100 text-center">Favorite</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in cards %}
+                        {% with owned=owned_dict|get_value:card.id %}
+                        <tr data-card-id="{{ card.id }}" class="{% if not owned or owned.0 == 0 %}opacity-75 bg-base-300{% endif %} bg-base-100 pt-20 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:opacity-100 hover:bg-base-200 hover:font-bold">
+                            <td class="text-center card-image">
+                                {% if card.local_image_small %}
+                                <img 
+                                    src="{% static card.local_image_small %}" 
+                                    alt="{{ card.name }}" 
+                                    class="card-img w-35 h-auto rounded shadow-md border-4 cursor-pointer card-small-img {% if not owned or owned.0 == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
+                                    {% if 'Diamond' in card.rarity %}
+                                        {% if card.rarity == 'One Diamond' %}border-[oklch(74%_.16_232.661)]/50{% elif card.rarity == 'Two Diamond' %}border-[oklch(74%_.16_232.661)]/70{% elif card.rarity == 'Three Diamond' %}border-[oklch(74%_.16_232.661)]/90{% elif card.rarity == 'Four Diamond' %}border-[oklch(74%_.16_232.661)]{% endif %} hover: shadow-[oklch(74%_.16_232.661)]/50
+                                    {% elif 'Star' in card.rarity %}
+                                        {% if card.rarity == 'One Star' %}border-[oklch(82%_.189_84.429)]/70{% elif card.rarity == 'Two Star' %}border-[oklch(82%_.189_84.429)]/90{% elif card.rarity == 'Three Star' %}border-[oklch(82%_.189_84.429)]{% endif %} hover: shadow-border-[oklch(82%_.189_84.429)]/50
+                                    {% elif 'Shiny' in card.rarity %}
+                                        {% if card.rarity == 'One Shiny' %}border-[oklch(65%_.241_354.308)]/70{% elif card.rarity == 'Two Shiny' %}border-[oklch(65%_.241_354.308)]{% endif %} hover:shadow-[oklch(65%_.241_354.308)]/50
+                                    {% elif card.rarity == 'Crown' %}
+                                        border-[oklch(71%_.194_13.428)] hover:shadow-[oklch(71%_.194_13.428)]/50
                                     {% else %}
-                                        <!-- Placeholder if no image -->
-                                        <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
-                                    {% endif %}
-                                </div>
-                                </td>
-                                <td class="text-center overflow-hidden truncate">
-                                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold text-wrap">
-                                        {{ card.name }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold tracking-wide">
-                                        {{ card.tcg_id }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    {% if card.type %}
-                                    <div class="tooltip" data-tip="{{ card.type }}">
-                                        <img 
-                                            src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" 
-                                            alt="{{ card.type }} Energy Symbol" 
-                                            class="w-10 h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
-                                            loading="lazy">
-                                    </div>
-                                    {% else %}
-                                    <span class="inline-block transition-transform duration-200 hover:scale-105 text-lg font-semibold">
-                                        No Type
-                                    </span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
-                                        <span class="inline-block text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm text-lg font-semibold text-warning">
-                                            {% if card.rarity == 'One Diamond' %}💎
-                                            {% elif card.rarity == 'Two Diamond' %}💎💎
-                                            {% elif card.rarity == 'Three Diamond' %}💎💎💎
-                                            {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
-                                            {% elif card.rarity == 'One Star' %}★
-                                            {% elif card.rarity == 'Two Star' %}★★
-                                            {% elif card.rarity == 'Three Star' %}★★★
-                                            {% elif card.rarity == 'One Shiny' %}✨
-                                            {% elif card.rarity == 'Two Shiny' %}✨✨
-                                            {% elif card.rarity == 'Crown' %}👑
-                                            {% else %}{{ card.rarity }}
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    <input 
-                                        type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input input-bordered join-item w-20 text-center" 
-                                    />
-                                </td>
-                                {% if card.is_tradeable %}
-                                <td class="text-center">
-                                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-md wishlist-toggle {% if card.id in wants %}btn-accent{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>
-                                        {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
-                                    </button>
-                                </td>
+                                        border-neutral
+                                    {% endif %}"
+                                    data-large-src="{{ card.image_base }}/high.png"
+                                    data-rarity="{{ card.rarity }}"
+                                    loading="lazy">
                                 {% else %}
-                                <td></td>
+                                <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
                                 {% endif %}
-                                <td class="text-center">
-                                    <button data-card-id="{{ card.id }}" type="button" class="btn btn-md {% if owned.2 %}btn-primary{% else %}btn-outline{% endif %} favorite-toggle w-full" {% if not owned or owned.0 == 0 %}disabled{% endif %}>
-                                        {% if owned.2 %}Favorited!{% else %}Favorite{% endif %}
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endwith %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </form>
-            <div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
-                <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-xl">
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-block transition-transform duration-200 hover:scale-105 text-base font-semibold text-wrap xl:text-lg">
+                                    {{ card.name }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="inline-block transition-transform duration-200 hover:scale-105 text-base font-semibold tracking-wide xl:text-lg">
+                                    {{ card.tcg_id }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if card.type %}
+                                <div class="tooltip" data-tip="{{ card.type }}">
+                                    <img 
+                                        src="{% static 'images/icons/energy/'|add:card.type|lower|add:'.png' %}" 
+                                        alt="{{ card.type }} Energy Symbol" 
+                                        class="w-6 h-6 xl:w-10 xl:h-10 transition-all duration-200 hover:scale-110 hover:shadow-sm card-img" 
+                                        loading="lazy">
+                                </div>
+                                {% else %}
+                                <span class="inline-block transition-transform duration-200 hover:scale-105 text-base xl:text-lg font-semibold">
+                                    No Type
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="tooltip" data-tip="{{ card.rarity }}">  <!-- Hover shows full name, e.g., "Two Diamond" -->
+                                    <span class="inline-block text-lg xl:text-xl transition-all duration-200 hover:scale-110 hover:shadow-sm font-semibold text-warning">
+                                        {% if card.rarity == 'One Diamond' %}💎
+                                        {% elif card.rarity == 'Two Diamond' %}💎💎
+                                        {% elif card.rarity == 'Three Diamond' %}💎💎💎
+                                        {% elif card.rarity == 'Four Diamond' %}💎💎💎💎
+                                        {% elif card.rarity == 'One Star' %}★
+                                        {% elif card.rarity == 'Two Star' %}★★
+                                        {% elif card.rarity == 'Three Star' %}★★★
+                                        {% elif card.rarity == 'One Shiny' %}✨
+                                        {% elif card.rarity == 'Two Shiny' %}✨✨
+                                        {% elif card.rarity == 'Crown' %}👑
+                                        {% else %}{{ card.rarity }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <input data-card-id="{{ card.id }}" type="number" name="quantity_{{ card.id }}" min="0" value="{{ owned.0|default:'0' }}" class="input join-item w-20 text-center" />
+                            </td>
+                            {% if card.is_tradeable %}
+                            <td class="text-center">
+                                <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm xl:btn-md wishlist-toggle {% if card.id in wants %}btn-accent{% else %}btn-outline{% endif %}" {% if owned and owned.0 > 1 %}disabled{% endif %}>
+                                    {% if card.id in wants %}Wishlisted!{% else %}Wishlist{% endif %}
+                                </button>
+                            </td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+                            <td class="text-center">
+                                <button data-card-id="{{ card.id }}" type="button" class="btn btn-sm xl:btn-md {% if owned.1 %}btn-primary{% else %}btn-outline{% endif %} favorite-toggle w-full" {% if not owned or owned.0 == 0 %}disabled{% endif %}>
+                                    {% if owned.1 %}Favorited!{% else %}Favorite{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div id="save-indicator" class="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-3000">
-                Saved!
-            </div>
+        </form>
+        <div id="image-modal" class="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 cursor-pointer hidden">
+            <img id="large-image" scr="" alt="Large card image" class="max-w-[75%] max-h-[75%] border-8 shadow-2xl rounded-2xl">
+        </div>
+        <div id="save-indicator" class="fixed bottom-12 right-4 lg:bottom-6 lg:right-30 px-4 py-2 bg-green-500 text-white rounded shadow-lg hidden transition-opacity duration-3000">
+            Saved!
         </div>
     </div>
 </div>
+
+<button id="back-to-top" class="btn btn-block btn-primary border-2 border-neutral fixed bottom-0 right-0 shadow-lg opacity-0 scale-0 transition-all duration-300 hidden
+                                lg:btn-xl lg:btn-square lg:bottom-6 lg:right-6" role="button">
+    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
 <script>
     function getCookie(name) {
         let cookieValue = null;
@@ -172,56 +260,83 @@
         return cookieValue;
     }
 
-    function updateRowStyle(quantityInput) {
-        if (quantityInput.type !== "number") {
-            return;
-        }
-        const row = quantityInput.closest('tr');
-        if (!row) return;
-        
+    function updateStyle(element) {
+        const quantityInput = element.tagName === 'INPUT' ? element : element.querySelector('input[type="number"]');
+        if (!quantityInput) return;
+
         const qtyValue = parseInt(quantityInput.value, 10) || 0;
-        const favoriteToggle = row.querySelector('.favorite-toggle');
-        if (qtyValue <= 0) {
-            row.classList.add('opacity-50', 'bg-gray-300');
-            favoriteToggle.disabled = true;
-            if (favoriteToggle.classList.contains('btn-primary')) {
+
+        const row = quantityInput.closest('tr');
+        if (row) {
+            const favoriteToggle = row.querySelector('.favorite-toggle');
+            if (qtyValue <= 0) {
+                row.classList.add('opacity-75', 'bg-gray-300');
+                favoriteToggle.disabled = true;
+                if (favoriteToggle.classList.contains('btn-primary')) {
+                    favoriteToggle.classList.remove('btn-primary');
+                    favoriteToggle.classList.add('btn-outline');
+                    favoriteToggle.textContent = 'Favorite';
+                }
+            } else {
+                row.classList.remove('opacity-75', 'bg-gray-300');
+                favoriteToggle.disabled = false;
+            }
+
+            const wishlistToggle = row.querySelector('.wishlist-toggle');
+            if (wishlistToggle) {
+                if (qtyValue > 1) {
+                    wishlistToggle.disabled = true;
+                    if (wishlistToggle.classList.contains('btn-accent')) {
+                        wishlistToggle.classList.remove('btn-accent');
+                        wishlistToggle.classList.add('btn-outline');
+                        wishlistToggle.textContent = 'Wishlist';
+                    }
+                } else {
+                    wishlistToggle.disabled = false;
+                }
+            }
+
+            const imageTd = row.querySelector('.card-image');
+            if (!imageTd) {
+                return;
+            }
+
+            const image = imageTd.querySelector('img.card-img');
+            if (image) {
+                if (qtyValue > 0) {
+                    image.classList.remove('grayscale');
+                } else {
+                    image.classList.add('grayscale');
+                }
+            } else {
+                imageTd.classList.toggle('text-gray-500', qtyValue === 0);
+            }
+        }
+
+        const card = quantityInput.closest('.card');
+        if (card) {
+            card.classList.toggle('bg-base-300', qtyValue === 0);
+            card.classList.toggle('border-neutral/50', qtyValue === 0);
+
+            const favoriteToggle = card.querySelector('.favorite-toggle');
+            favoriteToggle.disabled = qtyValue === 0;
+            if (favoriteToggle.disabled) {
                 favoriteToggle.classList.remove('btn-primary');
                 favoriteToggle.classList.add('btn-outline');
                 favoriteToggle.textContent = 'Favorite';
             }
-        } else {
-            row.classList.remove('opacity-50', 'bg-gray-300');
-            favoriteToggle.disabled = false;
-        }
 
-        const wishlistToggle = row.querySelector('.wishlist-toggle');
-        if (wishlistToggle) {
-            if (qtyValue > 1) {
-                wishlistToggle.disabled = true;
-                if (wishlistToggle.classList.contains('btn-accent')) {
+            const wishlistToggle = card.querySelector('.wishlist-toggle');
+            if (wishlistToggle) {
+                wishlistToggle.disabled = qtyValue > 1;
+                if (wishlistToggle.disabled) {
                     wishlistToggle.classList.remove('btn-accent');
                     wishlistToggle.classList.add('btn-outline');
                     wishlistToggle.textContent = 'Wishlist';
                 }
-            } else {
-                wishlistToggle.disabled = false;
             }
-        }
-
-        const imageTd = row.querySelector('.card-image');
-        if (!imageTd) {
-            return;
-        }
-
-        const image = imageTd.querySelector('img.card-img');
-        if (image) {
-            if (qtyValue > 0) {
-                image.classList.remove('grayscale');
-            } else {
-                image.classList.add('grayscale');
-            }
-        } else {
-            imageTd.classList.toggle('text-gray-500', qtyValue === 0);
+            const image = card.querySelector('.card-img');
+            if (image) image.classList.toggle('grayscale', qtyValue === 0);
         }
     }
     
@@ -315,23 +430,40 @@
 
     inputs.forEach(input => {
         input.addEventListener('change', () => {
-            updateRowStyle(input);
+            const cardId = input.dataset.cardId;
+            if (cardId) {
+                document.querySelectorAll(`input[name="${input.name}"]`).forEach(otherInput => {
+                    if (otherInput !== input) {
+                        otherInput.value = input.value;
+                    }
+                });
+
+                document.querySelectorAll(`[data-card-id="${cardId}"]`).forEach(el => {
+                    updateStyle(el);
+                });
+            } else {
+                updateStyle(input)
+            }
             saveChanges();
         });
     });
 
-    window.addEventListener('beforeunload', () => {
-        updateRowStyle(input);
-        saveChanges();
-    });
-
     function filterCards() {
         var input = document.getElementById('search').value.toLowerCase();
+
         document.querySelectorAll('tr').forEach(tr => {
             if (tr.textContent.toLowerCase().includes(input)) {
                 tr.style.display = '';
             } else {
                 tr.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.mobile-card').forEach(card => {
+            if (card.textContent.toLowerCase().includes(input)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
             }
         });
     }
@@ -386,29 +518,31 @@
                     });
                     const data = await response.json();
                     if (data.status === 'success') {
-                        if (type === 'want') {
-                            if (button.classList.contains('btn-accent')) {
-                                button.classList.remove('btn-accent');
-                                button.classList.add('btn-outline');
-                                button.textContent = 'Wishlist';
-                            } else {
-                                button.classList.add('btn-accent');
-                                button.classList.remove('btn-outline');
-                                button.textContent = 'Wishlisted!';
+                        const cardId = button.dataset.cardId;
+                        document.querySelectorAll(`.${type === 'want' ? 'wishlist-toggle' : 'favorite-toggle'}[data-card-id="${cardId}"]`).forEach(toggleBtn => {
+                            if (type === 'want') {
+                                if (toggleBtn.classList.contains('btn-accent')) {
+                                    toggleBtn.classList.remove('btn-accent');
+                                    toggleBtn.classList.add('btn-outline');
+                                    toggleBtn.textContent = 'Wishlist';
+                                } else {
+                                    toggleBtn.classList.add('btn-accent');
+                                    toggleBtn.classList.remove('btn-outline');
+                                    toggleBtn.textContent = 'Wishlisted!';
+                                }
+                            } else if (type === 'favorite') {
+                                if (toggleBtn.classList.contains('btn-primary')) {
+                                    toggleBtn.classList.remove('btn-primary');
+                                    toggleBtn.classList.add('btn-outline');
+                                    toggleBtn.textContent = 'Favorite';
+                                } else {
+                                    toggleBtn.classList.add('btn-primary');
+                                    toggleBtn.classList.remove('btn-outline');
+                                    toggleBtn.textContent = 'Favorited!'
+                                }
                             }
-                            showIndicator('Wishlist updated!');
-                        } else if (type === 'favorite') {
-                            if (button.classList.contains('btn-primary')) {
-                                button.classList.remove('btn-primary');
-                                button.classList.add('btn-outline');
-                                button.textContent = 'Favorite';
-                            } else {
-                                button.classList.add('btn-primary');
-                                button.classList.remove('btn-outline');
-                                button.textContent = 'Favorited!'
-                            }
-                            showIndicator('Favorites updated!');
-                        }
+                        });
+                        showIndicator(type === 'want' ? 'Wishlist updated!' : 'Favorites updated!');
                     } else {
                         alert('Error: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
                     }
@@ -475,6 +609,79 @@
                     largeImage.classList.remove(className);
                 });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('sets-nav-mobile');
+            const activeTab = document.querySelector('.set-card-mobile-active-tab');
+
+            if (container && activeTab) {
+                activeTab.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const incrementButtons = document.querySelectorAll('.increment');
+            const decrementButtons = document.querySelectorAll('.decrement');
+
+            function updateQuantity(button, delta) {
+                const input = button.closest('.flex').querySelector('.quantity-input');
+                if (input) {
+                    let currentValue = parseInt(input.value) || 0;
+                    currentValue = Math.max(0, currentValue + delta);
+                    input.value = currentValue;
+                    input.dispatchEvent(new Event('change', { bubbles: true }))
+                }
+            }
+
+            incrementButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const amount = parseInt(this.dataset.amount) || 1;
+                    updateQuantity(this, amount);
+                });
+            });
+
+            decrementButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const amount = parseInt(this.dataset.amount) || -1;
+                    updateQuantity(this, amount)
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const backToTop = document.getElementById('back-to-top');
+            if (!backToTop) return;
+
+            let scrollTimeout;
+            function handleScroll() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (window.scrollY > 100) {
+                        backToTop.classList.remove('hidden');
+                        backToTop.offsetHeight;
+                        backToTop.classList.add('opacity-100', 'scale-100');
+                    } else {
+                        backToTop.classList.remove('opacity-100', 'scale-100');
+                        setTimeout(() => {
+                            backToTop.classList.add('hidden');
+                        }, 300); 
+                    }
+                }, 100);
+            }
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
         });
 </script>
 {% endblock %}

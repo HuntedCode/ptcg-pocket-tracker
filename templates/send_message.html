@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+        <p>Base</p>
+        <p class="hidden sm:block">Sm</p>
+        <p class="hidden md:block">Md</p>
+        <p class="hidden lg:block">Lg</p>
+        <p class="hidden xl:block">Xl</p>
+        <p class="hidden 2xl:block">2Xl</p>
 <h2>Send Message to {{ receiver }}</h2>
 <form method="post">
     {% csrf_token %}
