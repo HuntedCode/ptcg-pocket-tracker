@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 import tcg_collections.views as views
-from tcg_collections.views import DashboardView, CollectionStatsAPI, SetBreakdownAPI, PackPickerAPI
+from tcg_collections.views import DashboardView, CollectionStatsAPI, SetBreakdownAPI, PackPickerAPI, ActivityFeedAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -48,7 +48,9 @@ urlpatterns = [
     path('api/collection/stats/', CollectionStatsAPI.as_view(), name='collection_stats_api'),
     path('api/set/breakdown/', SetBreakdownAPI.as_view(), name='set_breakdown_api'),
     path('api/pack/picker/', PackPickerAPI.as_view(), name='pack_picker_api'),
-
+    path('api/activity/feed/', ActivityFeedAPI.as_view(), name='activity_feed_api'),
+    #path('api/collection/growth/', GrowthTrendAPI.as_view(), name='growth_trend_api'),
+    #path('api/rarity/distribution/', RarityDistributionAPI.as_view(), name='rarity_distribution_api')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

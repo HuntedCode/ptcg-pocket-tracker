@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, View
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity, Match
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match
 import random
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
 from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES
@@ -670,12 +670,10 @@ def collection(request):
     sorted_sets = get_sorted_sets(collections, show_unowned)
 
     if request.method == 'POST':
-        print('processing POST...')
         errors = []
         set_id = None
         for key in request.POST:
             if key.startswith('mark_seen_'):
-                print('Mark ONE seen')
                 item_id_str = key[10:]
                 try:
                     item_id = int(item_id_str)
@@ -689,7 +687,6 @@ def collection(request):
                 except ValueError:
                     errors.append(f"Invalid item ID: {item_id_str}")
             elif key.startswith('mark_all_seen_'):
-                print('Mark ALL seen')
                 set_id_str = key[14:]
                 try:
                     set_id = int(set_id_str)
@@ -934,3 +931,16 @@ class PackPickerAPI(LoginRequiredMixin, View):
         
         recommendations.sort(key=lambda x: x['chance_new'], reverse=True)
         return JsonResponse({'boosters': recommendations})
+
+class ActivityFeedAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        activities = Activity.objects.filter(user=request.user).order_by('-timestamp')[:10]
+        feed = [
+            {
+                'type': a.type,
+                'content': a.content,
+                'timestamp': a.timestamp.isoformat()
+            }
+            for a in activities
+        ]
+        return JsonResponse({'feed': feed})
