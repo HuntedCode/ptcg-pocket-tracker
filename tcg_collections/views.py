@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import Count, F, Sum
+from django.db.models.functions import TruncWeek
 from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils import timezone
@@ -944,3 +945,20 @@ class ActivityFeedAPI(LoginRequiredMixin, View):
             for a in activities
         ]
         return JsonResponse({'feed': feed})
+    
+class GrowthTrendAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        data = Activity.objects.filter(user=request.user, type='collection_add') \
+            .annotate(week=TruncWeek('timestamp')) \
+            .values('week') \
+            .annotate(adds=Count('id')) \
+            .order_by('week')
+        
+        trend = [
+            {
+                'week': d['week'].isoformat() if d['week'] else None,
+                'adds': d['adds']
+            }
+            for d in data
+        ]
+        return JsonResponse({'trend': trend})
