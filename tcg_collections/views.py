@@ -473,6 +473,7 @@ def pack_opener(request):
                 selected_cards = json.loads(selected_cards_str)
                 commons = selected_cards.get('commons', [])
                 others = selected_cards.get('others', [])
+                sixth = selected_cards.get('sixth', [])
                 booster = get_object_or_404(Booster, id=booster_id)
 
                 cards_selected = []
@@ -492,6 +493,17 @@ def pack_opener(request):
                     cards_selected.append(card)
                     if card not in booster.cards.all() or card.rarity == 'One Diamond':
                         errors.append(f"Invalid other card {card.name}")
+                    else:
+                        obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'is_seen': False})
+                        if not created:
+                            obj.quantity += 1
+                            obj.save()
+
+                for card_id in sixth:
+                    card = get_object_or_404(Card, id=card_id)
+                    cards_selected.append(card)
+                    if not card.is_sixth_exclusive or card not in booster.cards.all():
+                        errors.append(f"Invalid sixth card {card.name}")
                     else:
                         obj, created = UserCollection.objects.get_or_create(user=request.user, card=card, defaults={'quantity': 1, 'is_seen': False})
                         if not created:
@@ -522,8 +534,11 @@ def get_booster_cards(request):
     booster = get_object_or_404(Booster, id=booster_id)
     cards = booster.cards.all().order_by('card_set__tcg_id', 'tcg_id')
 
-    commons = cards.filter(rarity='One Diamond')
-    others = cards.exclude(rarity='One Diamond')
+    commons = cards.filter(rarity='One Diamond', is_sixth_exclusive=False)
+    others = cards.exclude(rarity='One Diamond').filter(is_sixth_exclusive=False)
+    sixth = cards.filter(is_sixth_exclusive=True)
+    has_sixth_option = sixth.exists()
+
 
     common_list = [
         {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
@@ -535,9 +550,16 @@ def get_booster_cards(request):
         for c in others    
     ]
 
+    sixth_list = [
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        for c in sixth
+    ]
+
     return JsonResponse({
         'commons': common_list,
         'others': others_list,
+        'sixth': sixth_list,
+        'has_sixth_option': has_sixth_option,
         'booster_image': booster.local_image_small if booster.local_image_small else ''
     })
 

@@ -35,27 +35,39 @@
         <form method="post" id="pack-form">
             {% csrf_token %}
             <div id="card-section" class="hidden mt-8">
-                <div id="floating-preview" class="set-section flex flex-col md:flex-row gap-2 lg:gap-6 border-2 border-neutral justify-center items-center text-center sticky top-0 z-10 mb-2">
-                    <div class="flex-col gap-2 ml-4 mt-2 hidden xl:flex">
-                        <div id="booster-preview" class="text-center"></div>
-                    </div>
-                    <div>
-                        <p class="text-xs mb-1 text-center">Slots 1-3 <span id="commons-count">(0/3)</span></p>
-                        <div id="commons-selected" class="flex flex-row gap-2 justify-center">
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+
+                <div id="floating-preview" class="set-section flex flex-col gap-2 lg:gap-4 border-2 border-neutral justify-center items-center text-center sticky top-0 z-10 mb-2">
+                    <div class="flex flex-col md:flex-row gap-2 lg:gap-6">
+                        <div class="flex-col gap-2 ml-4 mt-2 hidden xl:flex">
+                            <div id="booster-preview" class="text-center"></div>
+                        </div>
+                        <div>
+                            <p class="text-xs mb-1 text-center">Slots 1-3 <span id="commons-count">(0/3)</span></p>
+                            <div id="commons-selected" class="flex flex-row gap-2 justify-center">
+                                <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                                <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                                <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-row gap-2">
+                            <div>
+                                <p class="text-xs mb-1 text-center">Slots 4-5 <span id="others-count">(0/2)</span></p>
+                                <div id="others-selected" class="flex flex-row gap-2 justify-center">
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                                </div>
+                            </div>
+                            <div id="sixth-preview" class="hidden">
+                                <p class="text-xs mb-1 text-center">Opt 6th <span id="sixth-count">(0/1)</span></p>
+                                <div id="sixth-selected" class="flex flex-row gap-2 justify-center">
+                                    <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-xs mb-1 text-center">Slots 4-5 <span id="others-count">(0/2)</span></p>
-                        <div id="others-selected" class="flex flex-row gap-2 justify-center">
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
-                            <div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>
-                        </div>
-                    </div>
-                    <button id="submit-pack" class="btn btn-sm lg:btn-md btn-accent mt-4" disabled>Add to Collection</button>
+                    <button id="submit-pack" class="btn btn-md btn-accent w-full mt-4" disabled>Add to Collection</button>
                 </div>
+
                 <div class="flex flex-row gap-4">
                     <div class="flex-grow flex flex-col">
                         <div class="set-section p-4 bg-base-200 rounded-lg shadow-md mb-8">
@@ -65,10 +77,17 @@
                             </div>
                         </div>
 
-                        <div class="set-section p-4 bg-base-200 rounded-lg shadow-md">
+                        <div class="set-section p-4 bg-base-200 rounded-lg shadow-md mb-8">
                             <div class="flex-grow flex flex-col items-center">
                                 <h3 class="text-xl font-semibold mb-2">Slots 4-5: Higher Rarities <span id="others-count-preview" class="text-sm">(0/2)</span></h3>
                                 <div id="others-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
+                            </div>
+                        </div>
+
+                        <div id="sixth-section" class="set-section p-4 bg-base-200 rounded-lg shadow-md">
+                            <div class="flex-grow flex flex-col items-center">
+                                <h3 class="text-xl font-semibold mb-2">Optional 6th Slot: Exclusives <span id="sixth-count-preview" class="text-sm">(0/2)</span></h3>
+                                <div id="sixth-grid" class="flex flex-wrap gap-4 overflow-x-auto px-6 pb-8 pt-12 snap-x snap-mandatory overflow-visible justify-center"></div>
                             </div>
                         </div>
                     </div>
@@ -85,6 +104,7 @@
     let cardsData = { commons: [], others: [] };
     let selectedCommons = [];
     let selectedOthers = [];
+    let selectedSixth = [];
     const staticUrl = '{% static "" %}';
 
     document.querySelectorAll('.booster-card').forEach(card => {
@@ -142,6 +162,33 @@
                         othersGrid.innerHTML += cardDiv;
                 });
 
+                if (data.has_sixth_option) {
+                    const sixthGrid = document.getElementById('sixth-grid');
+                    sixthGrid.innerHTML = '';
+                    data.sixth.forEach(card => {
+                        let rarity = "";
+                        if (card.rarity.toLowerCase().includes('diamond')) {
+                            rarity = 'diamond';
+                        } else if (card.rarity.toLowerCase().includes('star')) {
+                            rarity = 'star';
+                        } else if (card.rarity.toLowerCase().includes('shiny')) {
+                            rarity = 'shiny';
+                        } else if (card.rarity.toLowerCase().includes('crown')) {
+                            rarity = 'crown';
+                        }
+                        
+                        const cardDiv = `<div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive rarity-${rarity}" data-tip="${card.name}" data-id="${card.id}">
+                                <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
+                            </div>`;
+                        sixthGrid.innerHTML += cardDiv;
+                    });
+                    document.getElementById('sixth-section').classList.remove('hidden');
+                    document.getElementById('sixth-preview').classList.remove('hidden');
+                } else {
+                    document.getElementById('sixth-section').classList.add('hidden');
+                    document.getElementById('sixth-preview').classList.add('hidden');
+                }
+
                 document.getElementById('boosters-container').classList.add('hidden');
                 document.getElementById('card-section').classList.remove('hidden');
 
@@ -184,12 +231,29 @@
         }
     });
 
+    document.getElementById('sixth-grid').addEventListener('click', function(e) {
+        const item = e.target.closest('div.card-collection');
+        if (item) {
+            const id = item.dataset.id;
+            if (selectedSixth.length < 1) {
+                selectedSixth.push(id);
+            } else {
+                alert('Max 1 for optional 6th slot!');
+            }
+            updateSelectedPreview('sixth');
+            updateCounts();
+        }
+    });
+
     function updateCounts() {
         document.getElementById('commons-count').textContent = `(${selectedCommons.length}/3)`;
         document.getElementById('commons-count-preview').textContent = `(${selectedCommons.length}/3)`;
         document.getElementById('others-count').textContent = `(${selectedOthers.length}/2)`;
         document.getElementById('others-count-preview').textContent = `(${selectedOthers.length}/2)`;
         document.getElementById('submit-pack').disabled = !(selectedCommons.length === 3 && selectedOthers.length === 2);
+
+        document.getElementById('sixth-count').textContent = `(${selectedSixth.length}/1)`;
+        document.getElementById('sixth-count-preview').textContent = `(${selectedSixth.length}/1)`;
     }
 
     document.querySelectorAll('.booster-card').forEach(card => {
@@ -201,26 +265,46 @@
     });
 
     function updateSelectedPreview(type) {
-        const previewInner = document.getElementById(`${type}-selected`);
-        previewInner.innerHTML = '';
-        const selected = type === 'commons' ? selectedCommons : selectedOthers;
-        const maxSlots = type === 'commons' ? 3 : 2;
-
-        selected.forEach(id => {
-            const original = document.querySelector(`#${type}-grid > div[data-id="${id}"]`);
-            if (original) {
-                const clone = original.cloneNode(true);
-                clone.classList.remove('card-floating');
-                clone.classList.remove('w-3/4', 'sm:w-1/3', 'md:w-1/4');
-                clone.classList.add('w-20', 'lg:w-32', 'h-28', 'lg:h-44');
-                previewInner.insertAdjacentHTML('beforeend', clone.outerHTML);
+        if (type === 'sixth') {
+            const previewInner = document.getElementById('sixth-selected');
+            previewInner.innerHTML = '';
+            const max = 1;
+            selectedSixth.forEach(id => {
+                const original = document.querySelector(`#sixth-grid > div[data-id="${id}"]`);
+                if (original) {
+                    const clone = original.cloneNode(true);
+                    clone.classList.remove('card-floating', 'w-3/4', 'sm:w-1/3', 'md:w-1/4');
+                    clone.classList.add('w-20', 'lg:w-32', 'h-28', 'lg:h-44');
+                    previewInner.insertAdjacentHTML('beforeend', clone.outerHTML);
+                }
+            });
+            const remaining = max - selectedSixth.length;
+            for (let i = 0; i < remaining; i++) {
+                const ghost = `<div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>`;
+                previewInner.insertAdjacentHTML('beforeend', ghost);
             }
-        });
+        } else {
+            const previewInner = document.getElementById(`${type}-selected`);
+            previewInner.innerHTML = '';
+            const selected = type === 'commons' ? selectedCommons : selectedOthers;
+            const maxSlots = type === 'commons' ? 3 : 2;
 
-        const remaining = maxSlots - selected.length;
-        for (let i = 0; i < remaining; i++) {
-            const ghost = `<div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>`;
-            previewInner.insertAdjacentHTML('beforeend', ghost);
+            selected.forEach(id => {
+                const original = document.querySelector(`#${type}-grid > div[data-id="${id}"]`);
+                if (original) {
+                    const clone = original.cloneNode(true);
+                    clone.classList.remove('card-floating');
+                    clone.classList.remove('w-3/4', 'sm:w-1/3', 'md:w-1/4');
+                    clone.classList.add('w-20', 'lg:w-32', 'h-28', 'lg:h-44');
+                    previewInner.insertAdjacentHTML('beforeend', clone.outerHTML);
+                }
+            });
+
+            const remaining = maxSlots - selected.length;
+            for (let i = 0; i < remaining; i++) {
+                const ghost = `<div class="ghost-card rounded-lg border-2 border-dashed border-gray-400 opactiy-50 w-20 h-28 lg:w-32 lg:h-44"></div>`;
+                previewInner.insertAdjacentHTML('beforeend', ghost);
+            }
         }
     }
 
@@ -252,6 +336,20 @@
         }
     });
 
+    document.getElementById('sixth-selected').addEventListener('click', function(e) {
+        const item = e.target.closest('div.card-collection');
+        if (item) {
+            const id = item.dataset.id;
+            const index = selectedSixth.indexOf(id);
+
+            if (index > -1) {
+                selectedSixth.splice(index, 1);
+                updateSelectedPreview('sixth');
+                updateCounts();
+            }
+        }
+    });
+
     document.getElementById('submit-pack').addEventListener('click', function() {
         if (selectedCommons.length !== 3 || selectedOthers.length !== 2) return;
 
@@ -259,6 +357,7 @@
         document.getElementById('selected_cards').value = JSON.stringify({
             commons: selectedCommons,
             others: selectedOthers,
+            sixth: selectedSixth
         });
 
         document.getElementById('pack-form').submit();
