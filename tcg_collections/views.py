@@ -728,25 +728,40 @@ class CollectionStatsAPI(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
         collections = UserCollection.objects.filter(user=user, quantity__gt=0)
+
         total_unique = collections.count()
         total_base = collections.filter(card__rarity__in=BASE_RARITIES).count()
         total_rare = collections.filter(card__rarity__in=RARE_RARITIES).count()
         total_quantity = collections.aggregate(total=Sum('quantity'))['total'] or 0
+
         base_cards_count = Card.objects.filter(rarity__in=BASE_RARITIES).count()
         rare_cards_count = Card.objects.filter(rarity__in=RARE_RARITIES).count()
         all_cards_count = Card.objects.count()
+
         base_completion = (total_base / base_cards_count * 100) if base_cards_count else 0
         rare_completion = (total_rare / rare_cards_count * 100) if rare_cards_count else 0
         overall_completion = (total_unique / all_cards_count * 100) if all_cards_count else 0
         rarities = collections.values('card__rarity').annotate(count=Count('card__rarity'))
         rarity_breakdown = {r['card__rarity']: r['count'] for r in rarities}
+
+        # 6th Slot Exclusives
+        exclusive_collections = collections.filter(card__is_sixth_exclusive=True)
+        total_exclusive_unique = exclusive_collections.count()
+        total_exclusives = Card.objects.filter(is_sixth_exclusive=True).count()
+        exclusive_completion = (total_exclusive_unique / total_exclusives * 100) if total_exclusives else 0
+        exclusive_rarities = exclusive_collections.values('card__rarity').annotate(count=Count('card__rarity'))
+        exclusive_rarity_breakdown = {r['card__rarity']: r['count'] for r in exclusive_rarities}
+
         return JsonResponse({
             'total_unique': total_unique,
             'total_quantity': total_quantity,
             'base_completion': round(base_completion, 2),
             'rare_completion': round(rare_completion, 2),
             'overall_completion': round(overall_completion, 2),
-            'rarity_breakdown': rarity_breakdown
+            'rarity_breakdown': rarity_breakdown,
+            'total_exclusive_unique': total_exclusive_unique,
+            'exclusive_completion': round(exclusive_completion, 2),
+            'exclusive_rarity_breakdown': exclusive_rarity_breakdown
         })
 
 class SetBreakdownAPI(LoginRequiredMixin, View):
@@ -762,6 +777,14 @@ class SetBreakdownAPI(LoginRequiredMixin, View):
             
             rarities = owned_qs.values('card__rarity').annotate(count=Count('card__rarity'))
             rarity_breakdown = {r['card__rarity']: r['count'] for r in rarities}
+
+            # 6th Slot Exclusives
+            set_exclusives_total = s.cards.filter(is_sixth_exclusive=True).count()
+            exclusive_owned_qs = owned_qs.filter(card__is_sixth_exclusive=True)
+            exclusive_owned = exclusive_owned_qs.count()
+            exclusive_completion = (exclusive_owned / set_exclusives_total * 100) if set_exclusives_total else 0
+            exclusive_rarities = exclusive_owned_qs.values('card__rarity').annotate(count=Count('card__rarity'))
+            exclusive_rarity_breakdown = {r['card__rarity']: r['count'] for r in exclusive_rarities}
             
             breakdown.append({
                 'set_name': s.name,
@@ -769,7 +792,11 @@ class SetBreakdownAPI(LoginRequiredMixin, View):
                 'owned':owned,
                 'total': set_cards,
                 'completion': round(completion, 2),
-                'rarity_breakdown': rarity_breakdown
+                'rarity_breakdown': rarity_breakdown,
+                'exclusive_owned': exclusive_owned,
+                'exclusive_total': set_exclusives_total,
+                'exclusive_completion': round(exclusive_completion, 2),
+                'exclusive_rarity_breakdown': exclusive_rarity_breakdown
             })
         return JsonResponse({'sets': breakdown})
 
