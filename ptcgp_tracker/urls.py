@@ -20,13 +20,13 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 import tcg_collections.views as views
+from tcg_collections.views import DashboardView, CollectionStatsAPI, SetBreakdownAPI, PackPickerAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('accounts/register', views.register, name='register'),
-    path('dashboard/', views.dashboard, name='dashboard'),
     path('trade/matches/', views.trade_matches, name='trade_matches'),
     path('trade/propose/', views.propose_trades, name='propose_trades'),
     path('trade/detail/<int:match_id>', views.trade_detail, name='trade_detail'),
@@ -42,6 +42,13 @@ urlpatterns = [
     path('tracker/set/<int:set_id>/', views.tracker, name='tracker'),
     path('wishlist/<uuid:token>/', views.wishlist, name='wishlist'),
     path('toggle_dark_mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
+
+    # Dashboard paths
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('api/collection/stats/', CollectionStatsAPI.as_view(), name='collection_stats_api'),
+    path('api/set/breakdown/', SetBreakdownAPI.as_view(), name='set_breakdown_api'),
+    path('api/pack/picker/', PackPickerAPI.as_view(), name='pack_picker_api'),
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

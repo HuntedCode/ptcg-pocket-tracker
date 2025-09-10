@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-        <p>Base</p>
-        <p class="hidden sm:block">Sm</p>
-        <p class="hidden md:block">Md</p>
-        <p class="hidden lg:block">Lg</p>
-        <p class="hidden xl:block">Xl</p>
-        <p class="hidden 2xl:block">2Xl</p>
+    <p>Base</p>
+    <p class="hidden sm:block">Sm</p>
+    <p class="hidden md:block">Md</p>
+    <p class="hidden lg:block">Lg</p>
+    <p class="hidden xl:block">Xl</p>
+    <p class="hidden 2xl:block">2Xl</p>
+<div class="card content-card">
+    <div class="card-body">
+        <h1 class="text-2xl font-bold mb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
+        <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        </div>
+    </div>
+</div>
 {% endblock %}

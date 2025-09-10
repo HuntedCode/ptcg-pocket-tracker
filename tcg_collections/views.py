@@ -4,16 +4,18 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db.models import Sum, Count, Q, F
+from django.db.models import Count, F, Sum
 from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils import timezone
+from django.views.generic import TemplateView, View
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, BoosterDropRate, Profile, Activity, Match
 import random
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
-from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES
+from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES
 
 # Create your views here.
 
@@ -356,66 +358,6 @@ def ignore_match(request, match_id):
     return JsonResponse({'success': 'Match ignored!'})
 
 # Collection Views
-
-@login_required
-def dashboard(request):
-    collections = UserCollection.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
-    wants = UserWant.objects.filter(user=request.user).select_related('card', 'card__card_set').order_by('card__card_set__tcg_id', 'card__tcg_id')
-    total_cards = collections.aggregate(total=Sum('quantity'))['total'] or 0
-    sets_summary = collections.values('card__card_set__id', 'card__card_set__name').annotate(
-        count=Count('card', distinct=True),
-        total_quantity=Sum('quantity')
-    ).order_by('card__card_set__name')
-
-    for summary in sets_summary:
-        set_obj = Set.objects.get(id=summary['card__card_set__id'])
-        summary['completion'] = (summary['count'] / set_obj.card_count_total * 100) if set_obj.card_count_total else 0
-    
-    rarity_stats = collections.values('card__rarity').annotate(
-        owned_count=Count('card', distinct=True),
-        total_quantity=Sum('quantity')
-    ).order_by('card__rarity')
-
-    booster_probs_by_set = defaultdict(list)
-    boosters = Booster.objects.all()
-    for booster in boosters:
-        drop_rates = BoosterDropRate.objects.filter(booster=booster)
-        normal_prob = 0.0
-        god_prob = 0.0
-        sixth_prob = 0.0
-        total_prob = 0.0
-
-        for rate in drop_rates:
-            total_in_rarity = Card.objects.filter(rarity=rate.rarity, boosters=booster).count()
-            if total_in_rarity == 0:
-                continue
-            missing_in_rarity = Card.objects.filter(rarity=rate.rarity, boosters=booster).exclude(id__in=collections.values_list('card__id', flat=True)).count()
-
-            slot_rarity_prob = rate.probability * (missing_in_rarity / total_in_rarity if total_in_rarity else 0)
-            if rate.slot in ['1-3', '4', '5']:
-                normal_prob += slot_rarity_prob
-            elif rate.slot == 'god':
-                god_prob += slot_rarity_prob
-            elif rate.slot == '6':
-                sixth_prob += slot_rarity_prob
-
-        total_prob += (normal_prob / 5) + (booster.god_pack_prob * god_prob) + (booster.sixth_card_prob * sixth_prob)
-        primary_set = booster.sets.first()
-        set_name = primary_set.name if primary_set else 'Unknown Set'
-        booster_probs_by_set[set_name].append((booster.name, (total_prob * 100)))
-
-    for set_name in booster_probs_by_set:
-        booster_probs_by_set[set_name].sort(key=lambda x: x[1], reverse=True)
-
-    context = {
-        'collections': collections,
-        'wants': wants,
-        'total_cards': total_cards,
-        'sets_summary': sets_summary,
-        'rarity_stats': rarity_stats,
-        'booster_probs_by_set': dict(booster_probs_by_set)
-    }
-    return render(request, 'dashboard.html', context)
 
 @login_required
 def tracker(request, set_id):
@@ -771,3 +713,175 @@ def collection(request):
         'show_unowned': show_unowned
     }
     return render(request, 'collection.html', context)
+
+# Dashboard Views
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+
+class CollectionStatsAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        collections = UserCollection.objects.filter(user=user, quantity__gt=0)
+        total_unique = collections.count()
+        total_base = collections.filter(card__rarity__in=BASE_RARITIES).count()
+        total_rare = collections.filter(card__rarity__in=RARE_RARITIES).count()
+        total_quantity = collections.aggregate(total=Sum('quantity'))['total'] or 0
+        base_cards_count = Card.objects.filter(rarity__in=BASE_RARITIES).count()
+        rare_cards_count = Card.objects.filter(rarity__in=RARE_RARITIES).count()
+        all_cards_count = Card.objects.count()
+        base_completion = (total_base / base_cards_count * 100) if base_cards_count else 0
+        rare_completion = (total_rare / rare_cards_count * 100) if rare_cards_count else 0
+        overall_completion = (total_unique / all_cards_count * 100) if all_cards_count else 0
+        rarities = collections.values('card__rarity').annotate(count=Count('card__rarity'))
+        rarity_breakdown = {r['card__rarity']: r['count'] for r in rarities}
+        return JsonResponse({
+            'total_unique': total_unique,
+            'total_quantity': total_quantity,
+            'base_completion': round(base_completion, 2),
+            'rare_completion': round(rare_completion, 2),
+            'overall_completion': round(overall_completion, 2),
+            'rarity_breakdown': rarity_breakdown
+        })
+
+class SetBreakdownAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        sets = Set.objects.all().prefetch_related('cards')
+        breakdown = []
+        for s in sets:
+            set_cards = s.cards.count()
+            owned_qs = UserCollection.objects.filter(user=user, card__card_set=s, quantity__gt=0)
+            owned = owned_qs.count()
+            completion = (owned / set_cards * 100) if set_cards else 0
+            
+            rarities = owned_qs.values('card__rarity').annotate(count=Count('card__rarity'))
+            rarity_breakdown = {r['card__rarity']: r['count'] for r in rarities}
+            
+            breakdown.append({
+                'set_name': s.name,
+                'set_id': s.tcg_id,
+                'owned':owned,
+                'total': set_cards,
+                'completion': round(completion, 2),
+                'rarity_breakdown': rarity_breakdown
+            })
+        return JsonResponse({'sets': breakdown})
+
+class PackPickerAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        def get_rarity_dicts(cards_qs, user):
+            cards_per_rarity = cards_qs.values('rarity').annotate(count=Count('id'))
+            cards_dict = {r['rarity']: r['count'] for r in cards_per_rarity}
+
+            owned_ids = UserCollection.objects.filter(user=user, card__in=cards_qs, quantity__gt=0).values_list('card__id', flat=True)
+            missing_qs = cards_qs.exclude(id__in=owned_ids)
+            missing_per_rarity = missing_qs.values('rarity').annotate(count=Count('id'))
+            missing_dict = {r['rarity']: r['count'] for r in missing_per_rarity}
+
+            return cards_dict, missing_dict
+        
+        user = request.user
+        boosters = Booster.objects.all().prefetch_related('cards', 'boosterdroprate_set')
+        recommendations = []
+
+        for booster in boosters:
+            drop_rates = {}
+            for dr in booster.boosterdroprate_set.all():
+                if dr.slot not in drop_rates:
+                    drop_rates[dr.slot] = {}
+                drop_rates[dr.slot][dr.rarity] = dr.probability
+
+            unique_rarities = set()
+            for slot_rates in drop_rates.values():
+                unique_rarities.update(slot_rates.keys())
+            unique_rarities = list(unique_rarities)
+
+            cards_qs = booster.cards.all()
+            normal_cards_qs = cards_qs.filter(is_sixth_exclusive=False)
+            sixth_cards_qs = cards_qs.filter(is_sixth_exclusive=True)
+
+            normal_cards_dict, normal_missing_dict = get_rarity_dicts(normal_cards_qs, user)
+            sixth_cards_dict, sixth_missing_dict = get_rarity_dicts(sixth_cards_qs, user)
+
+            print(booster.name, ':', sixth_cards_dict)
+
+            if sum(normal_missing_dict.values()) + sum(sixth_missing_dict.values()) == 0:
+                chance_new = 0.0
+                expected_new = 0.0
+            else:
+                def get_rarity(slot):
+                    return random.choices(list(drop_rates[slot].keys()), list(drop_rates[slot].values()))[0]
+                
+                num_sim = 1000
+                new_in_pack_counts = []
+                has_new_count = 0
+                rarity_new_per_sim = []
+
+                for _ in range(num_sim):
+                    pack_rarities = []
+                    has_sixth = random.random() < booster.sixth_card_prob
+
+                    for _ in range(3):
+                        if '1-3' in drop_rates:
+                            pack_rarities.append((get_rarity('1-3'), False))
+                    
+                    if '4' in drop_rates:
+                        pack_rarities.append((get_rarity('4'), False))
+                    
+                    if '5' in drop_rates:
+                        pack_rarities.append((get_rarity('5'), False))
+                    
+                    if has_sixth and '6' in drop_rates:
+                        pack_rarities.append((get_rarity('6'), True))
+                    
+                    new_in_this_pack = 0
+                    rarity_new_this_pack = {rarity: 0 for rarity in unique_rarities}
+                    for rarity, is_sixth in pack_rarities:
+                        if is_sixth:
+                            total_dict = sixth_cards_dict
+                            missing_dict = sixth_missing_dict
+                        else:
+                            total_dict = normal_cards_dict
+                            missing_dict = normal_missing_dict
+
+                        total_in_rarity = total_dict.get(rarity, 0)
+                        missing_in_rarity = missing_dict.get(rarity, 0)
+
+                        if total_in_rarity > 0 and random.random() < (missing_in_rarity / total_in_rarity):
+                            new_in_this_pack += 1
+                            rarity_new_this_pack[rarity] += 1
+                    
+                    if new_in_this_pack > 0:
+                        has_new_count += 1
+                    new_in_pack_counts.append(new_in_this_pack)
+                    rarity_new_per_sim.append(rarity_new_this_pack)
+                
+                chance_new = (has_new_count / num_sim) * 100
+                expected_new = sum(new_in_pack_counts) / num_sim
+
+                rarity_chances = {}
+                for rarity in unique_rarities:
+                    has_new_rarity_count = sum(1 for sim_dict in rarity_new_per_sim if sim_dict[rarity] > 0)
+                    total_new_rarity = sum(sim_dict[rarity] for sim_dict in rarity_new_per_sim)
+                    rarity_chances[rarity] = {
+                        'chance_new': round((has_new_rarity_count / num_sim) * 100, 2),
+                        'expected_new': round(total_new_rarity / num_sim, 2)
+                    }
+
+            
+            recommendations.append({
+                'booster_name': booster.name,
+                'booster_id': booster.tcg_id,
+                'chance_new': round(chance_new, 2),
+                'expected_new': round(expected_new, 2),
+                'rarity_chances': rarity_chances
+            })
+        
+        recommendations.sort(key=lambda x: x['chance_new'], reverse=True)
+        return JsonResponse({'boosters': recommendations})
