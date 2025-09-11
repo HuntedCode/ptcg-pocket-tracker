@@ -11,8 +11,22 @@
     <div class="card-body">
         <h1 class="text-2xl font-bold mb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
         <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
+            <div class="card bg-base-300 shadow-xl" data-card-id="total-stats">
+                <div class="card-body">
+                    <h2 class="card-title">Total Collection Status</h2>
+                    <p>Unique Cards: {{ total_stats.total_unique }}</p>
+                </div>
+            </div>
+            <div class="card bg-base-300 shadow-xl" data-card-id="set-breakdown">Set Breakdown (Loading...)</div>
+            <div class="card bg-base-300 shadow-xl" data-card-id="pack-picker">Pack Picker (Loading...)</div>
+            <div class="card bg-base-300 shadow-xl" data-card-id="activity-feed">Recent Activity (Loading...)</div>
+            <div class="card bg-base-300 shadow-xl" data-card-id="growth-trend">Growth Trend (Loading...)</div>
+            <div class="card bg-base-300 shadow-xl" data-card-id="rarity-dist">Rarity Distribution (Loading...)</div>
         </div>
     </div>
 </div>
+
+<script>
+
+</script>
 {% endblock %}

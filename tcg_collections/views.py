@@ -741,7 +741,37 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = self.request.user
+
+        stats_view = CollectionStatsAPI()
+        stats_response = stats_view.get(self.request)
+        stats_data = json.loads(stats_response.content)
+        context['total_stats'] = stats_data
+        
+        set_view = SetBreakdownAPI()
+        set_response = set_view.get(self.request)
+        set_data = json.loads(set_response.content)
+        context['set_breakdown'] = set_data['sets']
+
+        pack_view = PackPickerAPI()
+        pack_response = pack_view.get(self.request)
+        pack_data = json.loads(pack_response.content)
+        context['pack_picker'] = pack_data['boosters']
+
+        activity_view = ActivityFeedAPI()
+        activity_response = activity_view.get(self.request)
+        activity_data = json.loads(activity_response.content)
+        context['activity_feed'] = activity_data['feed']
+
+        growth_view = GrowthTrendAPI()
+        growth_response = growth_view.get(self.request)
+        growth_data = json.loads(growth_response.content)
+        context['growth_trend'] = growth_data['trend']
+
+        rarity_view = RarityDistributionAPI()
+        rarity_response = rarity_view.get(self.request)
+        rarity_data = json.loads(rarity_response.content)
+        context['rarity_dist'] = rarity_data['distribution']
+
         return context
 
 class CollectionStatsAPI(LoginRequiredMixin, View):
