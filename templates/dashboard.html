@@ -9,12 +9,30 @@
     <p class="hidden 2xl:block">2Xl</p>
 <div class="card content-card">
     <div class="card-body">
-        <h1 class="text-2xl font-bold mb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
+        <h1 class="text-lg md:text-xl lg:text-2xl font-bold mb-4 border-b-2 border-base-300 pb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
         <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="card bg-base-300 shadow-xl" data-card-id="total-stats">
-                <div class="card-body">
-                    <h2 class="card-title">Total Collection Status</h2>
-                    <p>Unique Cards: {{ total_stats.total_unique }}</p>
+            <div class="card dashboard-card" data-card-id="total-stats">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body">
+                    <h2 class="dashboard-title">Total Collection Stats</h2>
+
+                    <div class="dashboard-divider"></div>
+
+                    <p class="dashboard-label px-auto">Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
+                    
+                    <div class="dashboard-divider"></div>
+                    
+                    <p class="dashboard-label">Base Cards: <span class="dashboard-stat">{{ total_stats.total_base }} / {{ total_stats.base_cards_count }} ({{ total_stats.base_completion }}%)</span></p>
+                    <p class="dashboard-label">Rare Cards: <span class="dashboard-stat">{{ total_stats.total_rare }} / {{ total_stats.rare_cards_count }} ({{ total_stats.rare_completion }}%)</span></p>
+                    <p class="dashboard-label">6th Slot Cards: <span class="dashboard-stat">{{ total_stats.total_exclusive }} / {{ total_stats.exclusive_cards_count }} ({{ total_stats.exclusive_completion }}%)</span></p>
+                
+                    <div class="dashboard-divider"></div>
+
+                    {% for group in total_stats.grouped_rarities %}
+                    <p class="dashboard-label"><span class="{{ group.group|lower }}-text">{{ group.group }}</span> Cards: <span class="dashboard-stat">{{ group.owned }} / {{ group.total }} ({{ group.completion }}%)</span></p>
+                    {% endfor %}
                 </div>
             </div>
             <div class="card bg-base-300 shadow-xl" data-card-id="set-breakdown">Set Breakdown (Loading...)</div>

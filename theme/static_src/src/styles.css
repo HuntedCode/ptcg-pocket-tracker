@@ -274,9 +274,51 @@ footer .foot-link {
   @apply shadow-md p-4 rounded-lg border-2;
 }
 
+/* Dashboard */
 
+.dashboard-card {
+  @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
+}
 
+.dashboard-body {
+  @apply flex flex-col items-center m-2 mt-1 md:mt-2;
+}
 
+.dashboard-drag {
+  @apply w-full bg-primary rounded-none border-b-2 border-neutral;
+}
+
+.dashboard-title {
+  @apply text-base md:text-lg xl:text-xl text-accent font-bold text-center mb-2;
+}
+
+.dashboard-label {
+  @apply text-xs md:text-sm font-semibold text-primary mb-2;
+}
+
+.dashboard-stat {
+  @apply font-bold text-base-content;
+}
+
+.dashboard-divider {
+  @apply w-full border-b-2 border-base-300 mb-2;
+}
+
+.diamond-text {
+  color: oklch(74% .16 232.661);
+}
+
+.star-text {
+  color: oklch(82% .189 84.429);
+}
+
+.shiny-text {
+  color: oklch(65% .241 354.308);
+}
+
+.crown-text {
+  color: oklch(71% .194 13.428);
+}
 
 .remove-overlay {
   @apply font-bold text-lg;
@@ -371,7 +413,7 @@ footer .foot-link {
 }
 
 .profile-header {
-  @apply pb-6 border-b border-base-200 mb-6;
+  @apply pb-6 border-b-2 border-base-300 mb-6;
 }
 
 .profile-section {
