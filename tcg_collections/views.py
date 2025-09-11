@@ -962,3 +962,16 @@ class GrowthTrendAPI(LoginRequiredMixin, View):
             for d in data
         ]
         return JsonResponse({'trend': trend})
+    
+class RarityDistributionAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        set_id = request.GET.get('set_id')
+        qs = UserCollection.objects.filter(user=request.user, quantity__gt=0)
+
+        if set_id:
+            qs = qs.filter(card__card_set__tcg_id=set_id)
+        
+        rarities = qs.values('card__rarity').annotate(count=Count('card__rarity'))
+        distribution = {r['card__rarity']: r['count'] for r in rarities}
+
+        return JsonResponse({'distribution': distribution})
