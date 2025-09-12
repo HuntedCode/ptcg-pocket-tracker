@@ -16,7 +16,7 @@ import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match
 import random
 from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
-from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES
+from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
 
 # Create your views here.
 
@@ -778,6 +778,31 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         set_response = set_view.get(self.request)
         set_data = json.loads(set_response.content)
         context['set_breakdown'] = set_data['sets']
+        context['all_sets'] = set_data['all_sets']
+
+        set_rarities = {}
+        for breakdown in set_data['sets']:
+            set_id = breakdown['set_id']
+            owned_breakdown = breakdown['rarity_breakdown']
+            total_breakdown = breakdown['total_rarity_breakdown']
+
+            combined_rarities = []
+            all_keys = set(owned_breakdown.keys()) | set(total_breakdown.keys())
+            for key in sorted(all_keys):
+                owned_count = owned_breakdown.get(key, 0)
+                total_count = total_breakdown.get(key, 0)
+                completion = (owned_count / total_count * 100) if total_count > 0 else 0
+                combined_rarities.append({
+                    'rarity': key,
+                    'owned': owned_count,
+                    'total': total_count,
+                    'completion': round(completion, 2)
+                })
+
+            combined_rarities = sorted(combined_rarities, key=lambda item: RARITY_ORDER.index(item['rarity']) if item['rarity'] in RARITY_ORDER else len(RARITY_ORDER))
+            set_rarities[set_id] = combined_rarities
+        context['set_rarities'] = set_rarities
+
 
         pack_view = PackPickerAPI()
         pack_response = pack_view.get(self.request)
@@ -851,38 +876,31 @@ class CollectionStatsAPI(LoginRequiredMixin, View):
 class SetBreakdownAPI(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
-        sets = Set.objects.all().prefetch_related('cards')
+        sets = Set.objects.exclude(tcg_id__contains='P').prefetch_related('cards')
+        all_sets = []
         breakdown = []
         for s in sets:
-            set_cards = s.cards.count()
+            all_sets.append({'name': s.name, 'id': s.tcg_id})
+            set_cards_count = s.cards.count()
             owned_qs = UserCollection.objects.filter(user=user, card__card_set=s, quantity__gt=0)
             owned = owned_qs.count()
-            completion = (owned / set_cards * 100) if set_cards else 0
+            completion = (owned / set_cards_count * 100) if set_cards_count else 0
             
             rarities = owned_qs.values('card__rarity').annotate(count=Count('card__rarity'))
             rarity_breakdown = {r['card__rarity']: r['count'] for r in rarities}
-
-            # 6th Slot Exclusives
-            set_exclusives_total = s.cards.filter(is_sixth_exclusive=True).count()
-            exclusive_owned_qs = owned_qs.filter(card__is_sixth_exclusive=True)
-            exclusive_owned = exclusive_owned_qs.count()
-            exclusive_completion = (exclusive_owned / set_exclusives_total * 100) if set_exclusives_total else 0
-            exclusive_rarities = exclusive_owned_qs.values('card__rarity').annotate(count=Count('card__rarity'))
-            exclusive_rarity_breakdown = {r['card__rarity']: r['count'] for r in exclusive_rarities}
+            rarities_total = s.cards.values('rarity').annotate(count=Count('rarity'))
+            total_rarity_breakdown = {r['rarity']: r['count'] for r in rarities_total}
             
             breakdown.append({
                 'set_name': s.name,
                 'set_id': s.tcg_id,
-                'owned':owned,
-                'total': set_cards,
+                'owned': owned,
+                'total': set_cards_count,
                 'completion': round(completion, 2),
                 'rarity_breakdown': rarity_breakdown,
-                'exclusive_owned': exclusive_owned,
-                'exclusive_total': set_exclusives_total,
-                'exclusive_completion': round(exclusive_completion, 2),
-                'exclusive_rarity_breakdown': exclusive_rarity_breakdown
+                'total_rarity_breakdown': total_rarity_breakdown
             })
-        return JsonResponse({'sets': breakdown})
+        return JsonResponse({'sets': breakdown, 'all_sets': all_sets})
 
 class PackPickerAPI(LoginRequiredMixin, View):
     def get(self, request):
@@ -919,8 +937,6 @@ class PackPickerAPI(LoginRequiredMixin, View):
 
             normal_cards_dict, normal_missing_dict = get_rarity_dicts(normal_cards_qs, user)
             sixth_cards_dict, sixth_missing_dict = get_rarity_dicts(sixth_cards_qs, user)
-
-            print(booster.name, ':', sixth_cards_dict)
 
             if sum(normal_missing_dict.values()) + sum(sixth_missing_dict.values()) == 0:
                 chance_new = 0.0

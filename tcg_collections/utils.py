@@ -1,6 +1,13 @@
 BASE_RARITIES = ["One Diamond", "Two Diamond", "Three Diamond", "Four Diamond"]
 RARE_RARITIES = ["One Star", "Two Star", "Three Star", "One Shiny", "Two Shiny", "Crown"]
 
+RARITY_ORDER = [
+    'One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond',
+    'One Star', 'Two Star', 'Three Star',
+    'One Shiny', 'Two Shiny',
+    'Crown'
+]
+
 FREE_TRADE_SLOTS = 3
 PREMIUM_TRADE_SLOTS = 9
 

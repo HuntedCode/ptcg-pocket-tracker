@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block content %}
     <p>Base</p>
@@ -11,6 +12,8 @@
     <div class="card-body">
         <h1 class="text-lg md:text-xl lg:text-2xl font-bold mb-4 border-b-2 border-base-300 pb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
         <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <!-- Collection Stats -->
             <div class="card dashboard-card" data-card-id="total-stats">
                 <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -20,7 +23,7 @@
 
                     <div class="dashboard-divider"></div>
 
-                    <p class="dashboard-label px-auto">Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
+                    <p class="dashboard-label">Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
                     
                     <div class="dashboard-divider"></div>
                     
@@ -35,7 +38,37 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="card bg-base-300 shadow-xl" data-card-id="set-breakdown">Set Breakdown (Loading...)</div>
+
+            <!-- Set Breakdown -->
+
+            <div class="card dashboard-card" data-card-id="set-breakdown">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body">
+                    <h2 class="dashboard-title">Set Breakdown</h2>
+
+                    <div class="dashboard-divider"></div>
+
+                    <select id="set-breakdown-select" class="select select-md select-primary">
+                        {% for set in all_sets %}
+                        <option class="set-breakdown-option" value="{{ set.id }}">{{ set.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="dashboard-divider mt-2"></div>
+
+                    {% for set in set_breakdown %}
+                    <div class="set-breakdown-display flex flex-col items-center hidden" data-set-id="{{ set.set_id }}">
+                        <p class="dashboard-label">Total Collection: <span class="dashboard-stat">{{ set.owned }} / {{ set.total }} ({{ set.completion }}%)</span></p>
+                        {% for rarity in set_rarities|get_value:set.set_id %}
+                        <p class="dashboard-label"><span class="{% if 'Diamond' in rarity.rarity %}diamond{% elif 'Star' in rarity.rarity%}star{% elif 'Shiny' in rarity.rarity %}shiny{% elif 'Crown' in rarity.rarity %}crown{% endif %}-text">{{ rarity.rarity }}:</span> <span class="dashboard-stat">{{ rarity.owned }} / {{ rarity.total }} ({{ rarity.completion }}%)</span></p>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
             <div class="card bg-base-300 shadow-xl" data-card-id="pack-picker">Pack Picker (Loading...)</div>
             <div class="card bg-base-300 shadow-xl" data-card-id="activity-feed">Recent Activity (Loading...)</div>
             <div class="card bg-base-300 shadow-xl" data-card-id="growth-trend">Growth Trend (Loading...)</div>
@@ -45,6 +78,21 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const selector = document.getElementById('set-breakdown-select');
+        const initialDisplay = document.querySelector(`.set-breakdown-display[data-set-id="${selector.value}"]`);
+        initialDisplay.classList.remove('hidden');
 
+        selector.addEventListener('change', function(e) {
+            const all_displays = document.querySelectorAll('.set-breakdown-display');
+            all_displays.forEach(display => {
+                display.classList.add('hidden');
+            });
+
+            const setId = e.target.value;
+            const selectedDisplay = document.querySelector(`.set-breakdown-display[data-set-id="${setId}"]`);
+            selectedDisplay.classList.remove('hidden');
+        });
+    });
 </script>
 {% endblock %}
