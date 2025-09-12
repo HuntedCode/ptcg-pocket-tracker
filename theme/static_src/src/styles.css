@@ -277,7 +277,7 @@ footer .foot-link {
 /* Dashboard */
 
 .dashboard-card {
-  @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
+  @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral lg:min-h-120;
 }
 
 .dashboard-body {
@@ -285,15 +285,15 @@ footer .foot-link {
 }
 
 .dashboard-drag {
-  @apply w-full bg-primary rounded-none border-b-2 border-neutral;
+  @apply w-full bg-primary rounded-none border-b-2 border-neutral hover:scale-100;
 }
 
 .dashboard-title {
-  @apply text-base md:text-lg xl:text-xl text-accent font-bold text-center mb-2;
+  @apply text-base md:text-lg xl:text-xl text-accent font-bold text-center mb-2 hover:bg-base-300 hover:scale-105;
 }
 
 .dashboard-label {
-  @apply text-xs md:text-sm font-semibold text-primary mb-2;
+  @apply text-xs md:text-sm font-semibold text-primary mb-2 hover:bg-base-300 hover:scale-105;
 }
 
 .dashboard-stat {

@@ -23,18 +23,19 @@
 
                     <div class="dashboard-divider"></div>
 
-                    <p class="dashboard-label">Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
+                    <p class="dashboard-label"></i>Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
                     
                     <div class="dashboard-divider"></div>
                     
-                    <p class="dashboard-label">Base Cards: <span class="dashboard-stat">{{ total_stats.total_base }} / {{ total_stats.base_cards_count }} ({{ total_stats.base_completion }}%)</span></p>
-                    <p class="dashboard-label">Rare Cards: <span class="dashboard-stat">{{ total_stats.total_rare }} / {{ total_stats.rare_cards_count }} ({{ total_stats.rare_completion }}%)</span></p>
-                    <p class="dashboard-label">6th Slot Cards: <span class="dashboard-stat">{{ total_stats.total_exclusive }} / {{ total_stats.exclusive_cards_count }} ({{ total_stats.exclusive_completion }}%)</span></p>
+                    <p class="dashboard-label"><i class="fas fa-star mr-1 text-accent"></i>Base Cards: <span class="dashboard-stat">{{ total_stats.total_base }} / {{ total_stats.base_cards_count }} ({{ total_stats.base_completion }}%)</span></p>
+                    <p class="dashboard-label"><i class="fas fa-star-half-alt mr-1 text-accent"></i>Rare Cards: <span class="dashboard-stat">{{ total_stats.total_rare }} / {{ total_stats.rare_cards_count }} ({{ total_stats.rare_completion }}%)</span></p>
+                    <p class="dashboard-label"><i class="fas fa-crown mr-1 text-accent"></i>6th Slot Cards: <span class="dashboard-stat">{{ total_stats.total_exclusive }} / {{ total_stats.exclusive_cards_count }} ({{ total_stats.exclusive_completion }}%)</span></p>
                 
                     <div class="dashboard-divider"></div>
 
                     {% for group in total_stats.grouped_rarities %}
-                    <p class="dashboard-label"><span class="{{ group.group|lower }}-text">{{ group.group }}</span> Cards: <span class="dashboard-stat">{{ group.owned }} / {{ group.total }} ({{ group.completion }}%)</span></p>
+                    <p class="dashboard-label"><span class="{{ group.group|lower }}-text">{% if group.group == 'Diamond' %}💎{% elif group.group == 'Star' %}★{% elif group.group == 'Shiny' %}✨{% elif group.group == 'Crown' %}👑{% endif %}
+                        {{ group.group }}</span> Cards: <span class="dashboard-stat">{{ group.owned }} / {{ group.total }} ({{ group.completion }}%)</span></p>
                     {% endfor %}
                 </div>
             </div>
@@ -61,8 +62,11 @@
                     {% for set in set_breakdown %}
                     <div class="set-breakdown-display flex flex-col items-center hidden" data-set-id="{{ set.set_id }}">
                         <p class="dashboard-label">Total Collection: <span class="dashboard-stat">{{ set.owned }} / {{ set.total }} ({{ set.completion }}%)</span></p>
+                        <progress class="progress progress-primary w-full mb-2" value="{{ set.completion }}" max="100"></progress>
                         {% for rarity in set_rarities|get_value:set.set_id %}
-                        <p class="dashboard-label"><span class="{% if 'Diamond' in rarity.rarity %}diamond{% elif 'Star' in rarity.rarity%}star{% elif 'Shiny' in rarity.rarity %}shiny{% elif 'Crown' in rarity.rarity %}crown{% endif %}-text">{{ rarity.rarity }}:</span> <span class="dashboard-stat">{{ rarity.owned }} / {{ rarity.total }} ({{ rarity.completion }}%)</span></p>
+                        <p class="dashboard-label"><span class="{% if 'Diamond' in rarity.rarity %}diamond{% elif 'Star' in rarity.rarity %}star{% elif 'Shiny' in rarity.rarity %}shiny{% elif 'Crown' in rarity.rarity %}crown{% endif %}-text">
+                            {% if 'Diamond' in rarity.rarity %}💎{% elif 'Star' in rarity.rarity %}★{% elif 'Shiny' in rarity.rarity %}✨{% elif 'Crown' in rarity.rarity %}👑{% endif %}
+                            {{ rarity.rarity }}:</span> <span class="dashboard-stat">{{ rarity.owned }} / {{ rarity.total }} ({{ rarity.completion }}%)</span></p>
                         {% endfor %}
                     </div>
                     {% endfor %}
@@ -71,7 +75,7 @@
 
             <!-- Pack Picker -->
 
-            <div class="card dashboard-card min-h-110" data-card-id="pack-picker">
+            <div class="card dashboard-card min-h-120" data-card-id="pack-picker">
                 <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
@@ -81,20 +85,21 @@
 
                         <div class="dashboard-divider"></div>
 
-                        <table class="text-center border-separate border-spacing-x-2 w-full">
-                            <thead class="text-accent">
+                        <table class="text-center border-separate border-spacing-x-2 xl:border-spacing-x-4 w-full">
+                            <thead class="text-accent hover:bg-base-300 hover:scale-105">
                                 <th class="border-b-2 border-base-300">Booster</th><th class="border-b-2 border-base-300">New Card%</th><th class="border-b-2 border-base-300">New Base%</th><th class="border-b-2 border-base-300">New Rare%</th>
                             </thead>
                             <tbody id="pack-picker-rows">
                                 {% for booster in pack_picker %}
-                                <tr class="font-semibold {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
+                                <tr class="font-semibold hover:bg-base-300 hover:scale-105 {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
                                     <td class="text-primary">{{ booster.booster_name }}</td>
                                     <td>{{ booster.chance_new }}%</td>
                                     <td>{{ booster.base_chance_new }}%</td>
                                     <td>{{ booster.rare_chance_new }}%</td>
                                 </tr>
-                                <tr class="{% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
-                                    <td colspan="2" class="text-accent font-semibold border-b-2 border-base-300">({{ booster.booster_set_id }}) - Missing:</td>
+                                <tr class="hover:bg-base-300 hover:scale-105 {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
+                                    <td class="text-accent font-semibold border-b-2 border-base-300">Missing:</td>
+                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.total_missing_count }}</td>
                                     <td class="dashboard-stat border-b-2 border-base-300">{{ booster.base_missing_count }}</td>
                                     <td class="dashboard-stat border-b-2 border-base-300">{{ booster.rare_missing_count }}</td>
                                 </tr>
@@ -102,13 +107,9 @@
                             </tbody>
                         </table>
                     </div>
-                    <div id="pack-picker-tabs" class="flex justify-center mt-4"></div>
+                    <div id="pack-picker-tabs" class="flex justify-center mt-4 p-2 overflow-x-auto"></div>
                 </div>                
             </div>
-
-            <div class="card bg-base-300 shadow-xl" data-card-id="activity-feed">Recent Activity (Loading...)</div>
-            <div class="card bg-base-300 shadow-xl" data-card-id="growth-trend">Growth Trend (Loading...)</div>
-            <div class="card bg-base-300 shadow-xl" data-card-id="rarity-dist">Rarity Distribution (Loading...)</div>
         </div>
     </div>
 </div>

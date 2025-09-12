@@ -940,6 +940,7 @@ class PackPickerAPI(LoginRequiredMixin, View):
 
             base_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in BASE_RARITIES)
             rare_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in RARE_RARITIES)
+            total_missing_count = base_missing_count + rare_missing_count
 
             if sum(normal_missing_dict.values()) + sum(sixth_missing_dict.values()) == 0:
                 chance_new = 0.0
@@ -1010,7 +1011,8 @@ class PackPickerAPI(LoginRequiredMixin, View):
                 'base_chance_new': base_chance_new,
                 'rare_chance_new': rare_chance_new,
                 'base_missing_count': base_missing_count,
-                'rare_missing_count': rare_missing_count
+                'rare_missing_count': rare_missing_count,
+                'total_missing_count': total_missing_count
             })
         
         recommendations.sort(key=lambda x: x['chance_new'], reverse=True)
