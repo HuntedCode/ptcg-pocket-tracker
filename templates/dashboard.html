@@ -69,7 +69,43 @@
                 </div>
             </div>
 
-            <div class="card bg-base-300 shadow-xl" data-card-id="pack-picker">Pack Picker (Loading...)</div>
+            <!-- Pack Picker -->
+
+            <div class="card dashboard-card min-h-110" data-card-id="pack-picker">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body flex flex-col justify-between h-full">
+                    <div>
+                        <h2 class="dashboard-title">Pack Picker</h2>
+
+                        <div class="dashboard-divider"></div>
+
+                        <table class="text-center border-separate border-spacing-x-2 w-full">
+                            <thead class="text-accent">
+                                <th class="border-b-2 border-base-300">Booster</th><th class="border-b-2 border-base-300">New Card%</th><th class="border-b-2 border-base-300">New Base%</th><th class="border-b-2 border-base-300">New Rare%</th>
+                            </thead>
+                            <tbody id="pack-picker-rows">
+                                {% for booster in pack_picker %}
+                                <tr class="font-semibold {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
+                                    <td class="text-primary">{{ booster.booster_name }}</td>
+                                    <td>{{ booster.chance_new }}%</td>
+                                    <td>{{ booster.base_chance_new }}%</td>
+                                    <td>{{ booster.rare_chance_new }}%</td>
+                                </tr>
+                                <tr class="{% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
+                                    <td colspan="2" class="text-accent font-semibold border-b-2 border-base-300">({{ booster.booster_set_id }}) - Missing:</td>
+                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.base_missing_count }}</td>
+                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.rare_missing_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pack-picker-tabs" class="flex justify-center mt-4"></div>
+                </div>                
+            </div>
+
             <div class="card bg-base-300 shadow-xl" data-card-id="activity-feed">Recent Activity (Loading...)</div>
             <div class="card bg-base-300 shadow-xl" data-card-id="growth-trend">Growth Trend (Loading...)</div>
             <div class="card bg-base-300 shadow-xl" data-card-id="rarity-dist">Rarity Distribution (Loading...)</div>
@@ -77,6 +113,7 @@
     </div>
 </div>
 
+{{ pack_picker|json_script:"pack-picker-data" }}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const selector = document.getElementById('set-breakdown-select');
@@ -93,6 +130,45 @@
             const selectedDisplay = document.querySelector(`.set-breakdown-display[data-set-id="${setId}"]`);
             selectedDisplay.classList.remove('hidden');
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const packPickerData = JSON.parse(document.getElementById('pack-picker-data').textContent);
+        const rows = document.querySelectorAll('#pack-picker-rows tr');
+        const tabsContainer = document.getElementById('pack-picker-tabs');
+        const itemsPerPage = 6;
+        const totalPages = Math.ceil(packPickerData.length / itemsPerPage);
+
+        let currentPage = 0;
+
+        function renderTabs() {
+            tabsContainer.innerHTML = '';
+            if (totalPages <= 1) return;
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group gap-2 lg:gap-0';
+            for (let i = 0; i < totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `btn btn-md lg:btn-sm btn-primary ${i === currentPage ? 'btn-active' : ''}`;
+                btn.textContent = i + 1;
+                btn.addEventListener('click', () => switchPage(i));
+                btnGroup.appendChild(btn);
+            }
+            tabsContainer.appendChild(btnGroup);
+        }
+
+        function switchPage(page) {
+            currentPage = page;
+            rows.forEach(row => {
+                const rowPage = parseInt(row.dataset.page);
+                row.classList.toggle('hidden', rowPage !== page);
+            });
+            tabsContainer.querySelectorAll('.btn').forEach((btn, i) => {
+                btn.classList.toggle('btn-active', i === page);
+            });
+            console.log('Switched to page:', page);
+        }
+
+        renderTabs();
     });
 </script>
 {% endblock %}

@@ -938,6 +938,9 @@ class PackPickerAPI(LoginRequiredMixin, View):
             normal_cards_dict, normal_missing_dict = get_rarity_dicts(normal_cards_qs, user)
             sixth_cards_dict, sixth_missing_dict = get_rarity_dicts(sixth_cards_qs, user)
 
+            base_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in BASE_RARITIES)
+            rare_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in RARE_RARITIES)
+
             if sum(normal_missing_dict.values()) + sum(sixth_missing_dict.values()) == 0:
                 chance_new = 0.0
                 expected_new = 0.0
@@ -992,22 +995,22 @@ class PackPickerAPI(LoginRequiredMixin, View):
                 chance_new = (has_new_count / num_sim) * 100
                 expected_new = sum(new_in_pack_counts) / num_sim
 
-                rarity_chances = {}
-                for rarity in unique_rarities:
-                    has_new_rarity_count = sum(1 for sim_dict in rarity_new_per_sim if sim_dict[rarity] > 0)
-                    total_new_rarity = sum(sim_dict[rarity] for sim_dict in rarity_new_per_sim)
-                    rarity_chances[rarity] = {
-                        'chance_new': round((has_new_rarity_count / num_sim) * 100, 2),
-                        'expected_new': round(total_new_rarity / num_sim, 2)
-                    }
+                base_has_new_count = sum(1 for sim_dict in rarity_new_per_sim if any(sim_dict.get(rarity, 0) > 0 for rarity in BASE_RARITIES))
+                rare_has_new_count = sum(1 for sim_dict in rarity_new_per_sim if any(sim_dict.get(rarity, 0) > 0 for rarity in RARE_RARITIES))
 
+                base_chance_new = round((base_has_new_count / num_sim) * 100, 2) if num_sim > 0 else 0.0
+                rare_chance_new = round((rare_has_new_count / num_sim) * 100, 2) if num_sim > 0 else 0.0
             
             recommendations.append({
                 'booster_name': booster.name,
                 'booster_id': booster.tcg_id,
+                'booster_set_id': booster.sets.first().tcg_id,
                 'chance_new': round(chance_new, 2),
                 'expected_new': round(expected_new, 2),
-                'rarity_chances': rarity_chances
+                'base_chance_new': base_chance_new,
+                'rare_chance_new': rare_chance_new,
+                'base_missing_count': base_missing_count,
+                'rare_missing_count': rare_missing_count
             })
         
         recommendations.sort(key=lambda x: x['chance_new'], reverse=True)

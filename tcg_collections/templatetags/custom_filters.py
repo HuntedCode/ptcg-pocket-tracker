@@ -22,3 +22,7 @@ def times(value):
         return range(int(value))
     except (ValueError, TypeError):
         return range(0)
+
+@register.filter
+def div(value, divisor):
+    return value / divisor
