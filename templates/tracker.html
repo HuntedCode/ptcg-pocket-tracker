@@ -261,6 +261,15 @@
 
         const row = quantityInput.closest('tr');
         if (row) {
+            if (qtyValue >= 1) {
+                row.classList.add('opacity-100');
+                row.classList.remove('bg-base-300');
+                row.classList.add('bg-base-100');
+            } else {
+                row.classList.add('opacity-75');
+                row.classList.add('bg-base-300');
+                row.classList.remove('bg-base-100');
+            }
             const wishlistToggle = row.querySelector('.wishlist-toggle');
             if (wishlistToggle) {
                 if (qtyValue > 1) {

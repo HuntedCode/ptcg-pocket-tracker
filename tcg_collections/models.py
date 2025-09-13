@@ -115,6 +115,41 @@ class Activity(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.type} at {self.timestamp}"
 
+class PackPickerData(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    last_refresh = models.DateTimeField(null=True, blank=True, help_text="Timestamp of last sim run")
+    refresh_count = models.PositiveIntegerField(default=0, help_text="Count for current period (e.g., reset daily/hourly)")
+
+    def __str__(self):
+        return f"{self.user.username}'s Pack Picker Data"
+
+class PackPickerBooster(models.Model):
+    data = models.ForeignKey(PackPickerData, on_delete=models.CASCADE, related_name='boosters')
+    booster = models.ForeignKey(Booster, on_delete=models.CASCADE)
+    chance_new = models.FloatField(default=0.0)
+    expected_new = models.FloatField(default=0.0)
+    missing_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('data', 'booster')
+        ordering = ['-chance_new']
+    
+    def __str__(self):
+        return f"{self.booster.name} for {self.data.user.username}"
+
+class PackPickerRarity(models.Model):
+    booster = models.ForeignKey(PackPickerBooster, on_delete=models.CASCADE, related_name='rarities')
+    rarity = models.CharField(max_length=50)
+    chance_new = models.FloatField(default=0.0)
+    expected_new = models.FloatField(default=0.0)
+    missing_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('booster', 'rarity')
+
+        def __str__(self):
+            return f"{self.rarity} for {self.booster.booster.name}"
+
 # Profile/Social Models
 
 class Profile(models.Model):
@@ -189,3 +224,8 @@ def log_new_collection_add(sender, instance, created, **kwargs):
     if created and instance.quantity > 0 and instance.card.rarity in TRACKED_RARITIES:
         content = json.dumps({'message': f"({instance.card.tcg_id}) {instance.card.name} - {instance.card.rarity}", 'card_id': instance.card.id})
         Activity.objects.create(user=instance.user, type='collection_add', content=content)
+
+@receiver(post_save, sender=User)
+def create_pack_picker(sender, instance, created, **kwargs):
+    if created:
+        PackPickerData.objects.create(user=instance)
