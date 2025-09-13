@@ -1,13 +1,9 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 
+{% block title %}Pocket Tracker - Dashboard{% endblock %}
+
 {% block content %}
-    <p>Base</p>
-    <p class="hidden sm:block">Sm</p>
-    <p class="hidden md:block">Md</p>
-    <p class="hidden lg:block">Lg</p>
-    <p class="hidden xl:block">Xl</p>
-    <p class="hidden 2xl:block">2Xl</p>
 <div class="card content-card">
     <div class="card-body">
         <h1 class="text-lg md:text-xl lg:text-2xl font-bold mb-4 border-b-2 border-base-300 pb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
@@ -170,6 +166,26 @@
         }
 
         renderTabs();
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('dashboard-grid');
+
+        const savedOrder = JSON.parse(localStorage.getItem('dashboardOrder')) || [];
+        if (savedOrder.length) {
+            savedOrder.forEach(id => {
+                const card = grid.querySelector(`[data-card-id="${id}"]`);
+                if (card) grid.appendChild(card);
+            });
+        }
+
+        const sortable = new Sortable(grid, {
+            animation: 150,
+            handle: '.dashboard-drag',
+            onEnd: () => {
+                const newOrder = Array.from(grid.querySelectorAll('.card')).map(c => c.dataset.cardId);
+                localStorage.setItem('dashboardOrder', JSON.stringify(newOrder));
+            }
+        });
     });
 </script>
 {% endblock %}

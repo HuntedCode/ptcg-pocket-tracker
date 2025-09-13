@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import json
 import uuid
+from .utils import ICON_CHOICES, COLOR_CHOICES
 
 # Create your models here.
 # Card/Collection Models
@@ -171,7 +172,12 @@ class Message(models.Model):
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        import random
+        pic_config = {
+            'icon': ICON_CHOICES[random.randint(0, len(ICON_CHOICES)-1)],
+            'bg_color': COLOR_CHOICES[random.randint(0, len(COLOR_CHOICES)-1)]
+        }
+        Profile.objects.create(user=instance, pic_config=pic_config)
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):

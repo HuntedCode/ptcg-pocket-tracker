@@ -26,3 +26,7 @@ def times(value):
 @register.filter
 def div(value, divisor):
     return value / divisor
+
+@register.filter
+def add_class(field, css_class):
+    return field.as_widget(attrs={"class": css_class})

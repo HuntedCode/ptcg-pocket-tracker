@@ -15,7 +15,7 @@ from django.views.generic import TemplateView, View
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match
 import random
-from tcg_collections.forms import CustomUserCreationForm, ProfileForm, MessageForm, TradeWantForm
+from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, TradeWantForm
 from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
 
 # Create your views here.
@@ -24,13 +24,13 @@ from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_
 
 def register(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user) # Auto login after registering
             return redirect('dashboard')
     else:
-        form = CustomUserCreationForm()
+        form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
 
 @login_required

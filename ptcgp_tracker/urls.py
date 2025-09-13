@@ -20,13 +20,19 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 import tcg_collections.views as views
-from tcg_collections.views import DashboardView, CollectionStatsAPI, SetBreakdownAPI, PackPickerAPI, ActivityFeedAPI, GrowthTrendAPI, RarityDistributionAPI
+from tcg_collections.views import DashboardView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-    path('accounts/register', views.register, name='register'),
+    path('accounts/register/', views.register, name='register'),
+    path('accounts/password_reset/', auth_views.PasswordResetView.as_view(template_name='registration/password_reset_form.html'), name='password_reset'),
+    path('accounts/password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='registration/password_reset_done.html'), name='password_reset_done'),
+    path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
+
     path('trade/matches/', views.trade_matches, name='trade_matches'),
     path('trade/propose/', views.propose_trades, name='propose_trades'),
     path('trade/detail/<int:match_id>', views.trade_detail, name='trade_detail'),
@@ -45,12 +51,6 @@ urlpatterns = [
 
     # Dashboard paths
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
-    path('api/collection/stats/', CollectionStatsAPI.as_view(), name='collection_stats_api'),
-    path('api/set/breakdown/', SetBreakdownAPI.as_view(), name='set_breakdown_api'),
-    path('api/pack/picker/', PackPickerAPI.as_view(), name='pack_picker_api'),
-    path('api/activity/feed/', ActivityFeedAPI.as_view(), name='activity_feed_api'),
-    path('api/collection/growth/', GrowthTrendAPI.as_view(), name='growth_trend_api'),
-    path('api/rarity/distribution/', RarityDistributionAPI.as_view(), name='rarity_distribution_api')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
