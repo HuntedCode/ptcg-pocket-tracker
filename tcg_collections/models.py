@@ -85,6 +85,10 @@ class UserCollection(models.Model):
 
     class Meta:
         unique_together = ('user', 'card')
+        indexes = [
+            models.Index(fields=['user', 'quantity']),
+            models.Index(fields=['user', 'card'])
+        ]
     
     def __str__(self):
         return f"{self.user.username}'s {self.card.name} (x{self.quantity})"
@@ -111,6 +115,9 @@ class Activity(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', 'timestamp'])
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.type} at {self.timestamp}"
@@ -140,6 +147,9 @@ class PackPickerBooster(models.Model):
     class Meta:
         unique_together = ('data', 'booster')
         ordering = ['-chance_new']
+        indexes = [
+            models.Index(fields=['data', 'chance_new'])
+        ]
     
     def to_dict(self):
         rarity_chances = {r.rarity: r.to_dict() for r in self.rarities.all()}
@@ -172,6 +182,9 @@ class PackPickerRarity(models.Model):
 
     class Meta:
         unique_together = ('booster', 'rarity')
+        indexes = [
+            models.Index(fields=['booster', 'rarity'])
+        ]
 
     def to_dict(self):
         return {
