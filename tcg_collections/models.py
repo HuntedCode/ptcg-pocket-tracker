@@ -129,11 +129,36 @@ class PackPickerBooster(models.Model):
     chance_new = models.FloatField(default=0.0)
     expected_new = models.FloatField(default=0.0)
     missing_count = models.PositiveIntegerField(default=0)
+    total_count = models.PositiveIntegerField(default=0)
+    base_missing_count = models.PositiveIntegerField(default=0)
+    base_total_count = models.PositiveIntegerField(default=0)
+    base_chance_new = models.FloatField(default=0.0)
+    rare_missing_count = models.PositiveIntegerField(default=0)
+    rare_total_count = models.PositiveIntegerField(default=0)
+    rare_chance_new = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ('data', 'booster')
         ordering = ['-chance_new']
     
+    def to_dict(self):
+        rarity_chances = {r.rarity: r.to_dict() for r in self.rarities.all()}
+        return {
+            'booster_name': self.booster.name,
+            'booster_id': self.booster.tcg_id,
+            'chance_new': self.chance_new,
+            'expected_new': self.expected_new,
+            'missing_count': self.missing_count,
+            'total_count': self.total_count,
+            'base_missing_count': self.base_missing_count,
+            'base_total_count': self.base_total_count,
+            'base_chance_new': self.base_chance_new,
+            'rare_missing_count': self.rare_missing_count,
+            'rare_total_count': self.rare_total_count,
+            'rare_chance_new': self.rare_chance_new,
+            'rarity_chances': rarity_chances
+        }
+
     def __str__(self):
         return f"{self.booster.name} for {self.data.user.username}"
 
@@ -143,12 +168,21 @@ class PackPickerRarity(models.Model):
     chance_new = models.FloatField(default=0.0)
     expected_new = models.FloatField(default=0.0)
     missing_count = models.PositiveIntegerField(default=0)
+    total_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = ('booster', 'rarity')
 
-        def __str__(self):
-            return f"{self.rarity} for {self.booster.booster.name}"
+    def to_dict(self):
+        return {
+            'chance_new': self.chance_new,
+            'expected_new': self.expected_new,
+            'missing_count': self.missing_count,
+            'total_count': self.total_count
+        }
+
+    def __str__(self):
+        return f"{self.rarity} for {self.booster.booster.name}"
 
 # Profile/Social Models
 

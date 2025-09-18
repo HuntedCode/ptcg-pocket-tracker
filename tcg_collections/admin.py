@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message, BoosterDropRate, Activity, Match
+from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message, BoosterDropRate, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity
 
 # Register your models here.
 # Card/Collection Models
@@ -60,3 +60,20 @@ class MatchAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('sender', 'receiver', 'content', 'timestamp', 'is_read')
     search_fields = ('sender__username', 'receiver__username', 'content')
+
+@admin.register(PackPickerData)
+class PackPickerDataAdmin(admin.ModelAdmin):
+    list_display = ('user', 'last_refresh', 'refresh_count')
+    search_fields = ('user',)
+
+@admin.register(PackPickerBooster)
+class PackPickerBoosterAdmin(admin.ModelAdmin):
+    list_display = ('data', 'booster', 'chance_new', 'expected_new', 'missing_count', 'total_count')
+    search_fields = ('booster',)
+    list_filter = ('booster',)
+
+@admin.register(PackPickerRarity)
+class PackPickerRarityAdmin(admin.ModelAdmin):
+    list_display = ('booster', 'rarity', 'chance_new', 'expected_new', 'missing_count', 'total_count')
+    search_fields = ('booster', 'rarity')
+    list_filter = ('booster', 'rarity')

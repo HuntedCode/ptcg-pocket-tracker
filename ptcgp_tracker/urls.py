@@ -51,6 +51,7 @@ urlpatterns = [
 
     # Dashboard paths
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('refresh-pack-picker/', views.refresh_pack_picker, name='refresh_pack_picker')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

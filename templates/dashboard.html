@@ -24,21 +24,72 @@
                     <div class="dashboard-divider"></div>
                     
                     <p class="dashboard-label"><i class="fas fa-star mr-1 text-accent"></i>Base Cards: <span class="dashboard-stat">{{ total_stats.total_base }} / {{ total_stats.base_cards_count }} ({{ total_stats.base_completion }}%)</span></p>
+                    <progress class="progress progress-primary w-[65%] mb-2" value="{{ total_stats.base_completion }}" max="100"></progress>
                     <p class="dashboard-label"><i class="fas fa-star-half-alt mr-1 text-accent"></i>Rare Cards: <span class="dashboard-stat">{{ total_stats.total_rare }} / {{ total_stats.rare_cards_count }} ({{ total_stats.rare_completion }}%)</span></p>
+                    <progress class="progress progress-accent w-[65%] mb-2" value="{{ total_stats.rare_completion }}" max="100"></progress>
                     <p class="dashboard-label"><i class="fas fa-crown mr-1 text-accent"></i>6th Slot Cards: <span class="dashboard-stat">{{ total_stats.total_exclusive }} / {{ total_stats.exclusive_cards_count }} ({{ total_stats.exclusive_completion }}%)</span></p>
-                
+                    <progress class="progress progress-success w-[65%] mb-2" value="{{ total_stats.exclusive_completion }}" max="100"></progress>
+
+                    <div class="dashboard-divider"></div>
+
+                    <h2 class="dashboard-title mt-10">Stats By Group</h2>
+
                     <div class="dashboard-divider"></div>
 
                     {% for group in total_stats.grouped_rarities %}
                     <p class="dashboard-label"><span class="{{ group.group|lower }}-text">{% if group.group == 'Diamond' %}💎{% elif group.group == 'Star' %}★{% elif group.group == 'Shiny' %}✨{% elif group.group == 'Crown' %}👑{% endif %}
                         {{ group.group }}</span> Cards: <span class="dashboard-stat">{{ group.owned }} / {{ group.total }} ({{ group.completion }}%)</span></p>
+                        <progress class="progress {% if group.group == 'Diamond' %}progress-primary{% elif group.group == 'Star' %}progress-secondary{% elif group.group == 'Shiny' %}progress-accent{% elif group.group == 'Crown' %}progress-error{% endif %} w-[65%] mb-2" value="{{ group.completion }}" max="100"></progress>
                     {% endfor %}
+                </div>
+            </div>
+
+            <!-- Set Overview -->
+            <div class="card dashboard-card min-h-155" data-card-id="total-stats">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body flex flex-col justify-between h-full">
+                    <div class="w-full">
+                        <h2 class="dashboard-title">Set Overview</h2>
+
+                        <div class="dashboard-divider"></div>
+                        
+                        <div class="overflow-x-auto w-full">
+                            <table class="table table-sm">
+                                <thead class="text-accent hover:bg-base-300">
+                                    <tr>
+                                        <th>Set</th>
+                                        <th>Base</th>
+                                        <th>Rare</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="set-overview-rows">
+                                    {% for set in total_stats.set_breakdown %}
+                                    <tr class="font-semibold cursor-pointer hover:bg-base-300{% if forloop.counter0 >= 6%} hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}" onclick="document.location='{% url 'tracker' set.set_id %}';">
+                                        <th rowspan="2" class="text-primary">{{ set.set_name }}</th>
+                                        <td>{{ set.set_base }}/{{ set.set_base_count }}</td>
+                                        <td>{{ set.set_rare }}/{{ set.set_rare_count }}</td>
+                                        <td>{{ set.set_total }}/{{ set.set_total_count }}</td>
+                                    </tr>
+                                    <tr class="font-semibold cursor-pointer hover:bg-base-300{% if forloop.counter0 >= 6%} hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
+                                        <td><progress class="progress {% if set.set_base_completion < 33.33 %}progress-accent{% elif set.set_base_completion < 66.66 %}progress-secondary{% elif set.set_base_completion < 100 %}progress-success{% else %}progress-primary{% endif %} w-full" value="{{ set.set_base_completion }}" max="100"></progress></td>
+                                        <td><progress class="progress {% if set.set_rare_completion < 33.33 %}progress-accent{% elif set.set_rare_completion < 66.66 %}progress-secondary{% elif set.set_rare_completion < 100 %}progress-success{% else %}progress-primary{% endif %} w-full" value="{{ set.set_rare_completion }}" max="100"></progress></td>
+                                        <td><progress class="progress {% if set.set_total_completion < 33.33 %}progress-accent{% elif set.set_total_completion < 66.66 %}progress-secondary{% elif set.set_total_completion < 100 %}progress-success{% else %}progress-primary{% endif %} w-full" value="{{ set.set_total_completion }}" max="100"></progress></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="set-overview-tabs" class="flex justify-center mt-4 p-2 overflow-x-auto"></div>
                 </div>
             </div>
 
             <!-- Set Breakdown -->
 
-            <div class="card dashboard-card" data-card-id="set-breakdown">
+            <div class="card dashboard-card min-h-160" data-card-id="set-breakdown">
                 <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
@@ -58,11 +109,14 @@
                     {% for set in set_breakdown %}
                     <div class="set-breakdown-display flex flex-col items-center hidden" data-set-id="{{ set.set_id }}">
                         <p class="dashboard-label">Total Collection: <span class="dashboard-stat">{{ set.owned }} / {{ set.total }} ({{ set.completion }}%)</span></p>
-                        <progress class="progress progress-primary w-full mb-2" value="{{ set.completion }}" max="100"></progress>
+                        <progress class="progress progress-success w-full mb-2" value="{{ set.completion }}" max="100"></progress>
+
                         {% for rarity in set_rarities|get_value:set.set_id %}
                         <p class="dashboard-label"><span class="{% if 'Diamond' in rarity.rarity %}diamond{% elif 'Star' in rarity.rarity %}star{% elif 'Shiny' in rarity.rarity %}shiny{% elif 'Crown' in rarity.rarity %}crown{% endif %}-text">
                             {% if 'Diamond' in rarity.rarity %}💎{% elif 'Star' in rarity.rarity %}★{% elif 'Shiny' in rarity.rarity %}✨{% elif 'Crown' in rarity.rarity %}👑{% endif %}
                             {{ rarity.rarity }}:</span> <span class="dashboard-stat">{{ rarity.owned }} / {{ rarity.total }} ({{ rarity.completion }}%)</span></p>
+
+                        <progress class="progress {% if 'Diamond' in rarity.rarity %}progress-primary{% elif 'Star' in rarity.rarity %}progress-secondary{% elif 'Shiny' in rarity.rarity %}progress-accent{% elif 'Crown' in rarity.rarity %}progress-error{% endif %} w-full mb-2" value="{{ rarity.completion }}" max="100"></progress>
                         {% endfor %}
                     </div>
                     {% endfor %}
@@ -71,37 +125,42 @@
 
             <!-- Pack Picker -->
 
-            <div class="card dashboard-card min-h-120" data-card-id="pack-picker">
+            <div class="card dashboard-card min-h-155" data-card-id="pack-picker">
                 <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
                 <div class="dashboard-body flex flex-col justify-between h-full">
-                    <div>
+                    <div class="w-full">
                         <h2 class="dashboard-title">Pack Picker</h2>
+                        <p class="text-xs text-base-content font-semibold text-center mb-2">(%s based on 5,000 simulated pack openings.)</p>
 
                         <div class="dashboard-divider"></div>
 
-                        <table class="text-center border-separate border-spacing-x-2 xl:border-spacing-x-4 w-full">
-                            <thead class="text-accent hover:bg-base-300 hover:scale-105">
-                                <th class="border-b-2 border-base-300">Booster</th><th class="border-b-2 border-base-300">New Card%</th><th class="border-b-2 border-base-300">New Base%</th><th class="border-b-2 border-base-300">New Rare%</th>
-                            </thead>
-                            <tbody id="pack-picker-rows">
-                                {% for booster in pack_picker %}
-                                <tr class="font-semibold hover:bg-base-300 hover:scale-105 {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
-                                    <td class="text-primary">{{ booster.booster_name }}</td>
-                                    <td>{{ booster.chance_new }}%</td>
-                                    <td>{{ booster.base_chance_new }}%</td>
-                                    <td>{{ booster.rare_chance_new }}%</td>
-                                </tr>
-                                <tr class="hover:bg-base-300 hover:scale-105 {% if forloop.counter0 >= 6%}hidden{% endif %}" data-page="{{ forloop.counter0|div:6 }}">
-                                    <td class="text-accent font-semibold border-b-2 border-base-300">Missing:</td>
-                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.total_missing_count }}</td>
-                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.base_missing_count }}</td>
-                                    <td class="dashboard-stat border-b-2 border-base-300">{{ booster.rare_missing_count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="flex flex-col items-center justify-center my-4">
+                            <form method="post" action="{% url 'refresh_pack_picker' %}">
+                                {% csrf_token %}
+                                <button id="refresh-pack-picker" class="btn btn-success" disabled>Refresh Simulations</button>
+                            </form>
+                            <span id="refresh-timer" class="mt-2 text-sm font-semibold"></span>
+                        </div>
+                        
+                        <div class="overflow-x-auto w-full">
+                            <table class="table table-sm text-center w-full">
+                                <thead class="text-accent hover:bg-base-300">
+                                    <th>Booster</th><th>New Card%</th><th>New Base%</th><th>New Rare%</th>
+                                </thead>
+                                <tbody id="pack-picker-rows">
+                                    {% for booster in pack_picker %}
+                                    <tr class="font-semibold hover:bg-base-300{% if forloop.counter0 >= 8%} hidden{% endif %}" data-page="{{ forloop.counter0|div:8 }}">
+                                        <th class="text-primary">{{ booster.booster_name }}</th>
+                                        <td>{{ booster.chance_new }}%</td>
+                                        <td>{{ booster.base_chance_new }}%</td>
+                                        <td>{{ booster.rare_chance_new }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div id="pack-picker-tabs" class="flex justify-center mt-4 p-2 overflow-x-auto"></div>
                 </div>                
@@ -111,6 +170,7 @@
 </div>
 
 {{ pack_picker|json_script:"pack-picker-data" }}
+{{ total_stats.set_breakdown|json_script:"set-overview-data"}}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const selector = document.getElementById('set-breakdown-select');
@@ -133,7 +193,7 @@
         const packPickerData = JSON.parse(document.getElementById('pack-picker-data').textContent);
         const rows = document.querySelectorAll('#pack-picker-rows tr');
         const tabsContainer = document.getElementById('pack-picker-tabs');
-        const itemsPerPage = 6;
+        const itemsPerPage = 8;
         const totalPages = Math.ceil(packPickerData.length / itemsPerPage);
 
         let currentPage = 0;
@@ -167,6 +227,46 @@
 
         renderTabs();
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const setOverviewData = JSON.parse(document.getElementById('set-overview-data').textContent);
+        const rows = document.querySelectorAll('#set-overview-rows tr');
+        const tabsContainer = document.getElementById('set-overview-tabs');
+        const itemsPerPage = 6;
+        const totalPages = Math.ceil(setOverviewData.length / itemsPerPage);
+
+        let currentPage = 0;
+
+        function renderTabs() {
+            tabsContainer.innerHTML = '';
+            if (totalPages <= 1) return;
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group gap-2 lg:gap-0';
+            for (let i = 0; i < totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `btn btn-md lg:btn-sm btn-primary ${i === currentPage ? 'btn-active' : ''}`;
+                btn.textContent = i + 1;
+                btn.addEventListener('click', () => switchPage(i));
+                btnGroup.appendChild(btn);
+            }
+            tabsContainer.appendChild(btnGroup);
+        }
+
+        function switchPage(page) {
+            currentPage = page;
+            rows.forEach(row => {
+                const rowPage = parseInt(row.dataset.page);
+                row.classList.toggle('hidden', rowPage !== page);
+            });
+            tabsContainer.querySelectorAll('.btn').forEach((btn, i) => {
+                btn.classList.toggle('btn-active', i === page);
+            });
+            console.log('Switched to page:', page);
+        }
+
+        renderTabs();
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementById('dashboard-grid');
 
@@ -186,6 +286,63 @@
                 localStorage.setItem('dashboardOrder', JSON.stringify(newOrder));
             }
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const refreshButton = document.getElementById('refresh-pack-picker');
+        const timerSpan = document.getElementById('refresh-timer');
+        const tbody = document.getElementById('pack-picker-rows');
+
+        refreshButton.addEventListener('click', refreshSims);
+
+        function refreshSims() {
+            fetch('/api/pack/picker/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        timerSpan.textContent = data.error;
+                        refreshButton.disabled = true;
+                        console.log('Refresh limited');
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    data.boosters.forEach(booster => {
+
+                    })
+                })
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const lastRefreshISO = '{{ last_refresh }}';
+        const refreshButton = document.getElementById('refresh-pack-picker');
+        const timerSpan = document.getElementById('refresh-timer');
+
+        function startTimer(lastRefreshISO) {
+            if(!lastRefreshISO) {
+                timerSpan.textContent = 'Ready';
+                refreshButton.disabled = false;
+                return;
+            }
+            const last = new Date(lastRefreshISO);
+            const interval = setInterval(() => {
+                const now = new Date();
+                const diffMs = 3600000 - (now - last)
+                if (diffMs <= 0) {
+                    timerSpan.textContent = 'Ready';
+                    refreshButton.disabled = false;
+                    clearInterval(interval);
+                    return;
+                }
+                const min = Math.floor(diffMs / 60000);
+                const sec = Math.floor((diffMs % 60000) / 1000);
+                timerSpan.textContent = `Next in ${min}:${sec < 10 ? '0' : ''}${sec}`;
+                refreshButton.disabled = true;
+            }, 1000);
+        }
+        
+        startTimer(lastRefreshISO)
     });
 </script>
 {% endblock %}

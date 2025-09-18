@@ -277,7 +277,7 @@ footer .foot-link {
 /* Dashboard */
 
 .dashboard-card {
-  @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral lg:min-h-120;
+  @apply bg-base-200 border-4 border-neutral rounded-md shadow-lg shadow-neutral;
 }
 
 .dashboard-body {
