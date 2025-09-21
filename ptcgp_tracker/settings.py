@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'tcg_collections.middleware.SlowQueryMiddleware',
+    'tcg_collections.middleware.UpdateLastActiveMiddleware',
 ]
 
 ROOT_URLCONF = 'ptcgp_tracker.urls'

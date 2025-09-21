@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message, BoosterDropRate, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity
+from .models import Booster, Card, Set, UserCollection, UserWant, Profile, Message, BoosterDropRate, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat
 
 # Register your models here.
 # Card/Collection Models
@@ -46,7 +46,7 @@ class ActivityAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'pic_config', 'is_trading_active', 'bio', 'share_token', 'theme')
+    list_display = ('user', 'last_active', 'pic_config', 'is_trading_active', 'bio', 'share_token', 'theme')
     search_fields = ('user__username',)
     list_filter = ('is_trading_active',)
 
@@ -77,3 +77,10 @@ class PackPickerRarityAdmin(admin.ModelAdmin):
     list_display = ('booster', 'rarity', 'chance_new', 'expected_new', 'missing_count', 'total_count')
     search_fields = ('booster', 'rarity')
     list_filter = ('booster', 'rarity')
+
+# Daily Stats Model
+
+@admin.register(DailyStat)
+class DailyStatAdmin(admin.ModelAdmin):
+    list_display = ('date', 'packs_opened', 'rare_cards_found', 'new_users', 'four_diamond_found', 'one_star_found', 'two_star_found', 'three_star_found', 'one_shiny_found', 'two_shiny_found', 'crown_found')
+    search_fields = ('date',)

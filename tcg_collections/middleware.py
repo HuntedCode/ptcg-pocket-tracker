@@ -1,6 +1,8 @@
 import time
 import logging
+from django.utils import timezone
 from django.db.backends.utils import CursorWrapper
+from .models import Profile
 
 logger = logging.getLogger(__name__)
 
@@ -26,3 +28,13 @@ class SlowQueryMiddleware:
             duration = time.time() - start
             if duration > self.SLOW_QUERY_THRESHOLD:
                 logger.warning(f"Slow query: {duration:.2f}s - {sql[:100]}")
+
+class UpdateLastActiveMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            Profile.objects.filter(user=request.user).update(last_active=timezone.now())
+        response = self.get_response(request)
+        return response

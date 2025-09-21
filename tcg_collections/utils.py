@@ -1,5 +1,6 @@
 BASE_RARITIES = ["One Diamond", "Two Diamond", "Three Diamond", "Four Diamond"]
-RARE_RARITIES = ["One Star", "Two Star", "Three Star", "One Shiny", "Two Shiny", "Crown"]
+TRACKED_RARITIES = ["One Star", "Two Star", "Three Star", "One Shiny", "Two Shiny", "Crown"]
+TRACKED_RARITIES = ["Four Diamond", "One Star", "Two Star", "Three Star", "One Shiny", "Two Shiny", "Crown"]
 
 RARITY_ORDER = [
     'One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond',

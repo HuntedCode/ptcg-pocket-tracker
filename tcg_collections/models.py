@@ -1,12 +1,14 @@
-from django.db import models
+from collections import Counter
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.db.models.deletion import SET_NULL
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 import json
 import uuid
 import logging
-from .utils import ICON_CHOICES, COLOR_CHOICES
+from .utils import ICON_CHOICES, COLOR_CHOICES, TRACKED_RARITIES
 
 # Create your models here.
 # Card/Collection Models
@@ -250,6 +252,25 @@ class Message(models.Model):
     def __str__(self):
         return f"From {self.sender} to {self.receiver} at {self.timestamp}"
 
+# Aggregate Stats Model
+
+class DailyStat(models.Model):
+    date = models.DateField(default=timezone.now, unique=True)
+    packs_opened = models.PositiveIntegerField(default=0)
+    rare_cards_found = models.PositiveIntegerField(default=0)
+    new_users = models.PositiveIntegerField(default=0)
+
+    four_diamond_found = models.PositiveIntegerField(default=0)
+    one_star_found = models.PositiveIntegerField(default=0)
+    two_star_found = models.PositiveIntegerField(default=0)
+    three_star_found = models.PositiveIntegerField(default=0)
+    one_shiny_found = models.PositiveIntegerField(default=0)
+    two_shiny_found = models.PositiveIntegerField(default=0)
+    crown_found = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Stats for {self.date}"
+    
 # Receivers
 
 @receiver(post_save, sender=User)
@@ -283,3 +304,43 @@ def log_collection_stats(sender, instance, **kwargs):
 def create_pack_picker(sender, instance, created, **kwargs):
     if created:
         PackPickerData.objects.create(user=instance)
+
+# Stats Receivers
+
+@transaction.atomic
+@receiver(post_save, sender=Activity)
+def update_stats_on_activity(sender, instance, created, **kwargs):
+    if created and instance.type == 'pack_open':
+        today = timezone.now().date()
+        stats, _ = DailyStat.objects.get_or_create(date=today)
+
+        card_details = json.loads(instance.content)['details']
+        rarity_found = []
+        for detail in card_details:
+            card = Card.objects.filter(id=detail[0]).first()
+            if card and card.rarity in TRACKED_RARITIES:
+                rarity_str = card.rarity.lower().replace(" ", "_") + '_found'
+                rarity_found.append(rarity_str)
+
+        counter = Counter(rarity_found)
+
+        changed_fields = ['packs_opened']
+        stats.packs_opened = models.F('packs_opened') + 1
+        if len(rarity_found) > 0:
+            stats.rare_cards_found = models.F('rare_cards_found') + len(rarity_found)
+            changed_fields.append('rare_cards_found')
+
+        for rarity_str, count in counter.items():
+            setattr(stats, rarity_str, models.F(rarity_str) + count)
+            changed_fields.append(rarity_str)
+
+        stats.save(update_fields=changed_fields)
+
+@transaction.atomic
+@receiver(post_save, sender=User)
+def update_stats_on_collection(sender, instance, created, **kwargs):
+    if created:
+        today = timezone.now.date()
+        stats, _ = DailyStat.objects.get_or_create(date=today)
+        stats.new_users = models.F('new_users') + 1
+        stats.save(update_fields=['new_users'])
