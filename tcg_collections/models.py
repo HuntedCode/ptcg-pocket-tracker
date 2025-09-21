@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import json
 import uuid
+import logging
 from .utils import ICON_CHOICES, COLOR_CHOICES
 
 # Create your models here.
@@ -271,6 +272,12 @@ def log_new_collection_add(sender, instance, created, **kwargs):
     if created and instance.quantity > 0 and instance.card.rarity in TRACKED_RARITIES:
         content = json.dumps({'message': f"({instance.card.tcg_id}) {instance.card.name} - {instance.card.rarity}", 'card_id': instance.card.id})
         Activity.objects.create(user=instance.user, type='collection_add', content=content)
+
+logger = logging.getLogger(__name__)
+@receiver(post_save, sender=UserCollection)
+def log_collection_stats(sender, instance, **kwargs):
+    count = sender.objects.filter(user=instance.user).count()
+    logger.info(f"User {instance.user.username} collection size: {count}")
 
 @receiver(post_save, sender=User)
 def create_pack_picker(sender, instance, created, **kwargs):
