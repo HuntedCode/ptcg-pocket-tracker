@@ -16,7 +16,7 @@ import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat
 import random
 from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, TradeWantForm
-from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, TRACKED_RARITIES, RARITY_ORDER
+from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
 
 # Create your views here.
 
@@ -51,9 +51,6 @@ def profile(request, token):
     form = ProfileForm(instance=profile) if is_own else None
     total_unique_cards = UserCollection.objects.filter(user=user).aggregate(owned=Count('card', distinct=True))['owned']
 
-    BASE_RARITIES = ['One Diamond', 'Two Diamond', 'Three Diamond', 'Four Diamond']
-    OTHER_RARITIES = ['One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown']
-
     set_breakdowns = []
     all_sets = Set.objects.exclude(name__contains='Promo').order_by('tcg_id')
 
@@ -61,8 +58,8 @@ def profile(request, token):
         total_base_in_set = Card.objects.filter(card_set=set_obj, rarity__in=BASE_RARITIES).count()
         owned_base_in_set = UserCollection.objects.filter(user=user, card__card_set=set_obj, card__rarity__in=BASE_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
         base_completion = (owned_base_in_set / total_base_in_set * 100) if total_base_in_set else 0
-        total_rare_in_set = Card.objects.filter(card_set=set_obj, rarity__in=OTHER_RARITIES).count()
-        owned_rare_in_set = UserCollection.objects.filter(user=user, card__card_set=set_obj, card__rarity__in=OTHER_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
+        total_rare_in_set = Card.objects.filter(card_set=set_obj, rarity__in=RARE_RARITIES).count()
+        owned_rare_in_set = UserCollection.objects.filter(user=user, card__card_set=set_obj, card__rarity__in=RARE_RARITIES).aggregate(owned=Count('card', distinct=True))['owned'] or 0
         rare_completion = (owned_rare_in_set / total_rare_in_set * 100) if total_rare_in_set else 0
 
         set_breakdowns.append({
@@ -824,7 +821,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['last_refresh'] = data_model.last_refresh.isoformat() if data_model.last_refresh else None
         except PackPickerData.DoesNotExist:
             context['pack_picker'] = []
-            context['last_refresh'] = None
+            context['last_refresh'] = timezone.now() - timedelta(hours=1)
 
         community_stats_view = DailyCommunityStatsAPI()
         community_stats_response = community_stats_view.get(self.request)
@@ -841,11 +838,11 @@ class CollectionStatsAPI(LoginRequiredMixin, View):
 
         total_unique = collections.count()
         total_base = collections.filter(card__rarity__in=BASE_RARITIES).count()
-        total_rare = collections.filter(card__rarity__in=TRACKED_RARITIES).count()
+        total_rare = collections.filter(card__rarity__in=RARE_RARITIES).count()
         total_quantity = collections.aggregate(total=Sum('quantity'))['total'] or 0
 
         base_cards_count = all_cards.filter(rarity__in=BASE_RARITIES).count()
-        rare_cards_count = all_cards.filter(rarity__in=TRACKED_RARITIES).count()
+        rare_cards_count = all_cards.filter(rarity__in=RARE_RARITIES).count()
         all_cards_count = all_cards.count()
 
         base_completion = (total_base / base_cards_count * 100) if base_cards_count else 0
@@ -868,9 +865,9 @@ class CollectionStatsAPI(LoginRequiredMixin, View):
         set_breakdown = []
         for s in all_sets:
             set_base = collections.filter(card__card_set=s, card__rarity__in=BASE_RARITIES).count()
-            set_rare = collections.filter(card__card_set=s, card__rarity__in=TRACKED_RARITIES).count()
+            set_rare = collections.filter(card__card_set=s, card__rarity__in=RARE_RARITIES).count()
             set_base_count = all_cards.filter(card_set=s, rarity__in=BASE_RARITIES).count()
-            set_rare_count = all_cards.filter(card_set=s, rarity__in=TRACKED_RARITIES).count()
+            set_rare_count = all_cards.filter(card_set=s, rarity__in=RARE_RARITIES).count()
             set_base_completion = (set_base / set_base_count * 100) if set_base_count else 0
             set_rare_completion = (set_rare / set_rare_count * 100) if set_rare_count else 0
             set_total = set_base + set_rare
@@ -986,9 +983,9 @@ class PackPickerAPI(LoginRequiredMixin, View):
             sixth_cards_dict, sixth_missing_dict = self.get_rarity_dicts(sixth_cards_qs, user)
 
             base_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in BASE_RARITIES)
-            rare_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in TRACKED_RARITIES)
+            rare_missing_count = sum(normal_missing_dict.get(rarity, 0) + sixth_missing_dict.get(rarity, 0) for rarity in RARE_RARITIES)
             base_total_count = sum(normal_cards_dict.get(rarity, 0) + sixth_cards_dict.get(rarity, 0) for rarity in BASE_RARITIES)
-            rare_total_count = sum(normal_cards_dict.get(rarity, 0) + sixth_cards_dict.get(rarity, 0) for rarity in TRACKED_RARITIES)
+            rare_total_count = sum(normal_cards_dict.get(rarity, 0) + sixth_cards_dict.get(rarity, 0) for rarity in RARE_RARITIES)
 
             def get_rarity(slot):
                 return random.choices(list(drop_rates[slot].keys()), list(drop_rates[slot].values()))[0]
@@ -1039,7 +1036,7 @@ class PackPickerAPI(LoginRequiredMixin, View):
                 rarity_new_per_sim.append(rarity_new_this_pack)
 
             base_has_new_count = sum(1 for sim_dict in rarity_new_per_sim if any(sim_dict.get(rarity, 0) > 0 for rarity in BASE_RARITIES))
-            rare_has_new_count = sum(1 for sim_dict in rarity_new_per_sim if any(sim_dict.get(rarity, 0) > 0 for rarity in TRACKED_RARITIES))
+            rare_has_new_count = sum(1 for sim_dict in rarity_new_per_sim if any(sim_dict.get(rarity, 0) > 0 for rarity in RARE_RARITIES))
 
             base_chance_new = round((base_has_new_count / num_sim) * 100, 2) if num_sim > 0 else 0.0
             rare_chance_new = round((rare_has_new_count / num_sim) * 100, 2) if num_sim > 0 else 0.0

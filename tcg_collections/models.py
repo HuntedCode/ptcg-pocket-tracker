@@ -1,4 +1,5 @@
 from collections import Counter
+from datetime import datetime, timedelta
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.db.models.deletion import SET_NULL
@@ -127,8 +128,8 @@ class Activity(models.Model):
 
 class PackPickerData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    last_refresh = models.DateTimeField(null=True, blank=True, help_text="Timestamp of last sim run")
-    refresh_count = models.PositiveIntegerField(default=0, help_text="Count for current period (e.g., reset daily/hourly)")
+    last_refresh = models.DateTimeField(default=timezone.now() - timedelta(hours=1), help_text="Timestamp of last sim run")
+    refresh_count = models.PositiveIntegerField(default=1, help_text="Count for current period (e.g., reset daily/hourly)")
 
     def __str__(self):
         return f"{self.user.username}'s Pack Picker Data"
@@ -278,8 +279,8 @@ def create_profile(sender, instance, created, **kwargs):
     if created:
         import random
         pic_config = {
-            'icon': ICON_CHOICES[random.randint(0, len(ICON_CHOICES)-1)],
-            'bg_color': COLOR_CHOICES[random.randint(0, len(COLOR_CHOICES)-1)]
+            'icon': ICON_CHOICES[random.randint(0, len(ICON_CHOICES)-1)][0],
+            'bg_color': COLOR_CHOICES[random.randint(0, len(COLOR_CHOICES)-1)][0]
         }
         Profile.objects.create(user=instance, pic_config=pic_config)
 
@@ -338,9 +339,9 @@ def update_stats_on_activity(sender, instance, created, **kwargs):
 
 @transaction.atomic
 @receiver(post_save, sender=User)
-def update_stats_on_collection(sender, instance, created, **kwargs):
+def update_stats_on_new_user(sender, instance, created, **kwargs):
     if created:
-        today = timezone.now.date()
+        today = timezone.now().date()
         stats, _ = DailyStat.objects.get_or_create(date=today)
         stats.new_users = models.F('new_users') + 1
         stats.save(update_fields=['new_users'])
