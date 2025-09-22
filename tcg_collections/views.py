@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, View
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat
 import random
 from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, TradeWantForm
 from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, TRACKED_RARITIES, RARITY_ORDER
@@ -826,20 +826,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['pack_picker'] = []
             context['last_refresh'] = None
 
-        activity_view = ActivityFeedAPI()
-        activity_response = activity_view.get(self.request)
-        activity_data = json.loads(activity_response.content)
-        context['activity_feed'] = activity_data['feed']
-
-        growth_view = GrowthTrendAPI()
-        growth_response = growth_view.get(self.request)
-        growth_data = json.loads(growth_response.content)
-        context['growth_trend'] = growth_data['trend']
-
-        rarity_view = RarityDistributionAPI()
-        rarity_response = rarity_view.get(self.request)
-        rarity_data = json.loads(rarity_response.content)
-        context['rarity_dist'] = rarity_data['distribution']
+        community_stats_view = DailyCommunityStatsAPI()
+        community_stats_response = community_stats_view.get(self.request)
+        community_stats_data = json.loads(community_stats_response.content)
+        context['daily_stats'] = community_stats_data['daily_stats']
 
         return context
 
@@ -1167,3 +1157,22 @@ class RarityDistributionAPI(LoginRequiredMixin, View):
         distribution = {r['card__rarity']: r['count'] for r in rarities}
 
         return JsonResponse({'distribution': distribution})
+
+class DailyCommunityStatsAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        today = timezone.now().date()
+        stats_obj, _ = DailyStat.objects.get_or_create(date=today)
+
+        stats = {
+            'packs_opened': stats_obj.packs_opened,
+            'rare_cards_found': stats_obj.rare_cards_found,
+            'four_diamond_found': stats_obj.four_diamond_found,
+            'one_star_found': stats_obj.one_star_found,
+            'two_star_found': stats_obj.two_star_found,
+            'three_star_found': stats_obj.three_star_found,
+            'one_shiny_found': stats_obj.one_shiny_found,
+            'two_shiny_found': stats_obj.two_shiny_found,
+            'crown_found': stats_obj.crown_found,
+        }
+
+        return JsonResponse({'daily_stats': stats})

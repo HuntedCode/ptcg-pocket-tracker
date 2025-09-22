@@ -3,6 +3,8 @@
 
 {% block title %}Pocket Tracker - Dashboard{% endblock %}
 
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock  %}
+
 {% block content %}
 <div class="card content-card">
     <div class="card-body">
@@ -19,7 +21,7 @@
 
                     <div class="dashboard-divider"></div>
 
-                    <p class="dashboard-label"></i>Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
+                    <p class="dashboard-label">Unique Cards: <span class="dashboard-stat">{{ total_stats.total_unique }}</span> | Total Cards: <span class="dashboard-stat">{{ total_stats.total_quantity }}</span></p>
                     
                     <div class="dashboard-divider"></div>
                     
@@ -165,12 +167,44 @@
                     <div id="pack-picker-tabs" class="flex justify-center mt-4 p-2 overflow-x-auto"></div>
                 </div>                
             </div>
+
+            <!-- Community Stats -->
+            <div class="card dashboard-card min-h-160" data-card-id="set-breakdown">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body">
+                    <h2 class="dashboard-title">Daily Community Stats</h2>
+
+                    <div class="dashboard-divider"></div>
+
+                    <p class="dashboard-label">Total Packs Opened: <span class="dashboard-stat">{{ daily_stats.packs_opened }}</span></p>
+                    <p class="dashboard-label">Total Rares Found: <span class="dashboard-stat">{{ daily_stats.rare_cards_found }}</span></p>
+
+                    <div class="dashboard-divider"></div>
+
+                    <p class="dashboard-label"><span class="diamond-text">Four Diamond</span> Pulled: <span class="dashboard-stat">{{ daily_stats.four_diamond_found }}</span></p>
+                    <p class="dashboard-label"><span class="star-text">One Star</span> Pulled: <span class="dashboard-stat">{{ daily_stats.one_star_found }}</span></p>
+                    <p class="dashboard-label"><span class="star-text">Two Star</span> Pullled: <span class="dashboard-stat">{{ daily_stats.two_star_found }}</span></p>
+                    <p class="dashboard-label"><span class="star-text">Three Star</span> Pulled: <span class="dashboard-stat">{{ daily_stats.three_star_found }}</span></p>
+                    <p class="dashboard-label"><span class="shiny-text">One Shiny</span> Pulled: <span class="dashboard-stat">{{ daily_stats.one_shiny_found }}</span></p>
+                    <p class="dashboard-label"><span class="shiny-text">Two Shiny</span> Pulled: <span class="dashboard-stat">{{ daily_stats.two_shiny_found }}</span></p>
+                    <p class="dashboard-label"><span class="crown-text">Crown</span> Pulled: <span class="dashboard-stat">{{ daily_stats.crown_found }}</span></p>
+                
+                    <div class="dashboard-divider"></div>
+
+                    <div class="w-full h-64">
+                        <canvas id="rarity-pie-chart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 {{ pack_picker|json_script:"pack-picker-data" }}
-{{ total_stats.set_breakdown|json_script:"set-overview-data"}}
+{{ total_stats.set_breakdown|json_script:"set-overview-data" }}
+{{ daily_stats|json_script:"daily-stats-data" }}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const selector = document.getElementById('set-breakdown-select');
@@ -222,7 +256,6 @@
             tabsContainer.querySelectorAll('.btn').forEach((btn, i) => {
                 btn.classList.toggle('btn-active', i === page);
             });
-            console.log('Switched to page:', page);
         }
 
         renderTabs();
@@ -261,7 +294,6 @@
             tabsContainer.querySelectorAll('.btn').forEach((btn, i) => {
                 btn.classList.toggle('btn-active', i === page);
             });
-            console.log('Switched to page:', page);
         }
 
         renderTabs();
@@ -302,7 +334,6 @@
                     if (data.error) {
                         timerSpan.textContent = data.error;
                         refreshButton.disabled = true;
-                        console.log('Refresh limited');
                         return;
                     }
 
@@ -343,6 +374,44 @@
         }
         
         startTimer(lastRefreshISO)
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const dailyStats = JSON.parse(document.getElementById('daily-stats-data').textContent);
+        const ctx = document.getElementById('rarity-pie-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Four Diamond', 'One Star', 'Two Star', 'Three Star', 'One Shiny', 'Two Shiny', 'Crown'],
+                datasets: [{
+                    data: [
+                        dailyStats.four_diamond_found,
+                        dailyStats.one_star_found,
+                        dailyStats.two_star_found,
+                        dailyStats.three_star_found,
+                        dailyStats.one_shiny_found,
+                        dailyStats.two_shiny_found,
+                        dailyStats.crown_found
+                    ],
+                    backgroundColor: [
+                        'oklch(74% .16 232.661)',
+                        'oklch(82% .189 84.429)',
+                        'oklch(82% .189 84.429)',
+                        'oklch(82% .189 84.429)',
+                        'oklch(65% .241 354.308)',
+                        'oklch(65% .241 354.308)',
+                        'oklch(71% .194 13.428)'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'right'}
+                }
+            }
+        });
     });
 </script>
 {% endblock %}
