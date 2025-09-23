@@ -97,8 +97,10 @@ WSGI_APPLICATION = 'ptcgp_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-USE_PROD = os.environ.get('USE_PROD', 'False') == 'True'
+logger = logging.getLogger('tcg_collections')
 
+USE_PROD = os.environ.get('USE_PROD', 'False') == 'True'
+logger.info(f"USE_PROD={USE_PROD}, DEFAULT_FILE_STORAGE={DEFAULT_FILE_STORAGE}")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -107,6 +109,7 @@ DATABASES = {
 }
 if USE_PROD:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+logger.info(f"After setting, DEFAULT_FILE_STORAGE={DEFAULT_FILE_STORAGE}")
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
@@ -162,8 +165,6 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
-if not DEBUG:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -187,6 +188,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'tcg_collections': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'tcg_collections.models': {
             'handlers': ['file'],
             'level': 'INFO',
