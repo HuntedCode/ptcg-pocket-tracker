@@ -16,7 +16,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 import logging
 from storages.backends.s3boto3 import S3Boto3Storage
-from django.core.files.storage import get_storage_class
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -112,7 +111,6 @@ DATABASES = {
 if USE_PROD:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 logger.info(f"After setting, DEFAULT_FILE_STORAGE={DEFAULT_FILE_STORAGE}")
-logger.info(f"Storage class: {get_storage_class().__name__}")
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
