@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'theme',
     'tcg_collections',
     'debug_toolbar',
+    'storages',
 ]
 TAILWIND_APP_NAME = 'theme'
 
