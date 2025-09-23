@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import dj_database_url
 from dotenv import load_dotenv
 from pathlib import Path
 load_dotenv()
@@ -99,7 +100,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    } if os.environ.get('DEBUG', 'False') == 'True' else dj_database_url.parse(os.environ.get('DATABASE_URL'))
 }
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
