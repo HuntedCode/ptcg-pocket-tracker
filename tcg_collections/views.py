@@ -1,19 +1,23 @@
 from collections import defaultdict
 import colorsys
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db.models import Count, F, Sum
 from django.db.models.functions import TruncWeek
 from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import TemplateView, View
 import json
-from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat
+from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat, User
 import random
 from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, TradeWantForm
 from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
@@ -26,12 +30,37 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user) # Auto login after registering
-            return redirect('dashboard')
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            link = request.build_absolute_uri(reverse('confirm_email', args=(uid, token)))
+            send_mail('Confirm Your Registration', f'Click to confirm: {link}', 'admin@pockettracker.io', [user.email],)
+            messages.success(request, 'Confirmation email sent.')
+            return redirect('login')
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+def confirm_email(request, uidb64, token):
+    print('Confirming email')
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        print('Confirmation failed...')
+        user = None
+    if user and default_token_generator.check_token(user, token):
+        print('Confirmed user and token...')
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Account confirmed. Login.')
+        return redirect('login')
+    print('Invalid user or token')
+    messages.error(request, 'Invalid confirmation link.')
+    return redirect('login')
 
 @login_required
 def profile(request, token):

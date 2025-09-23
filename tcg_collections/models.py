@@ -1,7 +1,8 @@
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from django.conf import settings
 from django.db import models, transaction
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.db.models.deletion import SET_NULL
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -12,6 +13,11 @@ import logging
 from .utils import ICON_CHOICES, COLOR_CHOICES, TRACKED_RARITIES
 
 # Create your models here.
+
+# User Model
+class User(AbstractUser):
+    email = models.EmailField(unique=True, null=False, blank=False)
+
 # Card/Collection Models
 
 class Booster(models.Model):
@@ -82,7 +88,7 @@ class Card(models.Model):
         return f"{self.name} ({self.tcg_id})"
     
 class UserCollection(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     is_seen = models.BooleanField(default=False)
@@ -98,7 +104,7 @@ class UserCollection(models.Model):
         return f"{self.user.username}'s {self.card.name} (x{self.quantity})"
 
 class UserWant(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     desired_quantity = models.PositiveIntegerField(default=1)
 
@@ -109,7 +115,7 @@ class UserWant(models.Model):
         return f"{self.user.username} wants {self.card.name} (x{self.desired_quantity})"
 
 class Activity(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='activities')
     type = models.CharField(max_length=50, choices=[
         ('collection_add', 'Collection Add'),
         ('pack_open', 'Pack Open')
@@ -127,8 +133,8 @@ class Activity(models.Model):
         return f"{self.user.username} - {self.type} at {self.timestamp}"
 
 class PackPickerData(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    last_refresh = models.DateTimeField(default=timezone.now() - timedelta(hours=1), help_text="Timestamp of last sim run")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    last_refresh = models.DateTimeField(default=date(2025, 1, 1), help_text="Timestamp of last sim run")
     refresh_count = models.PositiveIntegerField(default=1, help_text="Count for current period (e.g., reset daily/hourly)")
 
     def __str__(self):
@@ -204,7 +210,7 @@ class PackPickerRarity(models.Model):
 # Profile/Social Models
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
     pic_config = models.JSONField(default=dict)
     is_trading_active = models.BooleanField(default=False, help_text="Enable to appear in matches and receive messages.")
@@ -221,8 +227,8 @@ class Profile(models.Model):
         return f"{self.user.username}'s profile"
 
 class Match(models.Model):
-    initiator = models.ForeignKey(User, related_name='initiated_matches', on_delete=models.CASCADE)
-    recipient = models.ForeignKey(User, related_name='received_matches', on_delete=models.CASCADE)
+    initiator = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='initiated_matches', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_matches', on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=[
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
@@ -241,8 +247,8 @@ class Match(models.Model):
         return f"{self.initiator.username} -> {self.recipient.username}: {self.status}"
 
 class Message(models.Model):
-    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
-    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_messages', on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
@@ -274,7 +280,7 @@ class DailyStat(models.Model):
     
 # Receivers
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile(sender, instance, created, **kwargs):
     if created:
         import random
@@ -284,7 +290,7 @@ def create_profile(sender, instance, created, **kwargs):
         }
         Profile.objects.create(user=instance, pic_config=pic_config)
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()
 
@@ -301,7 +307,7 @@ def log_collection_stats(sender, instance, **kwargs):
     count = sender.objects.filter(user=instance.user).count()
     logger.info(f"User {instance.user.username} collection size: {count}")
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_pack_picker(sender, instance, created, **kwargs):
     if created:
         PackPickerData.objects.create(user=instance)
@@ -338,7 +344,7 @@ def update_stats_on_activity(sender, instance, created, **kwargs):
         stats.save(update_fields=changed_fields)
 
 @transaction.atomic
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def update_stats_on_new_user(sender, instance, created, **kwargs):
     if created:
         today = timezone.now().date()

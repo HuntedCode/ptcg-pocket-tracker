@@ -52,16 +52,14 @@ class Command(BaseCommand):
                     'logo_path': f"images/set_logos/{cards_data['id']}_logo.png",
                     'symbol': cards_data.get('symbol', '')
                 }
-                
-                print(set_info)
 
                 self.create_or_update_set(set_info, lang, last_set_id=last_set_id, refresh_full=refresh_full, booster_refresh=booster_refresh)
 
         self.stdout.write(self.style.SUCCESS('DB population complete!'))
 
     # API Functions
-    def call_api(self, url):
-        response = requests.get(url)
+    def call_api(self, url, headers={}):
+        response = requests.get(url, headers=headers, timeout=0.5)
         if response.status_code == 200:
             return response.json()
         else:

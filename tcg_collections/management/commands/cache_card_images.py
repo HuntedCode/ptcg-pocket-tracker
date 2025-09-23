@@ -26,9 +26,14 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE(f"Card {card.tcg_id} has no image link! Skipping.."))
                 continue
             url = f"{card.image_base}/low.png"
-            response = requests.get(url)
+            file_path = os.path.join(settings.STATIC_ROOT, 'cards', f"{card.tcg_id}_low.png")
+            if os.path.exists(file_path):
+                card.local_image_small = f"cards/{card.tcg_id}_low.png"
+                card.save()
+                print("Image already in cache! Updated DB row with path.")
+                continue
+            response = requests.get(url, headers={}, timeout=0.5)
             if response.status_code == 200:
-                file_path = os.path.join(settings.STATIC_ROOT, 'cards', f"{card.tcg_id}_low.png")
                 with open(file_path, 'wb') as f:
                     f.write(response.content)
                 card.local_image_small = f"cards/{card.tcg_id}_low.png"
