@@ -162,6 +162,10 @@ if not DEBUG:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     logging.getLogger('boto3').debug('S3 storage initialized')
 
+USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
+if USE_S3:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
