@@ -97,12 +97,16 @@ WSGI_APPLICATION = 'ptcgp_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+USE_PROD = os.environ.get('USE_PROD', 'False') == 'True'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    } if os.environ.get('DEBUG', 'False') == 'True' else dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    } if not USE_PROD else dj_database_url.parse(os.environ.get('DATABASE_URL'))
 }
+if USE_PROD:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
@@ -159,11 +163,6 @@ AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
 if not DEBUG:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    logging.getLogger('boto3').debug('S3 storage initialized')
-
-USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
-if USE_S3:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Default primary key field type
