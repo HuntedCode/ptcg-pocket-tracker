@@ -192,6 +192,16 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
+        'boto3': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'botocore': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
     'formatters': {
         'verbose': {
