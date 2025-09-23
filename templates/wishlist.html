@@ -31,7 +31,7 @@
         <div class="mb-8 set-section">
             <div class="flex justify-between items-center mb-4 p-2">
                 <h2 class="text-lg md:text-2xl font-semibold mb-4 flex flex-wrap justify-start items-center">
-                    <img src="{% static set_obj.logo_path %}" alt="{{ set_obj.name }} logo" class="h-6 md:h-8 mr-2">
+                    <img src="{{ set_obj.logo.url }}" alt="{{ set_obj.name }} logo" class="h-6 md:h-8 mr-2">
                     {{ set_obj.name }}
                     <span class="ml-2 text-xs md:text-sm text-neutral">({{ wants|length }} cards)</span>
                 </h2>
@@ -49,7 +49,7 @@
                 {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
                     <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
                         <figure>
-                            <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-auto object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                            <img src="{{ want.card.local_image_small.url }}" alt="{{ want.card.name }}" class="card-small-img w-full h-auto object-cover grayscale hover:grayscale-0" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
                         </figure>
                     </div>
                     <form method="post" class="absolute top-1 right-1" data-ajax-form>
@@ -71,7 +71,7 @@
                 {% endif %}" data-card-id="{{ want.card.id }}" role="button" tabindex="0">
                     <div class="tooltip" data-tip="{{ want.card.name }} - {{ want.card.rarity }}">
                         <figure>
-                            <img src="{% static want.card.local_image_small %}" alt="{{ want.card.name }}" class="card-small-img w-full h-auto object-cover{% if not want_item.1 %} grayscale hover:grayscale-0{% endif %}" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
+                            <img src="{{ want.card.local_image_small.url }}" alt="{{ want.card.name }}" class="card-small-img w-full h-auto object-cover{% if not want_item.1 %} grayscale hover:grayscale-0{% endif %}" data-large-src="{{ want.card.image_base }}/high.png" data-rarity="{{ want.card.rarity }}" loading="lazy">
                         </figure>
                     </div>
                 </div>

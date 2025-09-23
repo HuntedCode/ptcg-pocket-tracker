@@ -110,7 +110,7 @@
                                 {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
                                 {% endwith %}
                                     <figure>
-                                        <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                        <img src="{{ card.local_image_small.url }}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
                                     </figure>
                                 </div>
                             </div>
@@ -129,7 +129,7 @@
                             {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
                             {% endwith %}
                                 <figure>
-                                    <img src="{% static card.local_image_small %}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                                    <img src="{{ card.local_image_small.url }}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
                                 </figure>
                             </div>
                             {% endfor %}

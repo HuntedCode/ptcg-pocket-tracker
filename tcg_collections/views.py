@@ -568,17 +568,17 @@ def get_booster_cards(request):
 
 
     common_list = [
-        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small.url, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
         for c in commons    
     ]
 
     others_list = [
-        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small.url, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
         for c in others    
     ]
 
     sixth_list = [
-        {'id': c.id, 'name': c.name, 'image': c.local_image_small, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
+        {'id': c.id, 'name': c.name, 'image': c.local_image_small.url, 'rarity': c.rarity, 'tcg_id': c.tcg_id}
         for c in sixth
     ]
 
@@ -587,7 +587,7 @@ def get_booster_cards(request):
         'others': others_list,
         'sixth': sixth_list,
         'has_sixth_option': has_sixth_option,
-        'booster_image': booster.local_image_small if booster.local_image_small else ''
+        'booster_image': booster.local_image_small.url if booster.local_image_small else ''
     })
 
 @login_required

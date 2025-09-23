@@ -23,7 +23,7 @@ class User(AbstractUser):
 class Booster(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
-    local_image_small = models.CharField(max_length=200, blank=True, default='')
+    local_image_small = models.ImageField(upload_to='boosters/', blank=True, null=True)
     god_pack_prob = models.FloatField(default=0.0005, help_text='Base probability of god pack (e.g., 0.0005)')
     sixth_card_prob = models.FloatField(default=0.0, help_text="Base probability of 6th card (e.g., 0.05)")
 
@@ -54,7 +54,7 @@ class Set(models.Model):
     release_date = models.DateField(null=True, blank=True)
     card_count_official = models.PositiveIntegerField(null=True, blank=True)
     card_count_total = models.PositiveIntegerField(null=True, blank=True)
-    logo_path = models.CharField(max_length=50, blank=True)
+    logo = models.ImageField(upload_to='set_logos/', blank=True, null=True)
     symbol = models.URLField(blank=True)
     boosters = models.ManyToManyField(Booster, related_name='sets', blank=True)
 
@@ -66,7 +66,7 @@ class Card(models.Model):
     tcg_id = models.CharField(max_length=50, unique=True)
     illustrator = models.CharField(max_length=100, blank=True)
     image_base = models.CharField(max_length=200, blank=True)
-    local_image_small = models.CharField(max_length=200, blank=True, default='')
+    local_image_small = models.ImageField(upload_to='cards/', blank=True, null=True)
     name = models.CharField(max_length=100)
     rarity = models.CharField(max_length=50)
     card_set = models.ForeignKey(Set, on_delete=models.CASCADE, related_name='cards')

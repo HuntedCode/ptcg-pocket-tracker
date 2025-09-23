@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <div class="card bg-base-100 shadow-xl profile-card">
@@ -10,7 +9,7 @@
             {% if set.boosters.values|length > 0 %}
             <div class="raised-card-dark min-w-60 md:min-w-80 p-4 rounded-lg shadow-md flex flex-col items-center">
                 {% if set.logo_path %}
-                <img src="{% static set.logo_path %}" alt="{{ set.name }} Logo" class="w-24 md:w-36 lg:w-48 min-h-12 md:min-h-18 lg:min-h-24 py-auto mb-12">
+                <img src="{{ set.logo.url }}" alt="{{ set.name }} Logo" class="w-24 md:w-36 lg:w-48 min-h-12 md:min-h-18 lg:min-h-24 py-auto mb-12">
                 {% else %}
                 <h2 class="text-xl font-semibold mb-2 h-12">{{ set.name }}</h2>
                 {% endif %}
@@ -18,7 +17,7 @@
                     {% for booster in set.boosters.all %}
                     <div class="tooltip tooltip-primary booster-card card-floating cursor-pointer border-5 border-transparent rounded-lg hover:border-primary" data-tip="{{ booster.name }}" data-id="{{ booster.id }}">
                         {% if booster.local_image_small %}
-                        <img src="{% static booster.local_image_small %}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
+                        <img src="{{ booster.local_image_small.url }}" alt="{{ booster.name }}" class="w-32 h-auto rounded-lg" loading="lazy">
                         {% endif %}
                     </div>
                     {% empty %}
@@ -105,7 +104,6 @@
     let selectedCommons = [];
     let selectedOthers = [];
     let selectedSixth = [];
-    const staticUrl = '{% static "" %}';
 
     document.querySelectorAll('.booster-card').forEach(card => {
         card.addEventListener('click', function () {
@@ -131,13 +129,13 @@
                 cardsData.others = data.others || [];
 
                 const previewDiv = document.getElementById('booster-preview');
-                previewDiv.innerHTML = data.booster_image ? `<img src="${staticUrl}${data.booster_image}" alt="Opened Booster" class="w-20 h-auto mb-2 mx-auto block"><p>Opening pack...</p>` : '';
+                previewDiv.innerHTML = data.booster_image ? `<img src="${data.booster_image}" alt="Opened Booster" class="w-20 h-auto mb-2 mx-auto block"><p>Opening pack...</p>` : '';
 
                 const commonsGrid = document.getElementById('commons-grid');
                 commonsGrid.innerHTML = '';
                 cardsData.commons.forEach(card => {
                     const cardDiv = `<div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive rarity-diamond" data-tip="${card.name}" data-id="${card.id}">
-                            <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
+                            <img src="${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
                         </div`;
                         commonsGrid.innerHTML += cardDiv;
                 });
@@ -157,7 +155,7 @@
                     }
 
                     const cardDiv = `<div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive rarity-${rarity}" data-tip="${card.name}" data-id="${card.id}">
-                            <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
+                            <img src="${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
                         </div`;
                         othersGrid.innerHTML += cardDiv;
                 });
@@ -178,7 +176,7 @@
                         }
                         
                         const cardDiv = `<div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive rarity-${rarity}" data-tip="${card.name}" data-id="${card.id}">
-                                <img src="${staticUrl}${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
+                                <img src="${card.image}" alt="${card.name}" class="w-full h-auto rounded-lg" loading="lazy">
                             </div>`;
                         sixthGrid.innerHTML += cardDiv;
                     });

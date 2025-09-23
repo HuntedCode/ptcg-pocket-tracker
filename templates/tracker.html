@@ -20,7 +20,7 @@
             {% for nav_set in sets reversed %}
             <a role="tab" href="{% url 'tracker' nav_set.id %}" class="set-card-mobile{% if nav_set.id == set_id %}-active-tab{% endif %}">
                 <div class="flex flex-col items-center justify-center w-full h-full">
-                    <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="set-logo">
+                    <img src="{{ nav_set.logo.url }}" alt="{{ nav_set.name }} logo" class="set-logo">
                     <span class="set-name-text text-wrap p-2 w-full">{{ nav_set.name }}</span>
                 </div>
             </a>
@@ -31,7 +31,7 @@
         <div class="sets-nav hidden lg:flex">
             {% for nav_set in sets %}
             <a role="tab" href="{% url 'tracker' nav_set.id %}" class="set-card{% if nav_set.id == set_id %}-active-tab{% endif %} flex">
-                <img src="{% static nav_set.logo_path %}" alt="{{ nav_set.name }} logo" class="set-logo">
+                <img src="{{ nav_set.logo.url }}" alt="{{ nav_set.name }} logo" class="set-logo">
                 <span class="set-name-text">{{ nav_set.name }}</span>
             </a>
             {% endfor %}
@@ -49,7 +49,7 @@
                     <div class="flex items-center justify-between space-x-4">
                         {% if card.local_image_small %}
                         <img 
-                        src="{% static card.local_image_small %}" 
+                        src="{{ card.local_image_small.url }}" 
                         alt="{{ card.name }} Image" 
                         class="card-img card-small-img w-28 md:w-52 h-auto border-4 rounded lazyload {% if not owned or owned == 0 %}grayscale{% endif %}
                                 {% if 'Diamond' in card.rarity %}
@@ -140,7 +140,7 @@
                             <td class="text-center card-image">
                                 {% if card.local_image_small %}
                                 <img 
-                                    src="{% static card.local_image_small %}" 
+                                    src="{{ card.local_image_small.url }}" 
                                     alt="{{ card.name }}" 
                                     class="card-img w-35 h-auto rounded shadow-md border-4 cursor-pointer card-small-img {% if not owned or owned == 0 %}grayscale{% endif %} hover:scale-105 transition-transform duration-200 hover:grayscale-0 lazyload
                                     {% if 'Diamond' in card.rarity %}
