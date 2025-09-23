@@ -98,22 +98,16 @@ WSGI_APPLICATION = 'ptcgp_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-logger = logging.getLogger('tcg_collections')
-
 USE_PROD = os.environ.get('USE_PROD', 'False') == 'True'
-logger.info(f"USE_PROD={USE_PROD}")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     } if not USE_PROD else dj_database_url.parse(os.environ.get('DATABASE_URL'))
 }
-if USE_PROD:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-logger.info(f"After setting, DEFAULT_FILE_STORAGE={DEFAULT_FILE_STORAGE}")
+
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
-
 
 AUTH_USER_MODEL = 'tcg_collections.User'
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
@@ -165,6 +159,10 @@ AWS_S3_REGION_NAME = os.environ.get('AWS_REGION', 'us-east-2')
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+if USE_PROD:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 
 # Default primary key field type
