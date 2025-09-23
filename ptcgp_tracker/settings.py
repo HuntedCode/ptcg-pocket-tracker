@@ -14,6 +14,7 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 from pathlib import Path
+import logging
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -159,6 +160,7 @@ AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
 if not DEBUG:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    logging.getLogger('boto3').debug('S3 storage initialized')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -170,13 +172,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': 'db_stats.log',
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
