@@ -65,7 +65,7 @@
                 <li><a href="{% url 'wishlist' request.user.profile.share_token %}" class="nav-item{% if request.path|startswith:'/wishlist/' %}-focused{% endif %}">Wishlist</a></li>
                 <li><a href="{% url 'trade_matches' %}" class="nav-item{% if request.path == '/trade/matches/' %}-focused{% endif %}">Trade</a></li>
 
-                <span class="items-center px-2 tooltip tooltip-bottom hidden xl:flex" data-tip="Did you know you're cute??" data-tip->
+                <span class="items-center px-2 tooltip tooltip-bottom hidden xl:flex" data-tip="Gotta Track 'Em All!" data-tip->
                     <img src="{% static random_icon %}" alt="Random Pokemon Icon" class="w-20 h-20">
                 </span>
 
