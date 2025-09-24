@@ -7,6 +7,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db.models import Count, F, Sum
 from django.db.models.functions import TruncWeek
@@ -790,78 +791,115 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
+        user_id = self.request.user.id
 
-        stats_view = CollectionStatsAPI()
-        stats_response = stats_view.get(self.request)
-        stats_data = json.loads(stats_response.content)
-        context['total_stats'] = stats_data
+        # Cache Total Collection Stats
+        cache_key_stats = f"user:{user_id}:stats:{today}"
+        print(cache_key_stats)
+        cached_stats = cache.get(cache_key_stats)
+        if cached_stats:
+            context['total_stats'] = json.loads(cached_stats)
+        else:
+            stats_view = CollectionStatsAPI()
+            stats_response = stats_view.get(self.request)
+            total_stats = json.loads(stats_response.content)
 
-        owned_breakdown = stats_data['rarity_breakdown']
-        total_breakdown = stats_data['total_rarity_breakdown']
-        combined_rarities = []
-        all_keys = set(owned_breakdown.keys()) | set(total_breakdown.keys())
-        for key in sorted(all_keys):
-            owned_count = owned_breakdown.get(key, 0)
-            total_count = total_breakdown.get(key, 0)
-            combined_rarities.append({
-                'rarity': key,
-                'owned': owned_count,
-                'total': total_count,
-            })
-        groups = ['Diamond', 'Star', 'Shiny', 'Crown']
-        grouped_rarities = []
-        for group in groups:
-            filtered = [item for item in combined_rarities if group in item['rarity']]
-            owned_sum = sum(item['owned'] for item in filtered)
-            total_sum = sum(item['total'] for item in filtered)
-            completion = (owned_sum / total_sum * 100) if total_sum > 0 else 0
-            grouped_rarities.append({
-                'group': group,
-                'owned': owned_sum,
-                'total': total_sum,
-                'completion': round(completion, 2)
-            }) 
-        context['total_stats']['grouped_rarities'] = grouped_rarities
-        
-        set_view = SetBreakdownAPI()
-        set_response = set_view.get(self.request)
-        set_data = json.loads(set_response.content)
-        context['set_breakdown'] = set_data['sets']
-        context['all_sets'] = set_data['all_sets']
-
-        set_rarities = {}
-        for breakdown in set_data['sets']:
-            set_id = breakdown['set_id']
-            owned_breakdown = breakdown['rarity_breakdown']
-            total_breakdown = breakdown['total_rarity_breakdown']
-
+            owned_breakdown = total_stats['rarity_breakdown']
+            total_breakdown = total_stats['total_rarity_breakdown']
             combined_rarities = []
             all_keys = set(owned_breakdown.keys()) | set(total_breakdown.keys())
             for key in sorted(all_keys):
                 owned_count = owned_breakdown.get(key, 0)
                 total_count = total_breakdown.get(key, 0)
-                completion = (owned_count / total_count * 100) if total_count > 0 else 0
                 combined_rarities.append({
                     'rarity': key,
                     'owned': owned_count,
                     'total': total_count,
-                    'completion': round(completion, 2)
                 })
+            groups = ['Diamond', 'Star', 'Shiny', 'Crown']
+            grouped_rarities = []
+            for group in groups:
+                filtered = [item for item in combined_rarities if group in item['rarity']]
+                owned_sum = sum(item['owned'] for item in filtered)
+                total_sum = sum(item['total'] for item in filtered)
+                completion = (owned_sum / total_sum * 100) if total_sum > 0 else 0
+                grouped_rarities.append({
+                    'group': group,
+                    'owned': owned_sum,
+                    'total': total_sum,
+                    'completion': round(completion, 2)
+                }) 
+            total_stats['grouped_rarities'] = grouped_rarities
+            cache.set(cache_key_stats, json.dumps(total_stats), timeout=None)
+            context['total_stats'] = total_stats
 
-            combined_rarities = sorted(combined_rarities, key=lambda item: RARITY_ORDER.index(item['rarity']) if item['rarity'] in RARITY_ORDER else len(RARITY_ORDER))
-            set_rarities[set_id] = combined_rarities
-        context['set_rarities'] = set_rarities
+        # Cache Set Breakdown & Rarities
+        cache_key_breakdown = f"user:{user_id}:breakdown:{today}"
+        cached_breakdown = cache.get(cache_key_breakdown)
+        if cached_breakdown:
+            context['set_breakdown'] = json.loads(cached_breakdown)['sets']
+            context['all_sets'] = json.loads(cached_breakdown)['all_sets']
+            context['set_rarities'] = json.loads(cached_breakdown)['set_rarities']
+        else:
+            set_view = SetBreakdownAPI()
+            set_response = set_view.get(self.request)
+            set_data = json.loads(set_response.content)
+            set_rarities = {}
+            for breakdown in set_data['sets']:
+                set_id = breakdown['set_id']
+                owned_breakdown = breakdown['rarity_breakdown']
+                total_breakdown = breakdown['total_rarity_breakdown']
 
+                combined_rarities = []
+                all_keys = set(owned_breakdown.keys()) | set(total_breakdown.keys())
+                for key in sorted(all_keys):
+                    owned_count = owned_breakdown.get(key, 0)
+                    total_count = total_breakdown.get(key, 0)
+                    completion = (owned_count / total_count * 100) if total_count > 0 else 0
+                    combined_rarities.append({
+                        'rarity': key,
+                        'owned': owned_count,
+                        'total': total_count,
+                        'completion': round(completion, 2)
+                    })
 
-        try:
-            data_model = PackPickerData.objects.get(user=self.request.user)
-            boosters = data_model.boosters.all()
-            context['pack_picker'] = [b.to_dict() for b in boosters]
-            context['last_refresh'] = data_model.last_refresh.isoformat() if data_model.last_refresh else None
-        except PackPickerData.DoesNotExist:
-            context['pack_picker'] = []
-            context['last_refresh'] = timezone.now() - timedelta(hours=1)
+                combined_rarities = sorted(combined_rarities, key=lambda item: RARITY_ORDER.index(item['rarity']) if item['rarity'] in RARITY_ORDER else len(RARITY_ORDER))
+                set_rarities[set_id] = combined_rarities
+            breakdown_data = {
+                'sets': set_data['sets'],
+                'all_sets': set_data['all_sets'],
+                'set_rarities': set_rarities
+            }
+            cache.set(cache_key_breakdown, json.dumps(breakdown_data), timeout=None)
+            context['set_breakdown'] = set_data['sets']
+            context['all_sets'] = set_data['all_sets']
+            context['set_rarities'] = set_rarities
 
+        # Cache Pack Picker
+        cache_key_picker = f"user:{user_id}:picker:{today}"
+        cached_picker = cache.get(cache_key_picker)
+        if cached_picker:
+            context['pack_picker'] = json.loads(cached_picker)['pack_picker']
+            context['last_refresh'] = json.loads(cached_picker)['last_refresh']
+        else:
+            try:
+                data_model = PackPickerData.objects.get(user=self.request.user)
+                boosters = data_model.boosters.all()
+                pack_picker = [b.to_dict() for b in boosters]
+                last_refresh = data_model.last_refresh.isoformat() if data_model.last_refresh else None
+            except PackPickerData.DoesNotExist:
+                pack_picker = []
+                last_refresh = timezone.now() - timedelta(hours=1)
+            picker_data = {
+                'pack_picker': pack_picker,
+                'last_refresh': last_refresh
+            }
+            cache.set(cache_key_picker, json.dumps(picker_data), timeout=None)
+            context['pack_picker'] = pack_picker
+            context['last_refresh'] = last_refresh
+
+        # Community Stats (No caching)
         community_stats_view = DailyCommunityStatsAPI()
         community_stats_response = community_stats_view.get(self.request)
         community_stats_data = json.loads(community_stats_response.content)
