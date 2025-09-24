@@ -1,5 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from tcg_collections.models import Card
 import os
@@ -19,24 +20,20 @@ class Command(BaseCommand):
         os.makedirs(os.path.join(settings.STATIC_ROOT, 'cards'), exist_ok=True)
 
         for card in cards:
-            if card.local_image_small:
-                self.stdout.write(self.style.NOTICE(f"Skipping cache card {card.tcg_id}"))
-                continue
+            #if card.local_image_small:
+             #   self.stdout.write(self.style.NOTICE(f"Skipping cache card {card.tcg_id}"))
+              #  continue
             if not card.image_base:
                 self.stdout.write(self.style.NOTICE(f"Card {card.tcg_id} has no image link! Skipping.."))
                 continue
             url = f"{card.image_base}/low.png"
-            file_path = os.path.join(settings.STATIC_ROOT, 'cards', f"{card.tcg_id}_low.png")
-            if os.path.exists(file_path):
-                card.local_image_small = f"cards/{card.tcg_id}_low.png"
-                card.save()
-                print("Image already in cache! Updated DB row with path.")
-                continue
             response = requests.get(url, headers={}, timeout=0.5)
             if response.status_code == 200:
-                with open(file_path, 'wb') as f:
-                    f.write(response.content)
-                card.local_image_small = f"cards/{card.tcg_id}_low.png"
+                file_name = f"cards/{card.tcg_id}_low.png"
+                file_content = response.content
+                card.local_image_small = SimpleUploadedFile(
+                    file_name, file_content, content_type='image/png'
+                )
                 card.save()
                 self.stdout.write(self.style.SUCCESS(f"Cached image for {card.tcg_id}"))
             else:

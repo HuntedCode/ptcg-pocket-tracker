@@ -104,7 +104,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    } if not USE_PROD else dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    } if DEBUG else dj_database_url.parse(os.environ.get('DATABASE_URL'))
 }
 
 
@@ -151,19 +151,19 @@ STATIC_URL = 'theme/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
-
 # S3 Config
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.environ.get('AWS_REGION', 'us-east-2')
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_DEFAULT_ACL = None
+AWS_S3_REGION_NAME = os.environ.get('AWS_REGION', 'us-east-2')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
-if USE_PROD:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+if not DEBUG:
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = '/media/'
 
 
 # Default primary key field type
@@ -176,13 +176,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': 'db_stats.log',
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
@@ -200,17 +200,17 @@ LOGGING = {
         },
         'tcg_collections.middleware': {
             'handlers': ['file', 'console'],
-            'level': 'WARNING',
+            'level': 'INFO',
             'propagate': True,
         },
         'boto3': {
             'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
         'botocore': {
             'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
     },
