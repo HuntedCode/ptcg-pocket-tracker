@@ -16,8 +16,6 @@ class Command(BaseCommand):
         cards = Card.objects.all()
         if set_id:
             cards = cards.filter(card_set__tcg_id=set_id)
-        
-        os.makedirs(os.path.join(settings.STATIC_ROOT, 'cards'), exist_ok=True)
 
         for card in cards:
             if card.local_image_small:
@@ -27,7 +25,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE(f"Card {card.tcg_id} has no image link! Skipping.."))
                 continue
             url = f"{card.image_base}/low.png"
-            response = requests.get(url, headers={}, timeout=0.5)
+            response = requests.get(url, headers={}, timeout=5)
             if response.status_code == 200:
                 file_name = f"cards/{card.tcg_id}_low.png"
                 file_content = response.content
