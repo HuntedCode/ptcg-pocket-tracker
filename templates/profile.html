@@ -203,7 +203,7 @@
     const previewImg = document.getElementById('preview-img');
 
     if (iconSelect && colorSelect && previewDiv) {
-        iconSelect.addEventListener('change', () => previewImg.src = `/static/images/profile_images/${iconSelect.value}`);
+        iconSelect.addEventListener('change', () => previewImg.src = `/theme/static/images/profile_images/${iconSelect.value}`);
         colorSelect.addEventListener('change', () => previewDiv.style.backgroundColor = colorSelect.value);
 
         previewImg.src = `/theme/static/images/profile_images/${iconSelect.value}`;
