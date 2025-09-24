@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView, View, RedirectView
 import logging
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat, User
@@ -24,6 +24,13 @@ from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, Tr
 from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
 
 # Create your views here.
+
+# Root Redirect
+class RootRedirectView(RedirectView):
+    def get_redirect_url(self, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return reverse('dashboard')
+        return reverse('login')
 
 # User Views
 
@@ -391,98 +398,94 @@ logger = logging.getLogger('tcg_collections.views')
 
 @login_required
 def tracker(request, set_id):
-    try:
-        set_obj = get_object_or_404(Set, id=set_id)
-        all_sets = Set.objects.all().exclude(tcg_id__contains='P').order_by('tcg_id')
-        cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
+    set_obj = get_object_or_404(Set, id=set_id)
+    all_sets = Set.objects.all().exclude(tcg_id__contains='P').order_by('tcg_id')
+    cards = Card.objects.filter(card_set=set_obj).order_by('tcg_id')
 
-        owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
-        owned_dict = {cid: qty for cid, qty in owned}
-        wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
+    owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
+    owned_dict = {cid: qty for cid, qty in owned}
+    wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
 
-        errors = []
+    errors = []
 
-        if request.method == 'POST':
-            print(request.POST)
-            for key in request.POST:
-                if key.startswith('quantity_'):
-                    card_id_str = key[9:]
-                    try:
-                        card_id = int(card_id_str)
-                        card= get_object_or_404(Card, id=card_id)
-                        collection = UserCollection.objects.filter(user=request.user, card=card).first()
-                    except ValueError:
-                        errors.append(f"Invalid card ID '{card_id_str}'")
+    if request.method == 'POST':
+        print(request.POST)
+        for key in request.POST:
+            if key.startswith('quantity_'):
+                card_id_str = key[9:]
+                try:
+                    card_id = int(card_id_str)
+                    card= get_object_or_404(Card, id=card_id)
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
+                except ValueError:
+                    errors.append(f"Invalid card ID '{card_id_str}'")
 
-                    qty_str = request.POST.get(f"quantity_{card_id}", None)
-                    try:
-                        qty = int(qty_str)
-                        if qty < 0:
-                            errors.append(f"Quantity for card '{card_id}' cannot be negative.")
-                        
-                        if collection is None:
-                            if qty > 0:
-                                collection = UserCollection(user=request.user, card=card, quantity=qty)
-                                collection.save()
-                        elif qty > 0:
-                            collection.quantity = qty
-
-                            if qty >= 2:
-                                want = UserWant.objects.filter(user=request.user, card=card)
-                                if want:
-                                    want.delete()
-
-                            collection.save()
-                        elif qty == 0:
-                            collection.delete()
-                    except ValueError:
-                        errors.append(f"Invalid quantity for card Id {card_id}")
-
-                elif key.startswith('want_toggle_'):
-                    card_id_str = key[12:]
-                    try:
-                        card_id = int(card_id_str)
-                        card = get_object_or_404(Card, id=card_id)
-                        want_obj = UserWant.objects.filter(user=request.user, card=card).first()
-                        collection = UserCollection.objects.filter(user=request.user, card=card).first()
-                        qty = collection.quantity if collection else 0
-
-                        if want_obj:
-                            want_obj.delete()
-                        else:
-                            if qty > 1:
-                                errors.append(f"Cannot add {card.name} to wishlist, user already owns 2+ copies.")
-                            UserWant.objects.create(user=request.user, card=card, desired_quantity=1)
-                    except ValueError:
-                        errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
-                        continue
-
-            if not errors:
-                owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
-                owned_dict = {cid: qty for cid, qty in owned}
-                wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
-
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX
-                    return JsonResponse({'status': 'success', 'message': 'Changes saved!'})
-                else:
-                    return redirect('collection', set_id=set_id)  # Fallback for non-AJAX
-            else:
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+                qty_str = request.POST.get(f"quantity_{card_id}", None)
+                try:
+                    qty = int(qty_str)
+                    if qty < 0:
+                        errors.append(f"Quantity for card '{card_id}' cannot be negative.")
                     
-        context = {
-            'set': set_obj,
-            'sets': all_sets,
-            'set_id': set_id,
-            'cards': cards,
-            'owned_dict': owned_dict,
-            'wants': set(wants),
-            'errors': errors,
-        }
-        return render(request, 'tracker.html', context)
-    except Exception as e:
-        logger.error(f"Tracker error: {str(e)}", exc_info=True)
-        raise
+                    if collection is None:
+                        if qty > 0:
+                            collection = UserCollection(user=request.user, card=card, quantity=qty)
+                            collection.save()
+                    elif qty > 0:
+                        collection.quantity = qty
+
+                        if qty >= 2:
+                            want = UserWant.objects.filter(user=request.user, card=card)
+                            if want:
+                                want.delete()
+
+                        collection.save()
+                    elif qty == 0:
+                        collection.delete()
+                except ValueError:
+                    errors.append(f"Invalid quantity for card Id {card_id}")
+
+            elif key.startswith('want_toggle_'):
+                card_id_str = key[12:]
+                try:
+                    card_id = int(card_id_str)
+                    card = get_object_or_404(Card, id=card_id)
+                    want_obj = UserWant.objects.filter(user=request.user, card=card).first()
+                    collection = UserCollection.objects.filter(user=request.user, card=card).first()
+                    qty = collection.quantity if collection else 0
+
+                    if want_obj:
+                        want_obj.delete()
+                    else:
+                        if qty > 1:
+                            errors.append(f"Cannot add {card.name} to wishlist, user already owns 2+ copies.")
+                        UserWant.objects.create(user=request.user, card=card, desired_quantity=1)
+                except ValueError:
+                    errors.append(f"Invalid card ID for wishlist: '{card_id_str}'")
+                    continue
+
+        if not errors:
+            owned = UserCollection.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', 'quantity')
+            owned_dict = {cid: qty for cid, qty in owned}
+            wants = UserWant.objects.filter(user=request.user, card__card_set=set_obj).values_list('card__id', flat=True)
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Detect AJAX
+                return JsonResponse({'status': 'success', 'message': 'Changes saved!'})
+            else:
+                return redirect('collection', set_id=set_id)  # Fallback for non-AJAX
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+                
+    context = {
+        'set': set_obj,
+        'sets': all_sets,
+        'set_id': set_id,
+        'cards': cards,
+        'owned_dict': owned_dict,
+        'wants': set(wants),
+        'errors': errors,
+    }
+    return render(request, 'tracker.html', context)
 
 @login_required
 def pack_opener(request):

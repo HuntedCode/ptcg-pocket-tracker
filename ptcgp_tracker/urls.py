@@ -20,10 +20,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
 import tcg_collections.views as views
-from tcg_collections.views import DashboardView
+from tcg_collections.views import DashboardView, RootRedirectView
 import debug_toolbar
 
 urlpatterns = [
+    path('', RootRedirectView.as_view(), name='root'),
     path('admin/', admin.site.urls),
     
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
