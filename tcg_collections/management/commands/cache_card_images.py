@@ -20,9 +20,9 @@ class Command(BaseCommand):
         os.makedirs(os.path.join(settings.STATIC_ROOT, 'cards'), exist_ok=True)
 
         for card in cards:
-            #if card.local_image_small:
-             #   self.stdout.write(self.style.NOTICE(f"Skipping cache card {card.tcg_id}"))
-              #  continue
+            if card.local_image_small:
+                self.stdout.write(self.style.NOTICE(f"Skipping cache card {card.tcg_id}"))
+                continue
             if not card.image_base:
                 self.stdout.write(self.style.NOTICE(f"Card {card.tcg_id} has no image link! Skipping.."))
                 continue

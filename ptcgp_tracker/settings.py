@@ -99,7 +99,6 @@ WSGI_APPLICATION = 'ptcgp_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-USE_PROD = os.environ.get('USE_PROD', 'False') == 'True'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
