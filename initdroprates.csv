@@ -1,0 +1,264 @@
+booster_tcg_id,slot,rarity,probability
+boo_A1-mewtwo,1-3,One Diamond,1
+boo_A1-mewtwo,4,Crown,0.0004
+boo_A1-mewtwo,4,Three Star,0.00222
+boo_A1-mewtwo,4,Two Star,0.005
+boo_A1-mewtwo,4,One Star,0.02572
+boo_A1-mewtwo,4,Four Diamond,0.01666
+boo_A1-mewtwo,4,Three Diamond,0.05
+boo_A1-mewtwo,4,Two Diamond,0.9
+boo_A1-mewtwo,5,Crown,0.0016
+boo_A1-mewtwo,5,Three Star,0.00888
+boo_A1-mewtwo,5,Two Star,0.02
+boo_A1-mewtwo,5,One Star,0.10288
+boo_A1-mewtwo,5,Four Diamond,0.06664
+boo_A1-mewtwo,5,Three Diamond,0.2
+boo_A1-mewtwo,5,Two Diamond,0.6
+boo_A1-pikachu,1-3,One Diamond,1
+boo_A1-pikachu,4,Crown,0.0004
+boo_A1-pikachu,4,Three Star,0.00222
+boo_A1-pikachu,4,Two Star,0.005
+boo_A1-pikachu,4,One Star,0.02572
+boo_A1-pikachu,4,Four Diamond,0.01666
+boo_A1-pikachu,4,Three Diamond,0.05
+boo_A1-pikachu,4,Two Diamond,0.9
+boo_A1-pikachu,5,Crown,0.0016
+boo_A1-pikachu,5,Three Star,0.00888
+boo_A1-pikachu,5,Two Star,0.02
+boo_A1-pikachu,5,One Star,0.10288
+boo_A1-pikachu,5,Four Diamond,0.06664
+boo_A1-pikachu,5,Three Diamond,0.2
+boo_A1-pikachu,5,Two Diamond,0.6
+boo_A1-charizard,1-3,One Diamond,1
+boo_A1-charizard,4,Crown,0.0004
+boo_A1-charizard,4,Three Star,0.00222
+boo_A1-charizard,4,Two Star,0.005
+boo_A1-charizard,4,One Star,0.02572
+boo_A1-charizard,4,Four Diamond,0.01666
+boo_A1-charizard,4,Three Diamond,0.05
+boo_A1-charizard,4,Two Diamond,0.9
+boo_A1-charizard,5,Crown,0.0016
+boo_A1-charizard,5,Three Star,0.00888
+boo_A1-charizard,5,Two Star,0.02
+boo_A1-charizard,5,One Star,0.10288
+boo_A1-charizard,5,Four Diamond,0.06664
+boo_A1-charizard,5,Three Diamond,0.2
+boo_A1-charizard,5,Two Diamond,0.6
+boo_A1a-mew,1-3,One Diamond,1
+boo_A1a-mew,4,Crown,0.0004
+boo_A1a-mew,4,Three Star,0.00222
+boo_A1a-mew,4,Two Star,0.005
+boo_A1a-mew,4,One Star,0.02572
+boo_A1a-mew,4,Four Diamond,0.01666
+boo_A1a-mew,4,Three Diamond,0.05
+boo_A1a-mew,4,Two Diamond,0.9
+boo_A1a-mew,5,Crown,0.0016
+boo_A1a-mew,5,Three Star,0.00888
+boo_A1a-mew,5,Two Star,0.02
+boo_A1a-mew,5,One Star,0.10288
+boo_A1a-mew,5,Four Diamond,0.06664
+boo_A1a-mew,5,Three Diamond,0.2
+boo_A1a-mew,5,Two Diamond,0.6
+boo_A2-palkia,1-3,One Diamond,1
+boo_A2-palkia,4,Crown,0.0004
+boo_A2-palkia,4,Three Star,0.00222
+boo_A2-palkia,4,Two Star,0.005
+boo_A2-palkia,4,One Star,0.02572
+boo_A2-palkia,4,Four Diamond,0.01666
+boo_A2-palkia,4,Three Diamond,0.05
+boo_A2-palkia,4,Two Diamond,0.9
+boo_A2-palkia,5,Crown,0.0016
+boo_A2-palkia,5,Three Star,0.00888
+boo_A2-palkia,5,Two Star,0.02
+boo_A2-palkia,5,One Star,0.10288
+boo_A2-palkia,5,Four Diamond,0.06664
+boo_A2-palkia,5,Three Diamond,0.2
+boo_A2-palkia,5,Two Diamond,0.6
+boo_A2-dialga,1-3,One Diamond,1
+boo_A2-dialga,4,Crown,0.0004
+boo_A2-dialga,4,Three Star,0.00222
+boo_A2-dialga,4,Two Star,0.005
+boo_A2-dialga,4,One Star,0.02572
+boo_A2-dialga,4,Four Diamond,0.01666
+boo_A2-dialga,4,Three Diamond,0.05
+boo_A2-dialga,4,Two Diamond,0.9
+boo_A2-dialga,5,Crown,0.0016
+boo_A2-dialga,5,Three Star,0.00888
+boo_A2-dialga,5,Two Star,0.02
+boo_A2-dialga,5,One Star,0.10288
+boo_A2-dialga,5,Four Diamond,0.06664
+boo_A2-dialga,5,Three Diamond,0.2
+boo_A2-dialga,5,Two Diamond,0.6
+boo_A2a-arceus,1-3,One Diamond,1
+boo_A2a-arceus,4,Crown,0.0004
+boo_A2a-arceus,4,Three Star,0.00222
+boo_A2a-arceus,4,Two Star,0.005
+boo_A2a-arceus,4,One Star,0.02572
+boo_A2a-arceus,4,Four Diamond,0.01666
+boo_A2a-arceus,4,Three Diamond,0.05
+boo_A2a-arceus,4,Two Diamond,0.9
+boo_A2a-arceus,5,Crown,0.0016
+boo_A2a-arceus,5,Three Star,0.00888
+boo_A2a-arceus,5,Two Star,0.02
+boo_A2a-arceus,5,One Star,0.10288
+boo_A2a-arceus,5,Four Diamond,0.06664
+boo_A2a-arceus,5,Three Diamond,0.2
+boo_A2a-arceus,5,Two Diamond,0.6
+boo_A2b-shiny,1-3,One Diamond,1
+boo_A2b-shiny,4,Crown,0.0004
+boo_A2b-shiny,4,Two Shiny,0.00333
+boo_A2b-shiny,4,One Shiny,0.00714
+boo_A2b-shiny,4,Three Star,0.00222
+boo_A2b-shiny,4,Two Star,0.005
+boo_A2b-shiny,4,One Star,0.02572
+boo_A2b-shiny,4,Four Diamond,0.01666
+boo_A2b-shiny,4,Three Diamond,0.04952
+boo_A2b-shiny,4,Two Diamond,0.89
+boo_A2b-shiny,5,Crown,0.0016
+boo_A2b-shiny,5,Two Shiny,0.01333
+boo_A2b-shiny,5,One Shiny,0.02857
+boo_A2b-shiny,5,Three Star,0.00888
+boo_A2b-shiny,5,Two Star,0.02
+boo_A2b-shiny,5,One Star,0.10288
+boo_A2b-shiny,5,Four Diamond,0.06664
+boo_A2b-shiny,5,Three Diamond,0.1981
+boo_A2b-shiny,5,Two Diamond,0.56
+boo_A3-lunala,1-3,One Diamond,1
+boo_A3-lunala,4,Crown,0.0004
+boo_A3-lunala,4,Two Shiny,0.00333
+boo_A3-lunala,4,One Shiny,0.00714
+boo_A3-lunala,4,Three Star,0.00222
+boo_A3-lunala,4,Two Star,0.005
+boo_A3-lunala,4,One Star,0.02572
+boo_A3-lunala,4,Four Diamond,0.01666
+boo_A3-lunala,4,Three Diamond,0.04952
+boo_A3-lunala,4,Two Diamond,0.89
+boo_A3-lunala,5,Crown,0.0016
+boo_A3-lunala,5,Two Shiny,0.01333
+boo_A3-lunala,5,One Shiny,0.02857
+boo_A3-lunala,5,Three Star,0.00888
+boo_A3-lunala,5,Two Star,0.02
+boo_A3-lunala,5,One Star,0.10288
+boo_A3-lunala,5,Four Diamond,0.06664
+boo_A3-lunala,5,Three Diamond,0.1981
+boo_A3-lunala,5,Two Diamond,0.56
+boo_A3-solgaleo,1-3,One Diamond,1
+boo_A3-solgaleo,4,Crown,0.0004
+boo_A3-solgaleo,4,Two Shiny,0.00333
+boo_A3-solgaleo,4,One Shiny,0.00714
+boo_A3-solgaleo,4,Three Star,0.00222
+boo_A3-solgaleo,4,Two Star,0.005
+boo_A3-solgaleo,4,One Star,0.02572
+boo_A3-solgaleo,4,Four Diamond,0.01666
+boo_A3-solgaleo,4,Three Diamond,0.04952
+boo_A3-solgaleo,4,Two Diamond,0.89
+boo_A3-solgaleo,5,Crown,0.0016
+boo_A3-solgaleo,5,Two Shiny,0.01333
+boo_A3-solgaleo,5,One Shiny,0.02857
+boo_A3-solgaleo,5,Three Star,0.00888
+boo_A3-solgaleo,5,Two Star,0.02
+boo_A3-solgaleo,5,One Star,0.10288
+boo_A3-solgaleo,5,Four Diamond,0.06664
+boo_A3-solgaleo,5,Three Diamond,0.1981
+boo_A3-solgaleo,5,Two Diamond,0.56
+boo_A3a-buzzwole,1-3,One Diamond,1
+boo_A3a-buzzwole,4,Crown,0.0004
+boo_A3a-buzzwole,4,Two Shiny,0.00333
+boo_A3a-buzzwole,4,One Shiny,0.00714
+boo_A3a-buzzwole,4,Three Star,0.00222
+boo_A3a-buzzwole,4,Two Star,0.005
+boo_A3a-buzzwole,4,One Star,0.02572
+boo_A3a-buzzwole,4,Four Diamond,0.01666
+boo_A3a-buzzwole,4,Three Diamond,0.04952
+boo_A3a-buzzwole,4,Two Diamond,0.89
+boo_A3a-buzzwole,5,Crown,0.0016
+boo_A3a-buzzwole,5,Two Shiny,0.01333
+boo_A3a-buzzwole,5,One Shiny,0.02857
+boo_A3a-buzzwole,5,Three Star,0.00888
+boo_A3a-buzzwole,5,Two Star,0.02
+boo_A3a-buzzwole,5,One Star,0.10288
+boo_A3a-buzzwole,5,Four Diamond,0.06664
+boo_A3a-buzzwole,5,Three Diamond,0.1981
+boo_A3a-buzzwole,5,Two Diamond,0.56
+boo_A3b-eevee,1-3,One Diamond,1
+boo_A3b-eevee,4,Crown,0.0004
+boo_A3b-eevee,4,Two Shiny,0.00333
+boo_A3b-eevee,4,One Shiny,0.00714
+boo_A3b-eevee,4,Three Star,0.00222
+boo_A3b-eevee,4,Two Star,0.005
+boo_A3b-eevee,4,One Star,0.02572
+boo_A3b-eevee,4,Four Diamond,0.01666
+boo_A3b-eevee,4,Three Diamond,0.04952
+boo_A3b-eevee,4,Two Diamond,0.89
+boo_A3b-eevee,5,Crown,0.0016
+boo_A3b-eevee,5,Two Shiny,0.01333
+boo_A3b-eevee,5,One Shiny,0.02857
+boo_A3b-eevee,5,Three Star,0.00888
+boo_A3b-eevee,5,Two Star,0.02
+boo_A3b-eevee,5,One Star,0.10288
+boo_A3b-eevee,5,Four Diamond,0.06664
+boo_A3b-eevee,5,Three Diamond,0.1981
+boo_A3b-eevee,5,Two Diamond,0.56
+boo_A4-lugia,1-3,One Diamond,1
+boo_A4-lugia,4,Crown,0.0004
+boo_A4-lugia,4,Two Shiny,0.00333
+boo_A4-lugia,4,One Shiny,0.00714
+boo_A4-lugia,4,Three Star,0.00222
+boo_A4-lugia,4,Two Star,0.005
+boo_A4-lugia,4,One Star,0.02572
+boo_A4-lugia,4,Four Diamond,0.01666
+boo_A4-lugia,4,Three Diamond,0.04952
+boo_A4-lugia,4,Two Diamond,0.89
+boo_A4-lugia,5,Crown,0.0016
+boo_A4-lugia,5,Two Shiny,0.01333
+boo_A4-lugia,5,One Shiny,0.02857
+boo_A4-lugia,5,Three Star,0.00888
+boo_A4-lugia,5,Two Star,0.02
+boo_A4-lugia,5,One Star,0.10288
+boo_A4-lugia,5,Four Diamond,0.06664
+boo_A4-lugia,5,Three Diamond,0.1981
+boo_A4-lugia,5,Two Diamond,0.56
+boo_A4-lugia,6,One Star,0.129
+boo_A4-lugia,6,Three Diamond,0.871
+boo_A4-ho-oh,1-3,One Diamond,1
+boo_A4-ho-oh,4,Crown,0.0004
+boo_A4-ho-oh,4,Two Shiny,0.00333
+boo_A4-ho-oh,4,One Shiny,0.00714
+boo_A4-ho-oh,4,Three Star,0.00222
+boo_A4-ho-oh,4,Two Star,0.005
+boo_A4-ho-oh,4,One Star,0.02572
+boo_A4-ho-oh,4,Four Diamond,0.01666
+boo_A4-ho-oh,4,Three Diamond,0.04952
+boo_A4-ho-oh,4,Two Diamond,0.89
+boo_A4-ho-oh,5,Crown,0.0016
+boo_A4-ho-oh,5,Two Shiny,0.01333
+boo_A4-ho-oh,5,One Shiny,0.02857
+boo_A4-ho-oh,5,Three Star,0.00888
+boo_A4-ho-oh,5,Two Star,0.02
+boo_A4-ho-oh,5,One Star,0.10288
+boo_A4-ho-oh,5,Four Diamond,0.06664
+boo_A4-ho-oh,5,Three Diamond,0.1981
+boo_A4-ho-oh,5,Two Diamond,0.56
+boo_A4-ho-oh,6,One Star,0.129
+boo_A4-ho-oh,6,Three Diamond,0.871
+boo_A4a-suicune,1-3,One Diamond,1
+boo_A4a-suicune,4,Crown,0.0004
+boo_A4a-suicune,4,Two Shiny,0.00333
+boo_A4a-suicune,4,One Shiny,0.00714
+boo_A4a-suicune,4,Three Star,0.00222
+boo_A4a-suicune,4,Two Star,0.005
+boo_A4a-suicune,4,One Star,0.02572
+boo_A4a-suicune,4,Four Diamond,0.01666
+boo_A4a-suicune,4,Three Diamond,0.04952
+boo_A4a-suicune,4,Two Diamond,0.89
+boo_A4a-suicune,5,Crown,0.0016
+boo_A4a-suicune,5,Two Shiny,0.01333
+boo_A4a-suicune,5,One Shiny,0.02857
+boo_A4a-suicune,5,Three Star,0.00888
+boo_A4a-suicune,5,Two Star,0.02
+boo_A4a-suicune,5,One Star,0.10288
+boo_A4a-suicune,5,Four Diamond,0.06664
+boo_A4a-suicune,5,Three Diamond,0.1981
+boo_A4a-suicune,5,Two Diamond,0.56
+boo_A4a-suicune,6,One Star,0.129
+boo_A4a-suicune,6,Three Diamond,0.871
