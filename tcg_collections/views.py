@@ -776,6 +776,10 @@ def collection(request):
 @login_required
 def refresh_pack_picker(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        cache_key_picker = f"user:{user_id}:picker"
+        cache.delete(cache_key_picker)
+
         api_view = PackPickerAPI()
         response = api_view.get(request)
         data = json.loads(response.content)
@@ -791,11 +795,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = timezone.now().date()
         user_id = self.request.user.id
+        TTL_SECONDS = 604800 # 7 days
 
         # Cache Total Collection Stats
-        cache_key_stats = f"user:{user_id}:stats:{today}"
+        cache_key_stats = f"user:{user_id}:stats"
         print(cache_key_stats)
         cached_stats = cache.get(cache_key_stats)
         if cached_stats:
@@ -831,11 +835,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     'completion': round(completion, 2)
                 }) 
             total_stats['grouped_rarities'] = grouped_rarities
-            cache.set(cache_key_stats, json.dumps(total_stats), timeout=None)
+            cache.set(cache_key_stats, json.dumps(total_stats), timeout=TTL_SECONDS)
             context['total_stats'] = total_stats
 
         # Cache Set Breakdown & Rarities
-        cache_key_breakdown = f"user:{user_id}:breakdown:{today}"
+        cache_key_breakdown = f"user:{user_id}:breakdown"
         cached_breakdown = cache.get(cache_key_breakdown)
         if cached_breakdown:
             context['set_breakdown'] = json.loads(cached_breakdown)['sets']
@@ -871,13 +875,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'all_sets': set_data['all_sets'],
                 'set_rarities': set_rarities
             }
-            cache.set(cache_key_breakdown, json.dumps(breakdown_data), timeout=None)
+            cache.set(cache_key_breakdown, json.dumps(breakdown_data), timeout=TTL_SECONDS)
             context['set_breakdown'] = set_data['sets']
             context['all_sets'] = set_data['all_sets']
             context['set_rarities'] = set_rarities
 
         # Cache Pack Picker
-        cache_key_picker = f"user:{user_id}:picker:{today}"
+        cache_key_picker = f"user:{user_id}:picker"
         cached_picker = cache.get(cache_key_picker)
         if cached_picker:
             context['pack_picker'] = json.loads(cached_picker)['pack_picker']
@@ -895,7 +899,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'pack_picker': pack_picker,
                 'last_refresh': last_refresh
             }
-            cache.set(cache_key_picker, json.dumps(picker_data), timeout=None)
+            cache.set(cache_key_picker, json.dumps(picker_data), timeout=TTL_SECONDS)
             context['pack_picker'] = pack_picker
             context['last_refresh'] = last_refresh
 

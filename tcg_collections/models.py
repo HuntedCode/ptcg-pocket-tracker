@@ -1,6 +1,7 @@
 from collections import Counter
 from datetime import date, datetime, timedelta
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models, transaction
 from django.contrib.auth.models import User, AbstractUser
 from django.db.models.deletion import SET_NULL
@@ -312,6 +313,16 @@ def log_collection_stats(sender, instance, **kwargs):
 def create_pack_picker(sender, instance, created, **kwargs):
     if created:
         PackPickerData.objects.create(user=instance)
+
+# Cache Receivers
+
+@receiver(post_save, sender=UserCollection)
+def invalidate_user_cache(sender, instance, **kwargs):
+    user_id = instance.user.id
+    cache.delete_many([
+        f"user:{user_id}:stats",
+        f"user:{user_id}:breakdown"
+    ])
 
 # Stats Receivers
 
