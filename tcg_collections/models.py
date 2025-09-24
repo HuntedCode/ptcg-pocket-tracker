@@ -219,7 +219,7 @@ class Profile(models.Model):
     trade_threshold = models.PositiveSmallIntegerField(default=2, choices=[(1, 'Trade down to 1'), (2, 'Keep 2 for decks')])
     bio = models.TextField(blank=True, help_text="Share trading preferences (e.g., 'Only A1 sets').")
     theme = models.CharField(max_length=20, default='default')
-    dark_mode = models.BooleanField(default=False, help_text="Enable dark mode theme")
+    dark_mode = models.BooleanField(default=True, help_text="Enable dark mode theme")
     last_active = models.DateTimeField(auto_now=True)
     is_premium = models.BooleanField(default=False, help_text="Premium subscriber status.")
     accepted_trades_this_month = models.PositiveIntegerField(default=0, help_text="Count of accepted trades in current month.")
