@@ -339,6 +339,11 @@ footer .foot-link {
   will-change: transform, box-shadow, border-color;
 }
 
+.card-interactive-unowned {
+  @apply transition-all duration-300 ease-in-out border-2 border-error;
+  will-change: transform, box-shadow, border-color;
+}
+
 .card-interactive-profile {
   @apply transition-all duration-300 ease-in-out border-4;
   will-change: transform, box-shadow, border-color;

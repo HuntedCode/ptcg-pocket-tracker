@@ -104,7 +104,7 @@
             <div id="cards-{{ set_obj.id }}" class="flex flex-wrap gap-4 px-4 md:px-6 pb-8 pt-8 md:pt-12 overflow-visible justify-center">
                 {% for item in items %}
                 {% with rarity_lower=item.card.rarity|lower %}
-                <div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive
+                <div class="card card-collection w-3/4 sm:w-1/3 md:w-1/4 lg:w-32 bg-base-100 relative card-floating card-interactive{% if item.quantity == 0%}-unowned{% endif %}
                 {% if 'diamond' in rarity_lower %}rarity-diamond
                 {% elif 'star' in rarity_lower %}rarity-star
                 {% elif 'shiny' in rarity_lower %}rarity-shiny
