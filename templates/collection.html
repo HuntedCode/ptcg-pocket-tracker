@@ -118,6 +118,7 @@
                         </figure>
                         {% else %}
                         <div class="w-25 h-16 bg-base-200 rounded flex items-center justify-center text-xs">No Img</div>
+                        {% endif %}
                         {% if item.collection and not item.collection.is_seen %}
                         <img src="{% static 'images/icons/new2.png' %}" alt="New card!" class="absolute top-[-.75rem] right-[-.75rem] w-8 h-8 z-10" data-unseen-icon>
                         {% endif %}
