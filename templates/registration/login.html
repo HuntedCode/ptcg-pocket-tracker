@@ -31,6 +31,9 @@
                 <form method="post">
                     {% csrf_token %}
                     <p class="text-sm text-error my-1">{{ form.non_field_errors }}</p>
+                    {% for message in messages %}
+                    <p class="text-sm text-success my-1">{{ message }}</p>
+                    {% endfor %}
                     {% for field in form %}
                     <div class="mb-4">
                         <div class="text-lg md:text-xl font-semibold mb-2">{{ field.label_tag }}</div>

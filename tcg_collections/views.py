@@ -45,8 +45,8 @@ def register(request):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             link = request.build_absolute_uri(reverse('confirm_email', args=(uid, token)))
-            send_mail('Confirm Your Registration', f'Click to confirm: {link}', 'admin@pockettracker.io', [user.email],)
-            messages.success(request, 'Confirmation email sent.')
+            send_mail('Pocket Tracker - Confirm Your Registration', f'Click to confirm: {link}', 'admin@pockettracker.io', [user.email],)
+            messages.success(request, 'Confirmation email sent. Please confirm address before logging in!')
             return redirect('login')
     else:
         form = RegistrationForm()
@@ -64,7 +64,7 @@ def confirm_email(request, uidb64, token):
         print('Confirmed user and token...')
         user.is_active = True
         user.save()
-        messages.success(request, 'Account confirmed. Login.')
+        messages.success(request, "Email confirmed! Go forth and catch 'em all!")
         return redirect('login')
     print('Invalid user or token')
     messages.error(request, 'Invalid confirmation link.')
