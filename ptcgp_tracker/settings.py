@@ -158,11 +158,8 @@ AWS_DEFAULT_ACL = None
 AWS_S3_REGION_NAME = os.environ.get('AWS_REGION', 'us-east-2')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
-if not DEBUG:
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-else:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = '/media/'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+
 
 
 # Default primary key field type
