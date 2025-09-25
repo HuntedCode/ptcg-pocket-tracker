@@ -960,7 +960,7 @@ class CollectionStatsAPI(LoginRequiredMixin, View):
 class SetBreakdownAPI(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
-        sets = Set.objects.exclude(tcg_id__contains='P').prefetch_related('cards')
+        sets = Set.objects.exclude(tcg_id__contains='P').prefetch_related('cards').order_by('-tcg_id')
         all_sets = []
         breakdown = []
         for s in sets:
