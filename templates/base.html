@@ -2,7 +2,7 @@
 {% load custom_filters %}
 
 <!DOCTYPE html>
-<html lang="en" data-theme="pokemon{% if request.user.profile.dark_mode %}-dark{% endif %}">
+<html lang="en" data-theme="pokemon-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,12 +94,6 @@
 
         <div class="navbar-end">
             <div class="nav-icons flex">
-                {% if request.user.is_authenticated %}
-                <form method="post" action="{% url 'toggle_dark_mode' %}" id="dark-mode-form">
-                    {% csrf_token %}
-                    <input type="checkbox" name="dark_mode" class="toggle toggle-sm toggle-primary xl:toggle-md cursor-pointer"{% if request.user.profile.dark_mode %}checked{% endif %} />
-                </form>
-                {% endif %}
                 <form method="post" action="{% url 'logout' %}" class="btn btn-sm btn-ghost btn-square rounded logout-btn">
                     {% csrf_token %}
                     <button type="submit" class="hidden lg:block">
