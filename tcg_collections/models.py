@@ -1,9 +1,9 @@
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import date
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models, transaction
-from django.contrib.auth.models import User, AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models.deletion import SET_NULL
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -16,9 +16,35 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 # Create your models here.
 
-# User Model
+# User Models
+
+class UserManager(BaseUserManager):
+    def _create_user(self, username, email, password, **extra_fields):
+        if not username:
+            raise ValueError('The Username field must be set')
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        if self.model.objects.filter(username__iexact=username).exists():
+            raise ValueError('A user with that username already exists')
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(username, email, password, **extra_fields)
+    
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self._create_user(username, email, password, **extra_fields)
+
 class User(AbstractUser):
     email = models.EmailField(unique=True, null=False, blank=False)
+    objects = UserManager()
 
 # Card/Collection Models
 
