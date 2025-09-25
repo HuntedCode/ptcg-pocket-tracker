@@ -1,7 +1,7 @@
 from collections import defaultdict
-import colorsys
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -22,7 +22,7 @@ import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat, User
 import random
 from tcg_collections.forms import RegistrationForm, ProfileForm, MessageForm, TradeWantForm
-from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, THEME_COLORS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
+from .utils import FREE_TRADE_SLOTS, PREMIUM_TRADE_SLOTS, TRAINER_CLASSES, BASE_RARITIES, RARE_RARITIES, RARITY_ORDER
 
 # Create your views here.
 
@@ -39,6 +39,7 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
+            print('form validated')
             user = form.save(commit=False)
             user.is_active = False
             user.save()
@@ -49,9 +50,13 @@ def register(request):
             send_mail('Pocket Tracker - Confirm Your Registration', f'Click to confirm: {link}', 'admin@pockettracker.io', [user.email],)
             messages.success(request, 'Confirmation email sent. Please confirm address before logging in!')
             return redirect('login')
+        else:
+            print('form not valid, errors:', form.errors)
+            print('Non-field errors:', form.non_field_errors())
     else:
         form = RegistrationForm()
-    return render(request, 'registration/register.html', {'form': form})
+    context = {'form': form, 'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY}
+    return render(request, 'registration/register.html', context)
 
 def confirm_email(request, uidb64, token):
     try:

@@ -12,6 +12,7 @@ cookiecutter==2.6.0
 dj-database-url==3.0.1
 Django==5.2.5
 django-debug-toolbar==6.0.0
+django-recaptcha==4.1.0
 django-redis==6.0.0
 django-storages==1.14.6
 django-tailwind==4.2.0

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'tcg_collections',
     'debug_toolbar',
     'storages',
+    'django_recaptcha',
 ]
 TAILWIND_APP_NAME = 'theme'
 
@@ -152,6 +153,10 @@ AUTHENTICATION_BACKENDS = [
     'tcg_collections.auth_backends.CaseInsensitiveModelBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
+
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY')
+SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

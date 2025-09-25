@@ -1,14 +1,21 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Profile, Message, Booster, UserWant, User
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha import widgets
 from .utils import ICON_CHOICES, COLOR_CHOICES, THEME_CHOICES
 
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
-
+    recaptcha = ReCaptchaField(widget=widgets.ReCaptchaV3)
+    
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['recaptcha'].widget.attrs['required_score'] = 0.5
 
 class ProfileForm(forms.ModelForm):
     trade_threshold = forms.ChoiceField(

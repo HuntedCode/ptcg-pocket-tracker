@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
 </head>
 <body class="flex items-center justify-center">
     <main class="container flex flex-col items-center justify-center">
@@ -28,10 +29,11 @@
                     <h2 class="text-2xl md:text-4xl text-accent font-bold mt-2 mb-4">REGISTER</h2>
                 </div>
                 <div class="dashboard-divider"></div>
-                <form method="post">
+                <form method="post" id="register-form">
                     {% csrf_token %}
                     <p class="text-sm text-error my-1">{{ form.non_field_errors }}</p>
                     {% for field in form %}
+                    {% if field.name != 'recaptcha' %}
                     <div class="mb-4">
                         <div class="text-lg md:text-xl font-semibold mb-2">{{ field.label_tag }}</div>
                         {{ field|add_class:"input input-primary w-full" }}
@@ -39,12 +41,25 @@
                         <p class="text-sm text-error mt-1">{{ error }}</p>
                         {% endfor %}
                     </div>
+                    {% endif %}
                     {% endfor %}
+                    <input type="hidden" name="recaptcha" id="g-recaptcha-response">
                     <button type="submit" class="btn btn-primary w-full">Register</button>
                 </form>
                 <p class="mt-4 text-center">Already have an account? <a href="{% url 'login' %}" class="text-primary">Sign In</a></p>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
+    <script>
+        document.querySelector('#register-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            grecaptcha.ready(function () {
+                grecaptcha.execute('{{ recaptcha_site_key }}').then(function (token) {
+                    document.getElementById('g-recaptcha-response').value = token;
+                    e.target.submit();
+                });
+            });
+        });
+    </script>
 </body>
 </html>
