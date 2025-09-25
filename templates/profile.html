@@ -4,126 +4,100 @@
 {% block title %}Pocket Tracker - Profile{% endblock %}
 
 {% block content %}
-<div style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};">
-    <div class="card bg-base-100 shadow-xl profile-card">
-        <div class="card-body">
-            <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div style="background-color: {{ profile.pic_config.bg_color|default:'#0e8cc7' }};" class="rounded-full w-12 h-12 md:w-16 md:h-16 lg:w-24 lg:h-24 flex items-center justify-center mt-2 border-4 border-neutral">
-                        {% if profile.pic_config.icon %}
-                        <img src="{% static 'images/profile_images/'|add:profile.pic_config.icon %}" alt="Profile Icon" class="w-8 h-8 md:w-11 md:h-11 lg:w-16 lg:h-16">
-                        {% else %}
-                        <span class="text-lg md:text-xl lg:text-3xl">{{ profile.user.username|slice:":1" }}</span>
-                        {% endif %}
-                    </div>
-                <h2 class="card-title text-xl lg:text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+<div class="card bg-base-100 shadow-xl profile-card">
+    <div class="card-body">
+        <div class="profile-header flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div style="background-color: {{ profile.pic_config.bg_color|default:'#0e8cc7' }};" class="rounded-full w-12 h-12 md:w-16 md:h-16 lg:w-24 lg:h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                    {% if profile.pic_config.icon %}
+                    <img src="{% static 'images/profile_images/'|add:profile.pic_config.icon %}" alt="Profile Icon" class="w-8 h-8 md:w-11 md:h-11 lg:w-16 lg:h-16">
+                    {% else %}
+                    <span class="text-lg md:text-xl lg:text-3xl">{{ profile.user.username|slice:":1" }}</span>
+                    {% endif %}
                 </div>
-                <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-md lg:btn-lg text-accent-content">
-                    View My Wishlist!
-                </button>
+            <h2 class="card-title text-xl lg:text-3xl font-bold text-primary">{{ profile.user.username }}'s Profile</h2>
+            </div>
+            <button onclick="document.location='{% url 'wishlist' profile.share_token %}';" class="btn btn-accent btn-md lg:btn-lg text-accent-content">
+                View My Wishlist!
+            </button>
+        </div>
+
+        {% if is_own %}
+        <form method="post" class="space-y-6 profile-section">
+            {% csrf_token %}
+            <div class="flex flex-col lg:flex-row items-start justify-start lg:items-center lg:justify-between">
+                <div class="form-control flex flex-col lg:flex-row items-center gap-4">
+                    <label class="label text-accent font-semibold w-32 text-left lg:text-right">Build-A-PFP!</label>
+                    <div class="flex flex-col lg:flex-row gap-4 flex-grow">
+                        <div class="form-control">
+                            <label class="text-accent font-semibold">Profile Icon</label>
+                            {{ form.pic_icon }}
+                        </div>
+                        <div class="form-control">
+                            <label class="text-accent font-semibold">Background Color</label>
+                            {{ form.pic_bg_color }}
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <div id="pic-preview" style="background-color: #0e8cc7;" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
+                            <img src="{% static 'images/profile_images/pokeball.png' %}" id="preview-img" alt="Preview" class="w-16 h-16">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {% if is_own %}
-            <form method="post" class="space-y-6 profile-section">
-                {% csrf_token %}
-                <div class="flex flex-col lg:flex-row items-start justify-start lg:items-center lg:justify-between">
-                    <div class="form-control flex flex-col lg:flex-row items-center gap-4">
-                        <label class="label text-accent font-semibold w-32 text-left lg:text-right">Build-A-PFP!</label>
-                        <div class="flex flex-col lg:flex-row gap-4 flex-grow">
-                            <div class="form-control">
-                                <label class="text-accent font-semibold">Profile Icon</label>
-                                {{ form.pic_icon }}
-                            </div>
-                            <div class="form-control">
-                                <label class="text-accent font-semibold">Background Color</label>
-                                {{ form.pic_bg_color }}
-                            </div>
-                        </div>
-                        <div class="ml-4">
-                            <div id="pic-preview" style="background-color: #0e8cc7;" class="rounded-full w-24 h-24 flex items-center justify-center mt-2 border-4 border-neutral">
-                                <img src="{% static 'images/profile_images/pokeball.png' %}" id="preview-img" alt="Preview" class="w-16 h-16">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-start">
-                        <div class="form-control flex flex-row items-center gap-4">
-                            <label class="label text-accent font-semibold w-32 text-left lg:text-right">Profile Theme</label>
-                            {{ form.theme }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label for="bio" class="label text-accent font-semibold w-32 text-right">Bio</label>
-                    <textarea id="bio" name="bio" class="textarea textarea-accent flex-grow h-24">{{ profile.bio }}</textarea>
-                </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label for="is_trading_active" class="form-check-input cursor-pointer label text-accent font-semibold w-32 text-right">Trading Active</label>
-                    <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-accent" {% if profile.is_trading_active %}checked{% endif %}>
-                </div>
-                <div class="form-control flex flex-row items-center gap-4">
-                    <label class="label text-accent font-semibold w-32 text-right">Trade Threshold</label>
-                    {{ form.trade_threshold }}
-                </div>
-                <button type="submit" class="btn btn-primary w-full">Save Changes</button>
-            </form>
-            {% else %}
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Bio</h3>
-                <p class="text-base-content">{{ profile.bio|linebreaks }}</p>
+            <div class="form-control flex flex-row items-center gap-4">
+                <label for="bio" class="label text-accent font-semibold w-32 text-right">Bio</label>
+                <textarea id="bio" name="bio" class="textarea textarea-accent flex-grow h-24">{{ profile.bio }}</textarea>
             </div>
-            {% endif %}
+            <div class="form-control flex flex-row items-center gap-4">
+                <label for="is_trading_active" class="form-check-input cursor-pointer label text-accent font-semibold w-32 text-right">Trading Active</label>
+                <input id="is_trading_active" type="checkbox" name="is_trading_active" class="toggle toggle-accent" {% if profile.is_trading_active %}checked{% endif %}>
+            </div>
+            <div class="form-control flex flex-row items-center gap-4">
+                <label class="label text-accent font-semibold w-32 text-right">Trade Threshold</label>
+                {{ form.trade_threshold }}
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+        </form>
+        {% else %}
+        <div class="profile-section">
+            <h3 class="text-xl font-semibold text-accent">Bio</h3>
+            <p class="text-base-content">{{ profile.bio|linebreaks }}</p>
+        </div>
+        {% endif %}
 
-            <div class="profile-section">
-                <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
-                <ul class="space-y-4">
-                    {% for item in feed %}
-                    <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
-                        <input type="checkbox" />
-                        <div class="collapse-title flex justify-between items-center">
-                            <span class="font-semibold text-base-content">
-                                {% if item.type == 'pack_open' %}
-                                <i class="fas fa-box-open mr-2 text-accent"></i>
-                                Opened  <span class="shimmer-text text-sm md:text-lg pack-open-display"> {{ item.parsed_content.message }} </span> and got <span class="font-bold text-sm md:text-lg text-accent">{{ item.cards|length }}</span> cards!
-                                {% elif item.type == 'collection_add' %}
-                                <i class="fas fa-plus-circle mr-2 text-accent"></i>
-                                {% with rarity_lower=item.cards.0.rarity|lower %}
-                                Added <span class="shimmer-text text-sm md:text-lg
-                                {% if 'diamond' in rarity_lower %}rarity-diamond">💎 {{ item.parsed_content.message }} 💎
-                                {% elif 'star' in rarity_lower %}rarity-star">★ {{ item.parsed_content.message }} ★
-                                {% elif 'shiny' in rarity_lower %}rarity-shiny">✨ {{ item.parsed_content.message }} ✨
-                                {% elif 'crown' in rarity_lower %}rarity-crown">👑 {{ item.parsed_content.message }} 👑
-                                {% endif %}</span> to their collection!
-                                {% endwith %}
-                                {% endif %}
-                            </span>
-                            <span class="text-xs md:text-sm italic text-neutral hidden md:block">{{ item.timestamp|date:"SHORT_DATE_FORMAT" }}</span>
-                        </div>
-                        <div class="collapse-content flex flex-row overflow-x-auto pt-2">
+        <div class="profile-section">
+            <h3 class="text-xl font-semibold text-accent">Recent Activity</h3>
+            <ul class="space-y-4">
+                {% for item in feed %}
+                <li class="collapse collapse-arrow bg-base-300 rounded-lg shadow-md {% if forloop.counter > 3 %}hidden more-item{% endif %}">
+                    <input type="checkbox" />
+                    <div class="collapse-title flex justify-between items-center">
+                        <span class="font-semibold text-base-content">
                             {% if item.type == 'pack_open' %}
-                            {% for card in item.cards %}
-                            <div>
-                                {% with rarity_lower=card.rarity|lower %}
-                                <div class="card w-32 bg-base-300 relative card-floating card-interactive mx-6
-                                {% if 'diamond' in rarity_lower %}rarity-diamond
-                                {% elif 'star' in rarity_lower %}rarity-star
-                                {% elif 'shiny' in rarity_lower %}rarity-shiny
-                                {% elif 'crown' in rarity_lower %}rarity-crown
-                                {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
-                                {% endwith %}
-                                    <figure>
-                                        <img src="{{ card.local_image_small.url }}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
-                                    </figure>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <p class="text-neutral">No details.</p>
-                            {% endfor %}
-
+                            <i class="fas fa-box-open mr-2 text-accent"></i>
+                            Opened  <span class="shimmer-text text-sm md:text-lg pack-open-display"> {{ item.parsed_content.message }} </span> and got <span class="font-bold text-sm md:text-lg text-accent">{{ item.cards|length }}</span> cards!
                             {% elif item.type == 'collection_add' %}
-                            {% for card in item.cards %}
+                            <i class="fas fa-plus-circle mr-2 text-accent"></i>
+                            {% with rarity_lower=item.cards.0.rarity|lower %}
+                            Added <span class="shimmer-text text-sm md:text-lg
+                            {% if 'diamond' in rarity_lower %}rarity-diamond">💎 {{ item.parsed_content.message }} 💎
+                            {% elif 'star' in rarity_lower %}rarity-star">★ {{ item.parsed_content.message }} ★
+                            {% elif 'shiny' in rarity_lower %}rarity-shiny">✨ {{ item.parsed_content.message }} ✨
+                            {% elif 'crown' in rarity_lower %}rarity-crown">👑 {{ item.parsed_content.message }} 👑
+                            {% endif %}</span> to their collection!
+                            {% endwith %}
+                            {% endif %}
+                        </span>
+                        <span class="text-xs md:text-sm italic text-neutral hidden md:block">{{ item.timestamp|date:"SHORT_DATE_FORMAT" }}</span>
+                    </div>
+                    <div class="collapse-content flex flex-row overflow-x-auto pt-2">
+                        {% if item.type == 'pack_open' %}
+                        {% for card in item.cards %}
+                        <div>
                             {% with rarity_lower=card.rarity|lower %}
-                            <div class="card w-58 bg-base-300 card-floating card-interactive
+                            <div class="card w-32 bg-base-300 relative card-floating card-interactive mx-6
                             {% if 'diamond' in rarity_lower %}rarity-diamond
                             {% elif 'star' in rarity_lower %}rarity-star
                             {% elif 'shiny' in rarity_lower %}rarity-shiny
@@ -134,55 +108,73 @@
                                     <img src="{{ card.local_image_small.url }}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
                                 </figure>
                             </div>
-                            {% endfor %}
-                            {% endif %}
                         </div>
-                    </li>
-                    {% empty %}
-                    <p class="text-center text-gray-500 italic">No recent activity yet!</p>
-                    {% endfor %}
-                </ul>
-                <button id="show-more-btn" class="btn btn-outline border-primary text-primary w-full mt-4 {% if feed|length <= 3 %}hidden{% endif %}">Show More</button>
-            </div>
+                        {% empty %}
+                        <p class="text-neutral">No details.</p>
+                        {% endfor %}
 
-            <div class="profile-section overflow-x-auto">
-                <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
-                <div class="overflow-visible">
-                    <table class="table table-zebra w-full">
-                        <thead>
-                            <tr>
-                                <th>Set</th>
-                                <th>Owned Base Cards</th>
-                                <th>Total Base Cards</th>
-                                <th>Base Completion %</th>
-                                <th>Owned Rare Cards</th>
-                                <th>Total Rare Cards</th>
-                                <th>Rare Completion %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for breakdown in set_breakdowns %}
-                            <tr class="hover overflow-visible">
-                                <td class="hover:cursor-pointer" onclick="document.location='{% url 'tracker' breakdown.set.id %}';">{{ breakdown.set.name }}</td>
-                                <td>{{ breakdown.owned_base }}</td>
-                                <td>{{ breakdown.total_base }}</td>
-                                <td>
-                                    <progress class="progress progress-lg progress-primary w-full" value="{{ breakdown.base_completion }}" max="100"></progress>
-                                    {{ breakdown.base_completion }}%
-                                </td>
-                                <td>{{ breakdown.owned_rare }}</td>
-                                <td>{{ breakdown.total_rare }}</td>
-                                <td>
-                                    <progress class="progress progress-lg progress-accent w-full" value="{{ breakdown.rare_completion }}" max="100"></progress>
-                                    {{ breakdown.rare_completion }}%
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="7">No base cards owned yet!</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% elif item.type == 'collection_add' %}
+                        {% for card in item.cards %}
+                        {% with rarity_lower=card.rarity|lower %}
+                        <div class="card w-58 bg-base-300 card-floating card-interactive
+                        {% if 'diamond' in rarity_lower %}rarity-diamond
+                        {% elif 'star' in rarity_lower %}rarity-star
+                        {% elif 'shiny' in rarity_lower %}rarity-shiny
+                        {% elif 'crown' in rarity_lower %}rarity-crown
+                        {% endif %}" data-card-id="{{ card.id }}" data-rarity="{{ card.rarity }}" role="button" tabindex="0">
+                        {% endwith %}
+                            <figure>
+                                <img src="{{ card.local_image_small.url }}" alt="{{ card.name }}" class="card-small-img w-full h-auto object-cover" data-large-src="{{ card.image_base }}/high.png" data-rarity="{{ card.rarity }}" loading="lazy">
+                            </figure>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </li>
+                {% empty %}
+                <p class="text-center text-gray-500 italic">No recent activity yet!</p>
+                {% endfor %}
+            </ul>
+            <button id="show-more-btn" class="btn btn-outline border-primary text-primary w-full mt-4 {% if feed|length <= 3 %}hidden{% endif %}">Show More</button>
+        </div>
+
+        <div class="profile-section overflow-x-auto">
+            <h3 class="text-xl font-semibold text-accent">Collection Breakdown</h3>
+            <div class="overflow-visible">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Set</th>
+                            <th>Owned Base Cards</th>
+                            <th>Total Base Cards</th>
+                            <th>Base Completion %</th>
+                            <th>Owned Rare Cards</th>
+                            <th>Total Rare Cards</th>
+                            <th>Rare Completion %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for breakdown in set_breakdowns %}
+                        <tr class="hover overflow-visible">
+                            <td class="hover:cursor-pointer" onclick="document.location='{% url 'tracker' breakdown.set.id %}';">{{ breakdown.set.name }}</td>
+                            <td>{{ breakdown.owned_base }}</td>
+                            <td>{{ breakdown.total_base }}</td>
+                            <td>
+                                <progress class="progress progress-lg progress-primary w-full" value="{{ breakdown.base_completion }}" max="100"></progress>
+                                {{ breakdown.base_completion }}%
+                            </td>
+                            <td>{{ breakdown.owned_rare }}</td>
+                            <td>{{ breakdown.total_rare }}</td>
+                            <td>
+                                <progress class="progress progress-lg progress-accent w-full" value="{{ breakdown.rare_completion }}" max="100"></progress>
+                                {{ breakdown.rare_completion }}%
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7">No base cards owned yet!</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -33,4 +33,6 @@ def unseen_count_processor(request):
     return {'unseen_count': 0}
 
 def latest_set_id(request):
-    return {'latest_set_id': Set.objects.latest('id').id}
+    if request.user.is_authenticated:
+        return {'latest_set_id': Set.objects.latest('id').id}
+    return {'latest_set_id': 0}

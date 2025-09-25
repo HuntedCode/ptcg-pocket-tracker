@@ -2,7 +2,7 @@
 {% load custom_filters %}
 
 <!DOCTYPE html>
-<html lang="en" data-theme="{% if theme %}pokemon{% else %}{% if request.user.profile.dark_mode %}pokemon-dark{% else %}pokemon{% endif %}{% endif %}">
+<html lang="en" data-theme="pokemon{% if request.user.profile.dark_mode %}-dark{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,7 @@
     {% block head %}{% endblock %}
 </head>
 
-<body {% if theme %}style="--color-primary: {{ theme.primary }}; --color-accent: {{ theme.accent }}; --color-base-100: {{ theme.base_100 }}; --color-base-200: {{ theme.base_200 }}; --color-base-300: {{ theme.base_300 }};"{% endif %}>
+<body>
     <nav class="navbar">
         <div class="navbar-start">
             <a href="{% url 'dashboard' %}" class="btn btn-ghost navbar-btn hidden lg:flex">
