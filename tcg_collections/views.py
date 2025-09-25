@@ -54,20 +54,16 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 def confirm_email(request, uidb64, token):
-    print('Confirming email')
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        print('Confirmation failed...')
         user = None
     if user and default_token_generator.check_token(user, token):
-        print('Confirmed user and token...')
         user.is_active = True
         user.save()
         messages.success(request, "Email confirmed! Go forth and catch 'em all!")
         return redirect('login')
-    print('Invalid user or token')
     messages.error(request, 'Invalid confirmation link.')
     return redirect('login')
 
@@ -81,8 +77,6 @@ def profile(request, token):
         form = ProfileForm(request.POST ,instance=profile)
         if is_own and form.is_valid():
             form.save()
-        else:
-            print("Post-valid errors:", form.errors, form.non_field_errors())
 
         return redirect('profile', token=profile.share_token)
 

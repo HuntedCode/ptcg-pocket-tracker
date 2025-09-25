@@ -32,7 +32,12 @@
                     {% csrf_token %}
                     <p class="text-sm text-error my-1">{{ form.non_field_errors }}</p>
                     {% for message in messages %}
+                    {% if 'success' in message.tags %}
                     <p class="text-sm text-success my-1">{{ message }}</p>
+                    {% elif 'error' in message.tags %}
+                    <p class="text-sm text-error my-1">{{ message }}</p>
+                    {% else %}
+                    <p class="text-sm text-base-content my-1">{{ message }}</p>
                     {% endfor %}
                     {% for field in form %}
                     <div class="mb-4">
