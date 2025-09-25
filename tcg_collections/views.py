@@ -72,6 +72,7 @@ def profile(request, token):
     profile = get_object_or_404(Profile, share_token=token)
     user = get_object_or_404(User, profile=profile)
     is_own = request.user == user
+    share_url = request.build_absolute_uri(reverse('profile', args=[profile.share_token]))
 
     if request.method == 'POST':
         form = ProfileForm(request.POST ,instance=profile)
@@ -128,33 +129,7 @@ def profile(request, token):
             'cards': cards
         })
 
-    def hex_to_rgb(hex_str):
-        hex_str = hex_str.lstrip('#')
-        return tuple(int(hex_str[i:i+2], 16) / 255.0 for i in (0, 2, 4))
-    
-    def rgb_to_hex(rgb):
-        return '#%02x%02x%02x' % tuple(int(c * 255) for c in rgb)
-    
-    def generate_bases(primary_hex):
-        rgb = hex_to_rgb(primary_hex)
-        h, s, v = colorsys.rgb_to_hsv(*rgb)
-
-        base_100 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.6), 0.78))
-        base_200 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.55), 0.75))
-        base_300 = rgb_to_hex(colorsys.hsv_to_rgb(h, max(0, s - 0.5), 0.72))
-        return base_100, base_200, base_300
-
-    theme_key = profile.theme
-    colors = THEME_COLORS.get(theme_key, THEME_COLORS['default'])
-    primary = colors['primary']
-    accent = colors['accent']
-    if theme_key == 'default':
-        base_100, base_200, base_300 = '#F3F8FC', '#E8F0F5', '#DCE6EE'
-    else:
-        base_100, base_200, base_300 = generate_bases(primary)
-    theme = {'primary': primary, 'accent': accent, 'base_100':base_100, 'base_200': base_200, 'base_300': base_300}
-
-    context = {'form': form, 'profile': profile, 'is_own': is_own, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'feed': feed, 'theme': theme}
+    context = {'form': form, 'profile': profile, 'is_own': is_own, 'share_url': share_url, 'total_unique_cards': total_unique_cards, 'all_sets': all_sets, 'set_breakdowns': set_breakdowns, 'feed': feed,}
     return render(request, 'profile.html', context)
 
 @login_required
