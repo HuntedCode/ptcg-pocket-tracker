@@ -1,22 +1,24 @@
 from collections import defaultdict
+import csv
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import Count, F, Sum
 from django.db.models.functions import TruncWeek
-from django.http import JsonResponse, HttpResponseRedirect, Http404
+from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import TemplateView, View, RedirectView
+from io import StringIO
 import logging
 import json
 from .models import UserCollection, Set, UserWant, Card, Message, Booster, Profile, Activity, Match, PackPickerData, PackPickerBooster, PackPickerRarity, DailyStat, User
@@ -744,6 +746,146 @@ def collection(request):
         'show_unowned': show_unowned
     }
     return render(request, 'collection.html', context)
+
+# Import/Export Views
+
+@login_required
+def download_collection_template(request):
+    cards = Card.objects.select_related('card_set').exclude(card_set__name__contains='P-A').order_by('tcg_id')
+    filename = 'pocket_collection_template.csv'
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['set_name', 'tcg_id', 'name', 'quantity'])
+
+    for card in cards:
+        writer.writerow([card.card_set.name, card.tcg_id, card.name, 0])
+
+    response = HttpResponse(output.getvalue(), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+@login_required
+def download_user_collection(request):
+    user = request.user
+    cards = Card.objects.select_related('card_set').exclude(card_set__name__contains='P-A').order_by('tcg_id')
+    collection = UserCollection.objects.filter(user=request.user).values('card__tcg_id', 'quantity')
+    collection_dict = {item['card__tcg_id']: item['quantity'] for item in collection}
+    filename = f'pocket_collection_{user.username}.csv'
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['set_name', 'tcg_id', 'name', 'quantity'])
+
+    for card in cards:
+        quantity = collection_dict.get(card.tcg_id, 0)
+        writer.writerow([card.card_set.name, card.tcg_id, card.name, quantity ])
+
+    response = HttpResponse(output.getvalue(), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+def upload_user_collection(request):
+    def parse_csv(file):
+        file.seek(0)
+        reader = csv.DictReader(file.read().decode('utf-8').splitlines())
+        expected_headers = {'tcg_id', 'quantity'}
+        if not expected_headers.issubset(reader.fieldnames):
+            raise ValueError('Missing headers')
+        
+        valid_cards = set(Card.objects.values_list('tcg_id', flat=True))
+        data = {}
+        for row in reader:
+            tcg_id = row['tcg_id'].strip()
+            try:
+                quantity = int(row['quantity'])
+                if quantity < 0:
+                    raise ValueError
+            except ValueError:
+                continue
+            if tcg_id in valid_cards:
+                data[tcg_id] = quantity
+        return data
+
+    def calculate_transactions(user, data):
+        existing = {uc.card.tcg_id: uc for uc in UserCollection.objects.filter(user=user).select_related('card')}
+
+        to_create = 0
+        to_update = 0
+        to_delete = 0
+
+        for tcg_id, qty in data.items():
+            card = Card.objects.filter(tcg_id=tcg_id).first()
+            if not card:
+                continue
+            existing_uc = existing.pop(tcg_id, None)
+
+            if qty > 0:
+                if existing_uc:
+                    if existing_uc.quantity != qty:
+                        existing_uc.quantity = qty
+                        to_update += 1
+                else:
+                    to_create += 1
+            elif qty == 0 and existing_uc:
+                to_delete += 1
+        return {'creates': to_create, 'updates': to_update, 'deletes': to_delete}
+
+    @transaction.atomic
+    def update_collections(user, data):
+        existing = {uc.card.tcg_id: uc for uc in UserCollection.objects.filter(user=user).select_related('card')}
+
+        to_create = []
+        to_update = []
+        to_delete = []
+
+        for tcg_id, qty in data.items():
+            card = Card.objects.filter(tcg_id=tcg_id).first()
+            if not card:
+                continue
+            existing_uc = existing.pop(tcg_id, None)
+
+            if qty > 0:
+                if existing_uc:
+                    if existing_uc.quantity != qty:
+                        existing_uc.quantity = qty
+                        to_update.append(existing_uc)
+                else:
+                    to_create.append(UserCollection(user=user, card=card, quantity=qty))
+            elif qty == 0 and existing_uc:
+                to_delete.append(existing_uc)
+        
+        UserCollection.objects.bulk_create(to_create)
+        UserCollection.objects.bulk_update(to_update, ['quantity'])
+        UserCollection.objects.filter(id__in=[uc.id for uc in to_delete]).delete()
+    
+    if request.method == 'POST':
+        mode = request.GET.get('mode', 'commit')
+        if 'file' not in request.FILES:
+            return JsonResponse({'error': 'No file uploaded'}, status=400)
+        
+        file = request.FILES['file']
+        if not file.name.endswith('.csv'):
+            return JsonResponse({'error': 'Invalid file type'}, status=400)
+
+        try:
+            data = parse_csv(file)
+            if mode == 'preview':
+                values = calculate_transactions(request.user, data)
+                return JsonResponse({
+                    'creates': values['creates'],
+                    'updates': values['updates'],
+                    'deletes': values['deletes'],
+                    'total_changes': values['creates'] + values['updates'] + values['deletes']
+                })
+            else:
+                update_collections(request.user, data)
+                return JsonResponse({'success': 'Collection updated!'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
 
 # Dashboard Views
 

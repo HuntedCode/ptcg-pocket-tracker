@@ -11,6 +11,41 @@
         <h1 class="text-lg md:text-xl lg:text-2xl font-bold mb-4 border-b-2 border-base-300 pb-4">Welcome to Your Dashboard, {{ user.username }}</h1>
         <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
+            <!-- Bulk Uploader -->
+             <div class="card dashboard-card" data-card-id="bulk-uploader">
+                <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="dashboard-body">
+                    <h2 class="dashboard-title">Collection Import/Export</h2>
+
+                    <div class="dashboard-divider"></div>
+
+                    <p class="text-base font-semibold text-sm md:text-base-content text-center">Upload or download your entire collection fast & easy!</p>
+
+                    <div class="dashboard-divider"></div>
+
+                    <div class="flex flex-col gap-4 w-full">
+                        <a href="{% url 'download_collection_template' %}" class="btn btn-md btn-success w-full">Download Blank Collection Template</a>
+
+                        <a href="{% url 'download_user_collection' %}" class="btn btn-md btn-primary w-full">Download Your Collection</a>
+
+                        <form>
+                            {% csrf_token %}
+                            <button type="button" id="upload-collection-btn" class="btn btn-md btn-accent w-full">Upload Your Collection</button>
+                            
+                            <div id="collection-uploader-div" class="card raised-card w-[90%] mx-auto overflow-hidden justify-center items-center mt-4 hidden">
+                                <input class="file-input" type="file" id="upload-collection-input" name="upload-collection-file" accept=".csv">
+                                <div id="upload-stats"></div>
+                                <div class="flex flex-row gap-2 mb-2">
+                                    <button type="button" id="confirm-upload" class="btn btn-success w-[80%]">Confirm Upload</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+             </div>
+
             <!-- Collection Stats -->
             <div class="card dashboard-card" data-card-id="total-stats">
                 <button type="button" class="btn btn-xs btn-ghost dashboard-drag">
@@ -411,6 +446,72 @@
                     legend: {position: 'right'}
                 }
             }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const upload_button = document.getElementById('upload-collection-btn');
+        const file_input = document.getElementById('upload-collection-input');
+        const upload_div = document.getElementById('collection-uploader-div');
+        
+        upload_button.addEventListener('click', () => {
+            file_input.click();
+        });
+
+        file_input.addEventListener('change', () => {
+            if (file_input.files.length === 0) return;
+            const formData = new FormData();
+            formData.append('file', file_input.files[0]);
+            const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const upload_stats_div = document.getElementById('upload-stats');
+
+            fetch('/import/user_collection/?mode=preview', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrf_token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                upload_div.classList.remove('hidden');
+                
+                upload_stats_div.innerHTML = `
+                    <h2 class="dashboard-title">Pending Updates:</h2>
+                    <p class="dashboard-label text-center">Total Rows <span class="text-secondary">Created</span>: <span class="dashboard-stat">${data['creates']}</span></p>
+                    <p class="dashboard-label text-center">Total Rows <span class="text-secondary">Updated</span>: <span class="dashboard-stat">${data['updates']}</span></p>
+                    <p class="dashboard-label text-center">Total Rows <span class="text-secondary">Deleted</span>: <span class="dashboard-stat">${data['deletes']}</span></p>
+                    <p class="dashboard-label text-center">Total Rows <span class="text-secondary">Changed</span>: <span class="dashboard-stat">${data['total_changes']}</span></p>
+                `;
+            })
+        });
+
+        document.getElementById('confirm-upload').addEventListener('click', () => {
+            if (file_input.files.length === 0) return;
+            const formData = new FormData();
+            formData.append('file', file_input.files[0]);
+            const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const upload_stats_div = document.getElementById('upload-stats');
+
+            fetch('/import/user_collection/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrf_token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    document.getElementById('collection-uploader-div').classList.add('hidden');
+                    file_input.value = '';
+                } else {
+                    alert(data.error);
+                }
+            })
         });
     });
 </script>

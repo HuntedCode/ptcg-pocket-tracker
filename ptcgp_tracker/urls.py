@@ -52,6 +52,11 @@ urlpatterns = [
     path('wishlist/<uuid:token>/', views.wishlist, name='wishlist'),
     path('toggle_dark_mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
 
+    # Import/Export paths
+    path('export/template/', views.download_collection_template, name='download_collection_template'),
+    path('export/user_collection/', views.download_user_collection, name='download_user_collection'),
+    path('import/user_collection/', views.upload_user_collection, name='upload_user_collection'),
+
     # Dashboard paths
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('refresh-pack-picker/', views.refresh_pack_picker, name='refresh_pack_picker'),
